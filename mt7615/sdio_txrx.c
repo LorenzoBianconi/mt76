@@ -279,18 +279,27 @@ void mt7663s_txrx_worker(struct mt76_worker *w)
 	struct mt76_sdio *sdio = container_of(w, struct mt76_sdio,
 					      txrx_worker);
 	struct mt76_dev *dev = container_of(sdio, struct mt76_dev, sdio);
-	int i;
+	int i, nframes, ret;
 
 	/* disable interrupt */
 	sdio_claim_host(sdio->func);
 	sdio_writel(sdio->func, WHLPCR_INT_EN_CLR, MCR_WHLPCR, NULL);
 
-	/* tx */
-	for (i = 0; i < MT_TXQ_MCU_WA; i++)
-		mt7663s_tx_run_queue(dev, i);
+	do {
+		nframes = 0;
 
-	/* rx */
-	mt7663s_rx_handler(dev);
+		/* tx */
+		for (i = 0; i < MT_TXQ_MCU_WA; i++) {
+			ret = mt7663s_tx_run_queue(dev, i);
+			if (ret > 0)
+				nframes += ret;
+		}
+
+		/* rx */
+		ret = mt7663s_rx_handler(dev);
+		if (ret > 0)
+			nframes += ret;
+	} while (nframes > 0);
 
 	/* enable interrupt */
 	sdio_writel(sdio->func, WHLPCR_INT_EN_SET, MCR_WHLPCR, NULL);
