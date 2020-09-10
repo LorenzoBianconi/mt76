@@ -62,19 +62,6 @@ static int mt76s_alloc_tx(struct mt76_dev *dev)
 	return 0;
 }
 
-void mt76s_stop_txrx(struct mt76_dev *dev)
-{
-	struct mt76_sdio *sdio = &dev->sdio;
-
-	cancel_work_sync(&sdio->status_work);
-	cancel_work_sync(&sdio->net_work);
-	cancel_work_sync(&sdio->stat_work);
-	clear_bit(MT76_READING_STATS, &dev->phy.state);
-
-	mt76_tx_status_check(dev, NULL, true);
-}
-EXPORT_SYMBOL_GPL(mt76s_stop_txrx);
-
 int mt76s_alloc_queues(struct mt76_dev *dev)
 {
 	int err;
@@ -264,10 +251,10 @@ static const struct mt76_queue_ops sdio_queue_ops = {
 	.tx_queue_skb_raw = mt76s_tx_queue_skb_raw,
 };
 
-static void mt76s_tx_work(struct work_struct *work)
+static void mt76s_status_worker(struct mt76_worker *w)
 {
-	struct mt76_sdio *sdio = container_of(work, struct mt76_sdio,
-					      status_work);
+	struct mt76_sdio *sdio = container_of(w, struct mt76_sdio,
+					      status_worker);
 	struct mt76_dev *dev = container_of(sdio, struct mt76_dev, sdio);
 	int i;
 
@@ -279,14 +266,13 @@ static void mt76s_tx_work(struct work_struct *work)
 		queue_work(dev->wq, &dev->sdio.stat_work);
 }
 
-static void mt76s_rx_work(struct work_struct *work)
+static void mt76s_net_worker(struct mt76_worker *w)
 {
-	struct mt76_sdio *sdio = container_of(work, struct mt76_sdio,
-					      net_work);
+	struct mt76_sdio *sdio = container_of(w, struct mt76_sdio,
+					      net_worker);
 	struct mt76_dev *dev = container_of(sdio, struct mt76_dev, sdio);
 	int i;
 
-	/* rx processing */
 	local_bh_disable();
 	rcu_read_lock();
 
@@ -303,12 +289,13 @@ void mt76s_deinit(struct mt76_dev *dev)
 	int i;
 
 	mt76_worker_teardown(&sdio->txrx_worker);
+	mt76_worker_teardown(&sdio->status_worker);
+	mt76_worker_teardown(&sdio->net_worker);
 
-	mt76s_stop_txrx(dev);
-	if (sdio->txrx_wq) {
-		destroy_workqueue(sdio->txrx_wq);
-		sdio->txrx_wq = NULL;
-	}
+	cancel_work_sync(&sdio->stat_work);
+	clear_bit(MT76_READING_STATS, &dev->phy.state);
+
+	mt76_tx_status_check(dev, NULL, true);
 
 	sdio_claim_host(sdio->func);
 	sdio_release_irq(sdio->func);
@@ -335,16 +322,22 @@ int mt76s_init(struct mt76_dev *dev, struct sdio_func *func,
 	       const struct mt76_bus_ops *bus_ops)
 {
 	struct mt76_sdio *sdio = &dev->sdio;
+	int err;
 
-	sdio->txrx_wq = alloc_workqueue("mt76s_txrx_wq",
-					WQ_UNBOUND | WQ_HIGHPRI,
-					WQ_UNBOUND_MAX_ACTIVE);
-	if (!sdio->txrx_wq)
-		return -ENOMEM;
+	err = mt76_worker_setup(dev->hw, &sdio->status_worker,
+				mt76s_status_worker, "sdio-status");
+	if (err)
+		return err;
+
+	err = mt76_worker_setup(dev->hw, &sdio->net_worker, mt76s_net_worker,
+				"sdio-net");
+	if (err)
+		return err;
+
+	sched_set_fifo_low(sdio->status_worker.task);
+	sched_set_fifo_low(sdio->net_worker.task);
 
 	INIT_WORK(&sdio->stat_work, mt76s_tx_status_data);
-	INIT_WORK(&sdio->status_work, mt76s_tx_work);
-	INIT_WORK(&sdio->net_work, mt76s_rx_work);
 
 	mutex_init(&sdio->sched.lock);
 	dev->queue_ops = &sdio_queue_ops;
