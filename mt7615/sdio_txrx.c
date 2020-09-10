@@ -286,34 +286,24 @@ next:
 	}
 	mt7663s_tx_update_quota(sdio, qid, pse_sz, ple_sz);
 
+	queue_work(sdio->txrx_wq, &sdio->status_work);
+
 	return nframes;
 }
 
-void mt7663s_txrx_work(struct work_struct *work)
+void mt7663s_txrx_worker(struct mt76_worker *w)
 {
-	struct mt76_sdio *sdio = container_of(work, struct mt76_sdio,
-					      txrx_work);
+	struct mt76_sdio *sdio = container_of(w, struct mt76_sdio,
+					      txrx_worker);
 	struct mt76_dev *dev = container_of(sdio, struct mt76_dev, sdio);
-	int i, nframes = 0;
+	int i;
 
 	/* tx */
-	for (i = 0; i < MT_TXQ_MCU_WA; i++) {
-		int ret;
-
-		ret = mt7663s_tx_run_queue(dev, i);
-		if (ret < 0)
-			break;
-
-		nframes += ret;
-	}
+	for (i = 0; i < MT_TXQ_MCU_WA; i++)
+		mt7663s_tx_run_queue(dev, i);
 
 	/* rx */
-	nframes += mt7663s_rx_handler(dev);
-
-	if (nframes)
-		queue_work(sdio->txrx_wq, &sdio->txrx_work);
-
-	queue_work(sdio->txrx_wq, &sdio->status_work);
+	mt7663s_rx_handler(dev);
 }
 
 void mt7663s_sdio_irq(struct sdio_func *func)
@@ -324,5 +314,5 @@ void mt7663s_sdio_irq(struct sdio_func *func)
 	if (!test_bit(MT76_STATE_INITIALIZED, &dev->mt76.phy.state))
 		return;
 
-	queue_work(sdio->txrx_wq, &sdio->txrx_work);
+	mt76_worker_schedule(&sdio->txrx_worker);
 }
