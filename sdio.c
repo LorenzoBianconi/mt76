@@ -116,10 +116,32 @@ mt76s_process_rx_queue(struct mt76_dev *dev, struct mt76_queue *q)
 	return nframes;
 }
 
-static void mt76s_process_tx_queue(struct mt76_dev *dev, enum mt76_txq_id qid)
+static void mt76s_net_worker(struct mt76_worker *w)
+{
+	struct mt76_sdio *sdio = container_of(w, struct mt76_sdio,
+					      net_worker);
+	struct mt76_dev *dev = container_of(sdio, struct mt76_dev, sdio);
+	int i, nframes;
+
+	do {
+		nframes = 0;
+
+		local_bh_disable();
+		rcu_read_lock();
+
+		mt76_for_each_q_rx(dev, i)
+			nframes += mt76s_process_rx_queue(dev, &dev->q_rx[i]);
+
+		rcu_read_unlock();
+		local_bh_enable();
+	} while (nframes > 0);
+}
+
+static int mt76s_process_tx_queue(struct mt76_dev *dev, enum mt76_txq_id qid)
 {
 	struct mt76_queue *q = dev->q_tx[qid];
 	struct mt76_queue_entry entry;
+	int nframes = 0;
 	bool wake;
 
 	while (q->queued > 0) {
@@ -135,6 +157,7 @@ static void mt76s_process_tx_queue(struct mt76_dev *dev, enum mt76_txq_id qid)
 		}
 
 		mt76_queue_tx_complete(dev, q, &entry);
+		nframes++;
 	}
 
 	wake = q->stopped && q->queued < q->ndesc - 8;
@@ -145,12 +168,32 @@ static void mt76s_process_tx_queue(struct mt76_dev *dev, enum mt76_txq_id qid)
 		wake_up(&dev->tx_wait);
 
 	if (qid == MT_TXQ_MCU)
-		return;
+		goto out;
 
 	mt76_txq_schedule(&dev->phy, qid);
 
 	if (wake)
 		ieee80211_wake_queue(dev->hw, qid);
+out:
+	return nframes;
+}
+
+static void mt76s_status_worker(struct mt76_worker *w)
+{
+	struct mt76_sdio *sdio = container_of(w, struct mt76_sdio,
+					      status_worker);
+	struct mt76_dev *dev = container_of(sdio, struct mt76_dev, sdio);
+	int i, nframes;
+
+	do {
+		nframes = 0;
+		for (i = 0; i < MT_TXQ_MCU_WA; i++)
+			nframes += mt76s_process_tx_queue(dev, i);
+
+		if (dev->drv->tx_status_data &&
+		    !test_and_set_bit(MT76_READING_STATS, &dev->phy.state))
+			queue_work(dev->wq, &dev->sdio.stat_work);
+	} while (nframes > 0);
 }
 
 static void mt76s_tx_status_data(struct work_struct *work)
@@ -250,38 +293,6 @@ static const struct mt76_queue_ops sdio_queue_ops = {
 	.kick = mt76s_tx_kick,
 	.tx_queue_skb_raw = mt76s_tx_queue_skb_raw,
 };
-
-static void mt76s_status_worker(struct mt76_worker *w)
-{
-	struct mt76_sdio *sdio = container_of(w, struct mt76_sdio,
-					      status_worker);
-	struct mt76_dev *dev = container_of(sdio, struct mt76_dev, sdio);
-	int i;
-
-	for (i = 0; i < MT_TXQ_MCU_WA; i++)
-		mt76s_process_tx_queue(dev, i);
-
-	if (dev->drv->tx_status_data &&
-	    !test_and_set_bit(MT76_READING_STATS, &dev->phy.state))
-		queue_work(dev->wq, &dev->sdio.stat_work);
-}
-
-static void mt76s_net_worker(struct mt76_worker *w)
-{
-	struct mt76_sdio *sdio = container_of(w, struct mt76_sdio,
-					      net_worker);
-	struct mt76_dev *dev = container_of(sdio, struct mt76_dev, sdio);
-	int i;
-
-	local_bh_disable();
-	rcu_read_lock();
-
-	mt76_for_each_q_rx(dev, i)
-		mt76s_process_rx_queue(dev, &dev->q_rx[i]);
-
-	rcu_read_unlock();
-	local_bh_enable();
-}
 
 void mt76s_deinit(struct mt76_dev *dev)
 {
