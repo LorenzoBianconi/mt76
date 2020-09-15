@@ -3559,7 +3559,7 @@ out:
 	return ret;
 }
 
-int mt7615_mcu_set_bss_pm(struct mt7615_dev *dev, struct ieee80211_vif *vif,
+int mt7615_mcu_set_bss_pm(struct mt7615_phy *phy, struct ieee80211_vif *vif,
 			  bool enable)
 {
 	struct mt7615_vif *mvif = (struct mt7615_vif *)vif->drv_priv;
@@ -3585,19 +3585,36 @@ int mt7615_mcu_set_bss_pm(struct mt7615_dev *dev, struct ieee80211_vif *vif,
 	} req_hdr = {
 		.bss_idx = mvif->idx,
 	};
+	struct mt7615_dev *dev = phy->dev;
+	bool ext_phy = phy != &dev->phy;
 	int err;
 
 	if (vif->type != NL80211_IFTYPE_STATION ||
 	    !mt7615_firmware_offload(dev))
-		return -ENOTSUPP;
+		return -EOPNOTSUPP;
 
 	err = __mt76_mcu_send_msg(&dev->mt76, MCU_CMD_SET_BSS_ABORT,
 				  &req_hdr, sizeof(req_hdr), false);
-	if (err < 0 || !enable)
+	if (err < 0)
 		return err;
 
-	return __mt76_mcu_send_msg(&dev->mt76, MCU_CMD_SET_BSS_CONNECTED,
-				   &req, sizeof(req), false);
+	if (enable) {
+		err =  __mt76_mcu_send_msg(&dev->mt76,
+					   MCU_CMD_SET_BSS_CONNECTED,
+					   &req, sizeof(req), false);
+		if (err < 0)
+			return err;
+
+		vif->driver_flags |= IEEE80211_VIF_BEACON_FILTER;
+		mt76_set(dev, MT_WF_RFCR(ext_phy),
+			 MT_WF_RFCR_DROP_OTHER_BEACON);
+	} else {
+		vif->driver_flags &= ~IEEE80211_VIF_BEACON_FILTER;
+		mt76_clear(dev, MT_WF_RFCR(ext_phy),
+			   MT_WF_RFCR_DROP_OTHER_BEACON);
+	}
+
+	return 0;
 }
 
 #ifdef CONFIG_PM
@@ -3802,8 +3819,6 @@ void mt7615_mcu_set_suspend_iter(void *priv, u8 *mac,
 	struct ieee80211_hw *hw = phy->mt76->hw;
 	struct cfg80211_wowlan *wowlan = hw->wiphy->wowlan_config;
 	int i;
-
-	mt7615_mcu_set_bss_pm(phy->dev, vif, suspend);
 
 	mt7615_mcu_set_gtk_rekey(phy->dev, vif, suspend);
 	mt7615_mcu_set_arp_filter(phy->dev, vif, suspend);

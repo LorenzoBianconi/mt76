@@ -59,7 +59,14 @@ mt7615_pm_set(void *data, u64 val)
 	if (!mt7615_wait_for_mcu_init(dev))
 		return 0;
 
-	return mt7615_pm_set_enable(dev, val);
+	if (!mt7615_firmware_offload(dev) || !mt76_is_mmio(&dev->mt76))
+		return -EOPNOTSUPP;
+
+	mt7615_mutex_acquire(dev);
+	dev->pm.enable = val;
+	mt7615_mutex_release(dev);
+
+	return 0;
 }
 
 static int
