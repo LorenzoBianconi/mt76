@@ -376,6 +376,32 @@ mt7915_read_rate_txpower(struct seq_file *s, void *data)
 	return 0;
 }
 
+static void mt7915_color_collision_iter(void *priv, u8 *mac,
+					struct ieee80211_vif *vif)
+{
+	u64 *color_bitmap = priv;
+
+	if (vif->color_change_active)
+		return;
+
+	ieeee80211_obss_color_collision_notify(vif, *color_bitmap);
+}
+
+static int mt7915_trigger_color_collision(void *data, u64 val)
+{
+	struct mt7915_dev *dev = data;
+
+	ieee80211_iterate_active_interfaces(dev->mt76.hw,
+					    IEEE80211_IFACE_ITER_RESUME_ALL,
+					    mt7915_color_collision_iter, &val);
+	dev->color_collision++;
+
+	return 0;
+}
+
+DEFINE_DEBUGFS_ATTRIBUTE(fops_color_collision_trigger, NULL,
+			 mt7915_trigger_color_collision, "%lld\n");
+
 int mt7915_init_debugfs(struct mt7915_dev *dev)
 {
 	struct dentry *dir;
@@ -400,6 +426,9 @@ int mt7915_init_debugfs(struct mt7915_dev *dev)
 				    mt7915_read_temperature);
 	debugfs_create_devm_seqfile(dev->mt76.dev, "txpower_sku", dir,
 				    mt7915_read_rate_txpower);
+	debugfs_create_u32("color_collision", 0400, dir, &dev->color_collision);
+	debugfs_create_file("trigger_color_collision", 0600, dir, dev,
+			    &fops_color_collision_trigger);
 
 	return 0;
 }
