@@ -670,11 +670,22 @@ mt7915_mcu_bss_basic_tlv(struct sk_buff *skb, struct ieee80211_vif *vif,
 	struct tlv *tlv;
 
 	tlv = mt7915_mcu_add_tlv(skb, BSS_INFO_BASIC, sizeof(*bss));
+	bss = (struct bss_info_basic *)tlv;
 
 	switch (vif->type) {
 	case NL80211_IFTYPE_MESH_POINT:
-	case NL80211_IFTYPE_AP:
 		break;
+	case NL80211_IFTYPE_AP: {
+		/* mbss */
+		int max_bss_id = fls(vif->bss_conf.multiple_bssid.count);
+
+		if (max_bss_id > 8)
+			return -EINVAL;
+
+		bss->non_tx_bssid = vif->bss_conf.multiple_bssid.index;
+		bss->max_bssid = max_bss_id;
+		break;
+	}
 	case NL80211_IFTYPE_STATION:
 		/* TODO: enable BSS_INFO_UAPSD & BSS_INFO_PM */
 		if (enable) {
@@ -701,7 +712,6 @@ mt7915_mcu_bss_basic_tlv(struct sk_buff *skb, struct ieee80211_vif *vif,
 		break;
 	}
 
-	bss = (struct bss_info_basic *)tlv;
 	memcpy(bss->bssid, vif->bss_conf.bssid, ETH_ALEN);
 	bss->bcn_interval = cpu_to_le16(vif->bss_conf.beacon_int);
 	bss->network_type = cpu_to_le32(type);
@@ -990,6 +1000,29 @@ mt7915_mcu_muar_config(struct mt7915_phy *phy, struct ieee80211_vif *vif,
 				 sizeof(req), true);
 }
 
+static int
+mt7915_mcu_mbss_tlv(struct sk_buff *skb, struct ieee80211_vif *vif)
+{
+	struct bss_info_mbss *mbss;
+	struct tlv *tlv;
+	int max_bss_id;
+
+	if (vif->type != NL80211_IFTYPE_STATION)
+		return -ENOTSUPP;
+
+	max_bss_id = fls(vif->bss_conf.multiple_bssid.count);
+	if (max_bss_id > 8)
+		return -EINVAL;
+
+	tlv = mt7915_mcu_add_tlv(skb, BSS_INFO_11V_MBSSID, sizeof(*mbss));
+	mbss = (struct bss_info_mbss *)tlv;
+
+	mbss->bssid_index = vif->bss_conf.multiple_bssid.index;
+	mbss->max_bssid = max_bss_id;
+
+	return 0;
+}
+
 int mt7915_mcu_add_bss_info(struct mt7915_phy *phy,
 			    struct ieee80211_vif *vif, int enable)
 {
@@ -1015,6 +1048,7 @@ int mt7915_mcu_add_bss_info(struct mt7915_phy *phy,
 		mt7915_mcu_bss_bmc_tlv(skb, phy);
 		mt7915_mcu_bss_ra_tlv(skb, vif, phy);
 		mt7915_mcu_bss_hw_amsdu_tlv(skb);
+		mt7915_mcu_mbss_tlv(skb, vif);
 
 		if (vif->bss_conf.he_support)
 			mt7915_mcu_bss_he_tlv(skb, vif, phy);
@@ -2412,6 +2446,43 @@ mt7915_mcu_beacon_csa(struct sk_buff *rskb, struct sk_buff *skb,
 }
 
 static void
+mt7915_mcu_beacon_mbss(struct sk_buff *rskb, struct sk_buff *skb,
+		       struct ieee80211_vif * vif, struct bss_info_bcn *bcn,
+		       struct ieee80211_mutable_offsets *offs)
+{
+	struct bss_info_bcn_mbss *mbss;
+	const struct element *elem;
+	struct tlv *tlv;
+	int i = 1;
+
+	if (!vif->bss_conf.multiple_bssid.count)
+		return;
+
+	tlv = mt7915_mcu_add_nested_subtlv(rskb, BSS_INFO_BCN_MBSSID,
+					   sizeof(*mbss), &bcn->sub_ntlv,
+					   &bcn->len);
+	mbss = (struct bss_info_bcn_mbss *)tlv;
+	mbss->offset[0] = cpu_to_le16(offs->tim_offset);
+	mbss->bitmap = cpu_to_le32(1);
+
+	for_each_element_id(elem, WLAN_EID_MULTIPLE_BSSID,
+			    &skb->data[offs->multiple_bssid_offset],
+			    offs->multiple_bssid_offset) {
+		const struct element *sub_elem;
+
+		for_each_element(sub_elem, elem->data + 1, elem->datalen - 1) {
+			if (sub_elem->id)
+				continue;
+
+			mbss->offset[i] =
+				cpu_to_le16((u8 *)sub_elem - skb->data);
+			mbss->bitmap |= cpu_to_le32(1 << i);
+			i++;
+		}
+	}
+}
+
+static void
 mt7915_mcu_beacon_cont(struct mt7915_dev *dev, struct sk_buff *rskb,
 		       struct sk_buff *skb, struct bss_info_bcn *bcn,
 		       struct ieee80211_mutable_offsets *offs)
@@ -2452,6 +2523,10 @@ int mt7915_mcu_add_beacon(struct ieee80211_hw *hw,
 	struct bss_info_bcn *bcn;
 	int len = MT7915_BEACON_UPDATE_SIZE + MAX_BEACON_SIZE;
 
+	if (vif->bss_conf.multiple_bssid.count &&
+	    vif->bss_conf.multiple_bssid.parent)
+		return 0;
+
 	skb = ieee80211_beacon_get_template(hw, vif, &offs);
 	if (!skb)
 		return -EINVAL;
@@ -2477,8 +2552,9 @@ int mt7915_mcu_add_beacon(struct ieee80211_hw *hw,
 		info->hw_queue |= MT_TX_HW_QUEUE_EXT_PHY;
 	}
 
-	/* TODO: subtag - bss color count & 11v MBSSID */
+	/* TODO: subtag - bss color */
 	mt7915_mcu_beacon_csa(rskb, skb, bcn, &offs);
+	mt7915_mcu_beacon_mbss(rskb, skb, vif, bcn, &offs);
 	mt7915_mcu_beacon_cont(dev, rskb, skb, bcn, &offs);
 	dev_kfree_skb(skb);
 
