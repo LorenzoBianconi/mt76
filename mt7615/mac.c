@@ -2046,6 +2046,7 @@ void mt7615_dma_reset(struct mt7615_dev *dev)
 		   MT_WPDMA_GLO_CFG_TX_WRITEBACK_DONE);
 	usleep_range(1000, 2000);
 
+	__mt76_queue_tx_cleanup(&dev->mphy, dev->mt76.q_mcu[MT_MCUQ_WM], true);
 	for (i = 0; i < __MT_TXQ_MAX; i++)
 		__mt76_queue_tx_cleanup(&dev->mphy, dev->mt76.q_tx[i], true);
 

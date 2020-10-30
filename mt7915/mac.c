@@ -1265,6 +1265,7 @@ mt7915_dma_reset(struct mt7915_dev *dev)
 		   MT_WFDMA1_GLO_CFG_TX_DMA_EN | MT_WFDMA1_GLO_CFG_RX_DMA_EN);
 	usleep_range(1000, 2000);
 
+	__mt76_queue_tx_cleanup(&dev->mphy, dev->mt76.q_mcu[MT_MCUQ_WA], true);
 	for (i = 0; i < __MT_TXQ_MAX; i++)
 		__mt76_queue_tx_cleanup(&dev->mphy, dev->mt76.q_tx[i], true);
 
