@@ -67,7 +67,7 @@ static int mt76s_alloc_tx(struct mt76_dev *dev)
 			return PTR_ERR(q);
 
 		q->qid = i;
-		dev->q_tx[i] = q;
+		dev->phy.q_tx[i] = q;
 	}
 
 	q = mt76s_alloc_tx_queue(dev);
@@ -206,7 +206,8 @@ static void mt76s_status_worker(struct mt76_worker *w)
 		nframes = mt76s_process_tx_queue(dev, dev->q_mcu[MT_MCUQ_WM]);
 
 		for (i = 0; i <= MT_TXQ_PSD; i++)
-			nframes += mt76s_process_tx_queue(dev, dev->q_tx[i]);
+			nframes += mt76s_process_tx_queue(dev,
+							  dev->phy.q_tx[i]);
 
 		if (dev->drv->tx_status_data &&
 		    !test_and_set_bit(MT76_READING_STATS, &dev->phy.state))
@@ -244,8 +245,8 @@ mt76s_tx_queue_skb(struct mt76_phy *phy, enum mt76_txq_id qid,
 		   struct sk_buff *skb, struct mt76_wcid *wcid,
 		   struct ieee80211_sta *sta)
 {
+	struct mt76_queue *q = phy->q_tx[qid];
 	struct mt76_dev *dev = phy->dev;
-	struct mt76_queue *q = dev->q_tx[qid];
 	struct mt76_tx_info tx_info = {
 		.skb = skb,
 	};

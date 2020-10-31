@@ -1435,13 +1435,13 @@ static void mt7615_mac_tx_free(struct mt7615_dev *dev, struct sk_buff *skb)
 	struct mt7615_tx_free *free = (struct mt7615_tx_free *)skb->data;
 	u8 i, count;
 
-	__mt76_queue_tx_cleanup(&dev->mphy, dev->mt76.q_tx[MT_TXQ_PSD], false);
+	__mt76_queue_tx_cleanup(&dev->mphy, dev->mphy.q_tx[MT_TXQ_PSD], false);
 	if (is_mt7615(&dev->mt76)) {
-		__mt76_queue_tx_cleanup(&dev->mphy, dev->mt76.q_tx[MT_TXQ_BE],
+		__mt76_queue_tx_cleanup(&dev->mphy, dev->mphy.q_tx[MT_TXQ_BE],
 					false);
 	} else {
 		for (i = 0; i < IEEE80211_NUM_ACS; i++)
-			__mt76_queue_tx_cleanup(&dev->mphy, dev->mt76.q_tx[i],
+			__mt76_queue_tx_cleanup(&dev->mphy, dev->mphy.q_tx[i],
 						false);
 	}
 
@@ -2048,7 +2048,7 @@ void mt7615_dma_reset(struct mt7615_dev *dev)
 
 	__mt76_queue_tx_cleanup(&dev->mphy, dev->mt76.q_mcu[MT_MCUQ_WM], true);
 	for (i = 0; i < __MT_TXQ_MAX; i++)
-		__mt76_queue_tx_cleanup(&dev->mphy, dev->mt76.q_tx[i], true);
+		__mt76_queue_tx_cleanup(&dev->mphy, dev->mphy.q_tx[i], true);
 
 	mt76_for_each_q_rx(&dev->mt76, i) {
 		mt76_queue_rx_reset(dev, i);

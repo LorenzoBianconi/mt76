@@ -815,7 +815,7 @@ static void mt76u_status_worker(struct mt76_worker *w)
 	int i;
 
 	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
-		q = dev->q_tx[i];
+		q = dev->phy.q_tx[i];
 
 		while (q->queued > 0) {
 			if (!q->entry[q->tail].done)
@@ -905,8 +905,8 @@ mt76u_tx_queue_skb(struct mt76_phy *phy, enum mt76_txq_id qid,
 		   struct sk_buff *skb, struct mt76_wcid *wcid,
 		   struct ieee80211_sta *sta)
 {
+	struct mt76_queue *q = phy->q_tx[qid];
 	struct mt76_dev *dev = phy->dev;
-	struct mt76_queue *q = dev->q_tx[qid];
 	struct mt76_tx_info tx_info = {
 		.skb = skb,
 	};
@@ -985,7 +985,7 @@ static int mt76u_alloc_tx(struct mt76_dev *dev)
 
 	for (i = 0; i <= MT_TXQ_PSD; i++) {
 		if (i >= IEEE80211_NUM_ACS) {
-			dev->q_tx[i] = dev->q_tx[0];
+			dev->phy.q_tx[i] = dev->phy.q_tx[0];
 			continue;
 		}
 
@@ -995,7 +995,7 @@ static int mt76u_alloc_tx(struct mt76_dev *dev)
 
 		spin_lock_init(&q->lock);
 		q->hw_idx = mt76u_ac_to_hwq(dev, i);
-		dev->q_tx[i] = q;
+		dev->phy.q_tx[i] = q;
 
 		q->entry = devm_kcalloc(dev->dev,
 					MT_NUM_TX_ENTRIES, sizeof(*q->entry),
@@ -1024,7 +1024,7 @@ static void mt76u_free_tx(struct mt76_dev *dev)
 		struct mt76_queue *q;
 		int j;
 
-		q = dev->q_tx[i];
+		q = dev->phy.q_tx[i];
 		if (!q)
 			continue;
 
@@ -1052,7 +1052,7 @@ void mt76u_stop_tx(struct mt76_dev *dev)
 		dev_err(dev->dev, "timed out waiting for pending tx\n");
 
 		for (i = 0; i < IEEE80211_NUM_ACS; i++) {
-			q = dev->q_tx[i];
+			q = dev->phy.q_tx[i];
 			if (!q)
 				continue;
 
@@ -1064,7 +1064,7 @@ void mt76u_stop_tx(struct mt76_dev *dev)
 		 * will fail to submit urb, cleanup those skb's manually.
 		 */
 		for (i = 0; i < IEEE80211_NUM_ACS; i++) {
-			q = dev->q_tx[i];
+			q = dev->phy.q_tx[i];
 			if (!q)
 				continue;
 

@@ -230,8 +230,8 @@ __mt76_tx_queue_skb(struct mt76_phy *phy, int qid, struct sk_buff *skb,
 		    bool *stop)
 {
 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+	struct mt76_queue *q = phy->q_tx[qid];
 	struct mt76_dev *dev = phy->dev;
-	struct mt76_queue *q;
 	bool non_aql;
 	int pending;
 	int idx;
@@ -242,7 +242,6 @@ __mt76_tx_queue_skb(struct mt76_phy *phy, int qid, struct sk_buff *skb,
 		return idx;
 
 	wcid = (struct mt76_wcid *)sta->drv_priv;
-	q = dev->q_tx[qid];
 	q->entry[idx].wcid = wcid->idx;
 	pending = atomic_inc_return(&wcid->non_aql_packets);
 	if (stop && pending >= MT_MAX_NON_AQL_PKT)
@@ -287,7 +286,7 @@ mt76_tx(struct mt76_phy *phy, struct ieee80211_sta *sta,
 	if (ext_phy)
 		info->hw_queue |= MT_TX_HW_QUEUE_EXT_PHY;
 
-	q = dev->q_tx[qid];
+	q = phy->q_tx[qid];
 
 	spin_lock_bh(&q->lock);
 	__mt76_tx_queue_skb(phy, qid, skb, wcid, sta, NULL);
@@ -346,7 +345,7 @@ mt76_release_buffered_frames(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
 	struct mt76_phy *phy = hw->priv;
 	struct mt76_dev *dev = phy->dev;
 	struct sk_buff *last_skb = NULL;
-	struct mt76_queue *hwq = dev->q_tx[MT_TXQ_PSD];
+	struct mt76_queue *hwq = phy->q_tx[MT_TXQ_PSD];
 	int i;
 
 	spin_lock_bh(&hwq->lock);
@@ -450,8 +449,7 @@ mt76_txq_send_burst(struct mt76_phy *phy, struct mt76_queue *q,
 static int
 mt76_txq_schedule_list(struct mt76_phy *phy, enum mt76_txq_id qid)
 {
-	struct mt76_dev *dev = phy->dev;
-	struct mt76_queue *q = dev->q_tx[qid];
+	struct mt76_queue *q = phy->q_tx[qid];
 	struct ieee80211_txq *txq;
 	struct mt76_txq *mtxq;
 	struct mt76_wcid *wcid;
@@ -540,7 +538,7 @@ void mt76_tx_worker(struct mt76_worker *w)
 #endif
 }
 
-void mt76_stop_tx_queues(struct mt76_dev *dev, struct ieee80211_sta *sta,
+void mt76_stop_tx_queues(struct mt76_phy *phy, struct ieee80211_sta *sta,
 			 bool send_bar)
 {
 	int i;
@@ -553,7 +551,7 @@ void mt76_stop_tx_queues(struct mt76_dev *dev, struct ieee80211_sta *sta,
 		if (!txq)
 			continue;
 
-		hwq = dev->q_tx[mt76_txq_get_qid(txq)];
+		hwq = phy->q_tx[mt76_txq_get_qid(txq)];
 		mtxq = (struct mt76_txq *)txq->drv_priv;
 
 		spin_lock_bh(&hwq->lock);

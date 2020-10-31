@@ -15,7 +15,7 @@ static void mt76x02_pre_tbtt_tasklet(unsigned long arg)
 {
 	struct mt76x02_dev *dev = (struct mt76x02_dev *)arg;
 	struct mt76_dev *mdev = &dev->mt76;
-	struct mt76_queue *q = mdev->q_tx[MT_TXQ_PSD];
+	struct mt76_queue *q = dev->mphy.q_tx[MT_TXQ_PSD];
 	struct beacon_bc_data data = {};
 	struct sk_buff *skb;
 	int i;
@@ -151,7 +151,7 @@ static int mt76x02_poll_tx(struct napi_struct *napi, int budget)
 	__mt76_queue_tx_cleanup(&dev->mphy, dev->mt76.q_mcu[MT_MCUQ_WM],
 				false);
 	for (i = MT_TXQ_PSD; i >= 0; i--)
-		__mt76_queue_tx_cleanup(&dev->mphy, dev->mt76.q_tx[i], false);
+		__mt76_queue_tx_cleanup(&dev->mphy, dev->mphy.q_tx[i], false);
 
 	if (napi_complete_done(napi, 0))
 		mt76x02_irq_enable(dev, MT_INT_TX_DONE_ALL);
@@ -159,7 +159,7 @@ static int mt76x02_poll_tx(struct napi_struct *napi, int budget)
 	__mt76_queue_tx_cleanup(&dev->mphy, dev->mt76.q_mcu[MT_MCUQ_WM],
 				false);
 	for (i = MT_TXQ_PSD; i >= 0; i--)
-		__mt76_queue_tx_cleanup(&dev->mphy, dev->mt76.q_tx[i], false);
+		__mt76_queue_tx_cleanup(&dev->mphy, dev->mphy.q_tx[i], false);
 
 	mt76_worker_schedule(&dev->mt76.tx_worker);
 
@@ -284,7 +284,7 @@ irqreturn_t mt76x02_irq_handler(int irq, void *dev_instance)
 		if (dev->mt76.csa_complete)
 			mt76_csa_finish(&dev->mt76);
 		else
-			mt76_queue_kick(dev, dev->mt76.q_tx[MT_TXQ_PSD]);
+			mt76_queue_kick(dev, dev->mphy.q_tx[MT_TXQ_PSD]);
 	}
 
 	if (intr & MT_INT_TX_STAT)
@@ -349,7 +349,7 @@ static bool mt76x02_tx_hang(struct mt76x02_dev *dev)
 	int i;
 
 	for (i = 0; i < 4; i++) {
-		q = dev->mt76.q_tx[i];
+		q = dev->mphy.q_tx[i];
 
 		if (!q->queued)
 			continue;
@@ -469,7 +469,7 @@ static void mt76x02_watchdog_reset(struct mt76x02_dev *dev)
 
 	__mt76_queue_tx_cleanup(&dev->mphy, dev->mt76.q_mcu[MT_MCUQ_WM], true);
 	for (i = 0; i < __MT_TXQ_MAX; i++)
-		__mt76_queue_tx_cleanup(&dev->mphy, dev->mt76.q_tx[i], true);
+		__mt76_queue_tx_cleanup(&dev->mphy, dev->mphy.q_tx[i], true);
 
 	mt76_for_each_q_rx(&dev->mt76, i) {
 		mt76_queue_rx_reset(dev, i);

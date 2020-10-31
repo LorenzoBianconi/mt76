@@ -348,8 +348,8 @@ mt76_dma_tx_queue_skb(struct mt76_phy *phy, enum mt76_txq_id qid,
 		      struct sk_buff *skb, struct mt76_wcid *wcid,
 		      struct ieee80211_sta *sta)
 {
+	struct mt76_queue *q = phy->q_tx[qid];
 	struct mt76_dev *dev = phy->dev;
-	struct mt76_queue *q = dev->q_tx[qid];
 	struct mt76_tx_info tx_info = {
 		.skb = skb,
 	};
@@ -662,8 +662,12 @@ void mt76_dma_cleanup(struct mt76_dev *dev)
 	mt76_worker_disable(&dev->tx_worker);
 	netif_napi_del(&dev->tx_napi);
 
-	for (i = 0; i < ARRAY_SIZE(dev->q_tx); i++)
-		mt76_dma_tx_cleanup(&dev->phy, dev->q_tx[i], true);
+	for (i = 0; i < ARRAY_SIZE(dev->phy.q_tx); i++) {
+		mt76_dma_tx_cleanup(&dev->phy, dev->phy.q_tx[i], true);
+		if (dev->phy2)
+			mt76_dma_tx_cleanup(dev->phy2, dev->phy2->q_tx[i],
+					    true);
+	}
 	for (i = 0; i < ARRAY_SIZE(dev->q_mcu); i++)
 		mt76_dma_tx_cleanup(&dev->phy, dev->q_mcu[i], true);
 
