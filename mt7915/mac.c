@@ -910,6 +910,7 @@ void mt7915_mac_tx_free(struct mt7915_dev *dev, struct sk_buff *skb)
 {
 	struct mt7915_tx_free *free = (struct mt7915_tx_free *)skb->data;
 	struct mt76_dev *mdev = &dev->mt76;
+	struct mt76_phy *mphy_ext = mdev->phy2;
 	struct mt76_txwi_cache *txwi;
 	struct ieee80211_sta *sta = NULL;
 	LIST_HEAD(free_list);
@@ -919,6 +920,12 @@ void mt7915_mac_tx_free(struct mt7915_dev *dev, struct sk_buff *skb)
 	/* clean DMA queues and unmap buffers first */
 	__mt76_queue_tx_cleanup(&dev->mphy, dev->mphy.q_tx[MT_TXQ_PSD], false);
 	__mt76_queue_tx_cleanup(&dev->mphy, dev->mphy.q_tx[MT_TXQ_BE], false);
+	if (mphy_ext) {
+		__mt76_queue_tx_cleanup(mphy_ext, mphy_ext->q_tx[MT_TXQ_PSD],
+					false);
+		__mt76_queue_tx_cleanup(mphy_ext, mphy_ext->q_tx[MT_TXQ_BE],
+					false);
+	}
 
 	/*
 	 * TODO: MT_TX_FREE_LATENCY is msdu time from the TXD is queued into PLE,
@@ -1154,9 +1161,8 @@ mt7915_phy_get_nf(struct mt7915_phy *phy, int idx)
 	u32 val, sum = 0, n = 0;
 	int nss, i;
 
-	/* TODO: DBDC: 0,1 for 2.4G, 2,3 for 5G */
 	for (nss = 0; nss < hweight8(phy->chainmask); nss++) {
-		u32 reg = MT_WF_IRPI(nss);
+		u32 reg = MT_WF_IRPI(nss + (idx << dev->dbdc_support));
 
 		for (i = 0; i < ARRAY_SIZE(nf_power); i++, reg += 4) {
 			val = mt7915_l2_rr(dev, reg);
@@ -1165,10 +1171,7 @@ mt7915_phy_get_nf(struct mt7915_phy *phy, int idx)
 		}
 	}
 
-	if (!n)
-		return 0;
-
-	return sum / n;
+	return n ? sum / n : 0;
 }
 
 static void
@@ -1258,6 +1261,7 @@ static void
 mt7915_dma_reset(struct mt7915_phy *phy)
 {
 	struct mt7915_dev *dev = phy->dev;
+	struct mt76_phy *mphy_ext = dev->mt76.phy2;
 	int i;
 
 	mt76_clear(dev, MT_WFDMA0_GLO_CFG,
@@ -1267,8 +1271,12 @@ mt7915_dma_reset(struct mt7915_phy *phy)
 	usleep_range(1000, 2000);
 
 	__mt76_queue_tx_cleanup(&dev->mphy, dev->mt76.q_mcu[MT_MCUQ_WA], true);
-	for (i = 0; i < __MT_TXQ_MAX; i++)
+	for (i = 0; i < __MT_TXQ_MAX; i++) {
 		__mt76_queue_tx_cleanup(&dev->mphy, phy->mt76->q_tx[i], true);
+		if (mphy_ext)
+			__mt76_queue_tx_cleanup(mphy_ext, mphy_ext->q_tx[i],
+						true);
+	}
 
 	mt76_for_each_q_rx(&dev->mt76, i) {
 		mt76_queue_rx_reset(dev, i);
