@@ -639,7 +639,8 @@ int mt7915_register_ext_phy(struct mt7915_dev *dev)
 	/* The second interface does not get any packets unless it has a vif */
 	ieee80211_hw_set(mphy->hw, WANT_MONITOR_VIF);
 
-	ret = mt76_register_phy(mphy);
+	ret = mt76_register_phy(mphy, true, mt7915_rates,
+				ARRAY_SIZE(mt7915_rates));
 	if (ret)
 		ieee80211_free_hw(mphy->hw);
 
