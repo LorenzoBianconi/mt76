@@ -49,8 +49,10 @@ static int mt7615_start(struct ieee80211_hw *hw)
 		mt7615_mac_enable_nf(dev, 1);
 	}
 
-	if (mt7615_firmware_offload(dev))
+	if (mt7615_firmware_offload(dev)) {
 		mt76_connac_mcu_set_channel_domain(phy->mt76);
+		mt76_connac_mcu_set_rate_txpower(phy->mt76);
+	}
 
 	mt7615_mcu_set_chan_info(phy, MCU_EXT_CMD_SET_RX_PATH);
 

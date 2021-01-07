@@ -178,6 +178,7 @@ static int mt7921_start(struct ieee80211_hw *hw)
 
 	mt76_connac_mcu_set_mac_enable(&dev->mt76, 0, true, false);
 	mt76_connac_mcu_set_channel_domain(phy->mt76);
+	mt76_connac_mcu_set_rate_txpower(phy->mt76);
 
 	mt7921_mcu_set_chan_info(phy, MCU_EXT_CMD_SET_RX_PATH);
 	mt7921_mac_reset_counters(phy);
