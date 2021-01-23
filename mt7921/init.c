@@ -38,7 +38,8 @@ static struct ieee80211_rate mt7921_rates[] = {
 static const struct ieee80211_iface_limit if_limits[] = {
 	{
 		.max = MT7921_MAX_INTERFACES,
-		.types = BIT(NL80211_IFTYPE_STATION)
+		.types = BIT(NL80211_IFTYPE_P2P_CLIENT) |
+			 BIT(NL80211_IFTYPE_STATION)
 	}
 };
 
@@ -97,7 +98,9 @@ mt7921_init_wiphy(struct ieee80211_hw *hw)
 	wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
 	wiphy->reg_notifier = mt7921_regd_notifier;
 
-	wiphy->features |= NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
+	wiphy->features |= NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR |
+			   NL80211_FEATURE_P2P_GO_CTWIN |
+			   NL80211_FEATURE_P2P_GO_OPPPS;
 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_SET_SCAN_DWELL);
 
 	ieee80211_hw_set(hw, SINGLE_SCAN_ON_ALL_BANDS);
