@@ -472,11 +472,11 @@ mt7615_mcu_roc_event(struct mt7615_dev *dev, struct sk_buff *skb)
 	ieee80211_ready_on_channel(mphy->hw);
 
 	phy = (struct mt7615_phy *)mphy->priv;
-	phy->roc_grant = true;
-	wake_up(&phy->roc_wait);
+	phy->roc.grant = true;
+	wake_up(&phy->roc.wait);
 
 	duration = le32_to_cpu(event->max_interval);
-	mod_timer(&phy->roc_timer,
+	mod_timer(&phy->roc.timer,
 		  round_jiffies_up(jiffies + msecs_to_jiffies(duration)));
 }
 
@@ -2618,7 +2618,7 @@ int mt7615_mcu_set_roc(struct mt7615_phy *phy, struct ieee80211_vif *vif,
 		.req_type = 2,
 	};
 
-	phy->roc_grant = false;
+	phy->roc.grant = false;
 
 	return mt76_mcu_send_msg(&dev->mt76, MCU_CMD_SET_ROC, &req,
 				 sizeof(req), false);

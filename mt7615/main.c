@@ -75,8 +75,8 @@ static void mt7615_stop(struct ieee80211_hw *hw)
 	struct mt7615_phy *phy = mt7615_hw_phy(hw);
 
 	cancel_delayed_work_sync(&phy->mt76->mac_work);
-	del_timer_sync(&phy->roc_timer);
-	cancel_work_sync(&phy->roc_work);
+	del_timer_sync(&phy->roc.timer);
+	cancel_work_sync(&phy->roc.work);
 
 	cancel_delayed_work_sync(&dev->pm.ps_work);
 	cancel_work_sync(&dev->pm.wake_work);
@@ -915,7 +915,7 @@ void mt7615_roc_work(struct work_struct *work)
 	struct mt7615_phy *phy;
 
 	phy = (struct mt7615_phy *)container_of(work, struct mt7615_phy,
-						roc_work);
+						roc.work);
 
 	if (!test_and_clear_bit(MT76_STATE_ROC, &phy->mt76->state))
 		return;
@@ -930,9 +930,9 @@ void mt7615_roc_work(struct work_struct *work)
 
 void mt7615_roc_timer(struct timer_list *timer)
 {
-	struct mt7615_phy *phy = from_timer(phy, timer, roc_timer);
+	struct mt7615_phy *phy = from_timer(phy, timer, roc.timer);
 
-	ieee80211_queue_work(phy->mt76->hw, &phy->roc_work);
+	ieee80211_queue_work(phy->mt76->hw, &phy->roc.work);
 }
 
 void mt7615_scan_work(struct work_struct *work)
@@ -1060,7 +1060,7 @@ static int mt7615_remain_on_channel(struct ieee80211_hw *hw,
 		goto out;
 	}
 
-	if (!wait_event_timeout(phy->roc_wait, phy->roc_grant, HZ)) {
+	if (!wait_event_timeout(phy->roc.wait, phy->roc.grant, HZ)) {
 		mt7615_mcu_set_roc(phy, vif, NULL, 0);
 		clear_bit(MT76_STATE_ROC, &phy->mt76->state);
 		err = -ETIMEDOUT;
@@ -1080,8 +1080,8 @@ static int mt7615_cancel_remain_on_channel(struct ieee80211_hw *hw,
 	if (!test_and_clear_bit(MT76_STATE_ROC, &phy->mt76->state))
 		return 0;
 
-	del_timer_sync(&phy->roc_timer);
-	cancel_work_sync(&phy->roc_work);
+	del_timer_sync(&phy->roc.timer);
+	cancel_work_sync(&phy->roc.work);
 
 	mt7615_mutex_acquire(phy->dev);
 	mt7615_mcu_set_roc(phy, vif, NULL, 0);

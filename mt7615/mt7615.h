@@ -176,10 +176,7 @@ struct mt7615_phy {
 	struct sk_buff_head scan_event_list;
 	struct delayed_work scan_work;
 
-	struct work_struct roc_work;
-	struct timer_list roc_timer;
-	wait_queue_head_t roc_wait;
-	bool roc_grant;
+	struct mt76_connac_roc roc;
 
 #ifdef CONFIG_NL80211_TESTMODE
 	struct {

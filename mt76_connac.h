@@ -66,6 +66,13 @@ struct mt76_connac_coredump {
 	unsigned long last_activity;
 };
 
+struct mt76_connac_roc {
+	struct work_struct work;
+	struct timer_list timer;
+	wait_queue_head_t wait;
+	bool grant;
+};
+
 extern const struct wiphy_wowlan_support mt76_connac_wowlan_support;
 
 static inline bool is_mt7921(struct mt76_dev *dev)
