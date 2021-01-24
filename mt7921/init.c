@@ -98,7 +98,9 @@ mt7921_init_wiphy(struct ieee80211_hw *hw)
 	wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
 	wiphy->reg_notifier = mt7921_regd_notifier;
 
+	wiphy->max_remain_on_channel_duration = 5000;
 	wiphy->features |= NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR |
+			   WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
 			   NL80211_FEATURE_P2P_GO_CTWIN |
 			   NL80211_FEATURE_P2P_GO_OPPPS;
 	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_SET_SCAN_DWELL);
@@ -240,6 +242,10 @@ int mt7921_register_device(struct mt7921_dev *dev)
 
 	init_waitqueue_head(&dev->reset_wait);
 	INIT_WORK(&dev->reset_work, mt7921_mac_reset_work);
+
+	INIT_WORK(&dev->phy.roc.work, mt7921_roc_work);
+	timer_setup(&dev->phy.roc.timer, mt7921_roc_timer, 0);
+	init_waitqueue_head(&dev->phy.roc.wait);
 
 	ret = mt7921_init_hardware(dev);
 	if (ret)

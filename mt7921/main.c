@@ -201,6 +201,8 @@ static void mt7921_stop(struct ieee80211_hw *hw)
 
 	cancel_delayed_work_sync(&dev->pm.ps_work);
 	cancel_work_sync(&dev->pm.wake_work);
+	del_timer_sync(&phy->roc.timer);
+	cancel_work_sync(&phy->roc.work);
 	mt76_connac_free_pending_tx_skbs(&dev->pm, NULL);
 
 	mt7921_mutex_acquire(dev);
@@ -909,6 +911,25 @@ mt7921_set_coverage_class(struct ieee80211_hw *hw, s16 coverage_class)
 	mt7921_mutex_release(dev);
 }
 
+void mt7921_roc_work(struct work_struct *work)
+{
+	struct mt7921_phy *phy;
+
+	phy = (struct mt7921_phy *)container_of(work, struct mt7921_phy,
+						roc.work);
+
+	mt7921_mutex_acquire(phy->dev);
+	mt76_connac_roc_handler(phy->mt76, &phy->roc);
+	mt7921_mutex_release(phy->dev);
+}
+
+void mt7921_roc_timer(struct timer_list *timer)
+{
+	struct mt7921_phy *phy = from_timer(phy, timer, roc.timer);
+
+	ieee80211_queue_work(phy->mt76->hw, &phy->roc.work);
+}
+
 void mt7921_scan_work(struct work_struct *work)
 {
 	struct mt7921_phy *phy;
@@ -1063,6 +1084,35 @@ static void mt7921_sta_statistics(struct ieee80211_hw *hw,
 	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_TX_BITRATE);
 }
 
+static int mt7921_remain_on_channel(struct ieee80211_hw *hw,
+				    struct ieee80211_vif *vif,
+				    struct ieee80211_channel *chan,
+				    int duration,
+				    enum ieee80211_roc_type type)
+{
+	struct mt7921_phy *phy = mt7921_hw_phy(hw);
+	int err;
+
+	mt7921_mutex_acquire(phy->dev);
+	err = mt76_connac_remain_on_channel(hw, vif, chan, &phy->roc,
+					    duration, type);
+	mt7921_mutex_release(phy->dev);
+
+	return err;
+}
+
+static int mt7921_cancel_remain_on_channel(struct ieee80211_hw *hw,
+					   struct ieee80211_vif *vif)
+{
+	struct mt7921_phy *phy = mt7921_hw_phy(hw);
+
+	mt7921_mutex_acquire(phy->dev);
+	mt76_connac_cancel_remain_on_channel(hw, vif, &phy->roc);
+	mt7921_mutex_release(phy->dev);
+
+	return 0;
+}
+
 #ifdef CONFIG_PM
 static int mt7921_suspend(struct ieee80211_hw *hw,
 			  struct cfg80211_wowlan *wowlan)
@@ -1183,6 +1233,8 @@ const struct ieee80211_ops mt7921_ops = {
 	.sta_statistics = mt7921_sta_statistics,
 	.sched_scan_start = mt7921_start_sched_scan,
 	.sched_scan_stop = mt7921_stop_sched_scan,
+	.remain_on_channel = mt7921_remain_on_channel,
+	.cancel_remain_on_channel = mt7921_cancel_remain_on_channel,
 #ifdef CONFIG_PM
 	.suspend = mt7921_suspend,
 	.resume = mt7921_resume,

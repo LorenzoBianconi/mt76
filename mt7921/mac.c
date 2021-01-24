@@ -1260,6 +1260,8 @@ void mt7921_mac_reset_work(struct work_struct *work)
 	set_bit(MT76_MCU_RESET, &dev->mphy.state);
 	wake_up(&dev->mt76.mcu.wait);
 	cancel_delayed_work_sync(&dev->mphy.mac_work);
+	del_timer_sync(&dev->phy.roc.timer);
+	cancel_work_sync(&dev->phy.roc.work);
 
 	/* lock/unlock all queues to ensure that no tx is pending */
 	mt76_txq_schedule_all(&dev->mphy);

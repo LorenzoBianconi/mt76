@@ -76,24 +76,6 @@ struct mt7921_uni_txd {
 	u8 reserved2[4];
 } __packed __aligned(4);
 
-/* event table */
-enum {
-	MCU_EVENT_REG_ACCESS = 0x05,
-	MCU_EVENT_SCAN_DONE = 0x0d,
-	MCU_EVENT_BSS_ABSENCE  = 0x11,
-	MCU_EVENT_BSS_BEACON_LOSS = 0x13,
-	MCU_EVENT_CH_PRIVILEGE = 0x18,
-	MCU_EVENT_SCHED_SCAN_DONE = 0x23,
-	MCU_EVENT_DBG_MSG = 0x27,
-	MCU_EVENT_TXPWR = 0xd0,
-	MCU_EVENT_COREDUMP = 0xf0,
-};
-
-/* ext event table */
-enum {
-	MCU_EXT_EVENT_RATE_REPORT = 0x87,
-};
-
 struct mt7921_mcu_rxd {
 	__le32 rxd[6];
 

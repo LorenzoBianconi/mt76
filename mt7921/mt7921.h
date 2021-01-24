@@ -135,6 +135,8 @@ struct mt7921_phy {
 
 	struct sk_buff_head scan_event_list;
 	struct delayed_work scan_work;
+
+	struct mt76_connac_roc roc;
 };
 
 struct mt7921_dev {
@@ -266,6 +268,8 @@ int mt7921_mcu_get_rx_rate(struct mt7921_phy *phy, struct ieee80211_vif *vif,
 int mt7921_mcu_fw_log_2_host(struct mt7921_dev *dev, u8 ctrl);
 void mt7921_mcu_rx_event(struct mt7921_dev *dev, struct sk_buff *skb);
 void mt7921_mcu_exit(struct mt7921_dev *dev);
+void mt7921_roc_work(struct work_struct *work);
+void mt7921_roc_timer(struct timer_list *timer);
 
 static inline void mt7921_irq_enable(struct mt7921_dev *dev, u32 mask)
 {
