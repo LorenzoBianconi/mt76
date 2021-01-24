@@ -788,6 +788,23 @@ struct bss_info_uni_he {
 	u8 rsv[2];
 } __packed;
 
+struct mt76_connac_roc_tlv {
+	u8 bss_idx;
+	u8 token;
+	u8 active;
+	u8 primary_chan;
+	u8 sco;
+	u8 band;
+	u8 width;	/* To support 80/160MHz bandwidth */
+	u8 freq_seg1;	/* To support 80/160MHz bandwidth */
+	u8 freq_seg2;	/* To support 80/160MHz bandwidth */
+	u8 req_type;
+	u8 dbdc_band;
+	u8 rsv0;
+	__le32 max_interval;	/* ms */
+	u8 rsv1[8];
+} __packed;
+
 struct mt76_connac_gtk_rekey_tlv {
 	__le16 tag;
 	__le16 len;
@@ -1007,4 +1024,10 @@ void mt76_connac_mcu_coredump_event(struct mt76_dev *dev, struct sk_buff *skb,
 int mt76_connac_mcu_set_rate_txpower(struct mt76_phy *phy);
 int mt76_connac_mcu_set_p2p_oppps(struct ieee80211_hw *hw,
 				  struct ieee80211_vif *vif);
+int mt76_connac_mcu_set_roc(struct mt76_dev *dev, struct ieee80211_vif *vif,
+			    struct ieee80211_channel *chan, int duration);
+void mt76_connac_mcu_roc_event(struct mt76_phy *phy,
+			       struct mt76_connac_roc *roc,
+			       struct mt76_connac_roc_tlv *event);
+
 #endif /* __MT76_CONNAC_MCU_H */

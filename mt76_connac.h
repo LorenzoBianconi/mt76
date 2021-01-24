@@ -113,5 +113,16 @@ void mt76_connac_pm_queue_skb(struct ieee80211_hw *hw,
 			      struct sk_buff *skb);
 void mt76_connac_pm_dequeue_skbs(struct mt76_phy *phy,
 				 struct mt76_connac_pm *pm);
+int mt76_connac_remain_on_channel(struct ieee80211_hw *hw,
+				  struct ieee80211_vif *vif,
+				  struct ieee80211_channel *chan,
+				  struct mt76_connac_roc *roc,
+				  int duration,
+				  enum ieee80211_roc_type type);
+void mt76_connac_cancel_remain_on_channel(struct ieee80211_hw *hw,
+					  struct ieee80211_vif *vif,
+					  struct mt76_connac_roc *roc);
+void mt76_connac_roc_handler(struct mt76_phy *phy,
+			     struct mt76_connac_roc *roc);
 
 #endif /* __MT76_CONNAC_H */

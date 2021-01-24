@@ -255,23 +255,6 @@ struct mt7615_mcu_reg_event {
 	__le32 val;
 } __packed;
 
-struct mt7615_roc_tlv {
-	u8 bss_idx;
-	u8 token;
-	u8 active;
-	u8 primary_chan;
-	u8 sco;
-	u8 band;
-	u8 width;	/* To support 80/160MHz bandwidth */
-	u8 freq_seg1;	/* To support 80/160MHz bandwidth */
-	u8 freq_seg2;	/* To support 80/160MHz bandwidth */
-	u8 req_type;
-	u8 dbdc_band;
-	u8 rsv0;
-	__le32 max_interval;	/* ms */
-	u8 rsv1[8];
-} __packed;
-
 enum {
 	PATCH_NOT_DL_SEM_FAIL	 = 0x0,
 	PATCH_IS_DL		 = 0x1,

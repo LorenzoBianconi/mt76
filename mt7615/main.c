@@ -902,14 +902,6 @@ mt7615_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
 	return 0;
 }
 
-static void mt7615_roc_iter(void *priv, u8 *mac,
-			    struct ieee80211_vif *vif)
-{
-	struct mt7615_phy *phy = priv;
-
-	mt7615_mcu_set_roc(phy, vif, NULL, 0);
-}
-
 void mt7615_roc_work(struct work_struct *work)
 {
 	struct mt7615_phy *phy;
@@ -917,15 +909,9 @@ void mt7615_roc_work(struct work_struct *work)
 	phy = (struct mt7615_phy *)container_of(work, struct mt7615_phy,
 						roc.work);
 
-	if (!test_and_clear_bit(MT76_STATE_ROC, &phy->mt76->state))
-		return;
-
 	mt7615_mutex_acquire(phy->dev);
-	ieee80211_iterate_active_interfaces(phy->mt76->hw,
-					    IEEE80211_IFACE_ITER_RESUME_ALL,
-					    mt7615_roc_iter, phy);
+	mt76_connac_roc_handler(phy->mt76, &phy->roc);
 	mt7615_mutex_release(phy->dev);
-	ieee80211_remain_on_channel_expired(phy->mt76->hw);
 }
 
 void mt7615_roc_timer(struct timer_list *timer)
@@ -1049,24 +1035,9 @@ static int mt7615_remain_on_channel(struct ieee80211_hw *hw,
 	struct mt7615_phy *phy = mt7615_hw_phy(hw);
 	int err;
 
-	if (test_and_set_bit(MT76_STATE_ROC, &phy->mt76->state))
-		return 0;
-
 	mt7615_mutex_acquire(phy->dev);
-
-	err = mt7615_mcu_set_roc(phy, vif, chan, duration);
-	if (err < 0) {
-		clear_bit(MT76_STATE_ROC, &phy->mt76->state);
-		goto out;
-	}
-
-	if (!wait_event_timeout(phy->roc.wait, phy->roc.grant, HZ)) {
-		mt7615_mcu_set_roc(phy, vif, NULL, 0);
-		clear_bit(MT76_STATE_ROC, &phy->mt76->state);
-		err = -ETIMEDOUT;
-	}
-
-out:
+	err = mt76_connac_remain_on_channel(hw, vif, chan, &phy->roc,
+					    duration, type);
 	mt7615_mutex_release(phy->dev);
 
 	return err;
@@ -1077,14 +1048,8 @@ static int mt7615_cancel_remain_on_channel(struct ieee80211_hw *hw,
 {
 	struct mt7615_phy *phy = mt7615_hw_phy(hw);
 
-	if (!test_and_clear_bit(MT76_STATE_ROC, &phy->mt76->state))
-		return 0;
-
-	del_timer_sync(&phy->roc.timer);
-	cancel_work_sync(&phy->roc.work);
-
 	mt7615_mutex_acquire(phy->dev);
-	mt7615_mcu_set_roc(phy, vif, NULL, 0);
+	mt76_connac_cancel_remain_on_channel(hw, vif, &phy->roc);
 	mt7615_mutex_release(phy->dev);
 
 	return 0;

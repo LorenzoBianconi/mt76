@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: ISC
 /* Copyright (C) 2020 MediaTek Inc. */
 
-#include "mt76_connac.h"
+#include "mt76_connac_mcu.h"
 
 int mt76_connac_pm_wake(struct mt76_phy *phy, struct mt76_connac_pm *pm)
 {
@@ -117,3 +117,72 @@ void mt76_connac_pm_dequeue_skbs(struct mt76_phy *phy,
 	mt76_worker_schedule(&phy->dev->tx_worker);
 }
 EXPORT_SYMBOL_GPL(mt76_connac_pm_dequeue_skbs);
+
+int mt76_connac_remain_on_channel(struct ieee80211_hw *hw,
+				  struct ieee80211_vif *vif,
+				  struct ieee80211_channel *chan,
+				  struct mt76_connac_roc *roc,
+				  int duration,
+				  enum ieee80211_roc_type type)
+{
+	struct mt76_phy *phy = hw->priv;
+	int err;
+
+	if (test_and_set_bit(MT76_STATE_ROC, &phy->state))
+		return 0;
+
+	roc->grant = false;
+	err = mt76_connac_mcu_set_roc(phy->dev, vif, chan, duration);
+	if (err < 0) {
+		clear_bit(MT76_STATE_ROC, &phy->state);
+		return err;
+	}
+
+	if (!wait_event_timeout(roc->wait, roc->grant, HZ)) {
+		mt76_connac_mcu_set_roc(phy->dev, vif, NULL, 0);
+		clear_bit(MT76_STATE_ROC, &phy->state);
+		return -ETIMEDOUT;
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(mt76_connac_remain_on_channel);
+
+void mt76_connac_cancel_remain_on_channel(struct ieee80211_hw *hw,
+					  struct ieee80211_vif *vif,
+					  struct mt76_connac_roc *roc)
+{
+	struct mt76_phy *phy = hw->priv;
+
+	if (!test_and_clear_bit(MT76_STATE_ROC, &phy->state))
+		return;
+
+	del_timer_sync(&roc->timer);
+	cancel_work_sync(&roc->work);
+
+	roc->grant = false;
+	mt76_connac_mcu_set_roc(phy->dev, vif, NULL, 0);
+}
+EXPORT_SYMBOL_GPL(mt76_connac_cancel_remain_on_channel);
+
+static void mt76_connac_roc_iter(void *priv, u8 *mac,
+				 struct ieee80211_vif *vif)
+{
+	struct mt76_dev *dev = priv;
+
+	mt76_connac_mcu_set_roc(dev, vif, NULL, 0);
+}
+
+void mt76_connac_roc_handler(struct mt76_phy *phy,
+			     struct mt76_connac_roc *roc)
+{
+	if (!test_and_clear_bit(MT76_STATE_ROC, &phy->state))
+		return;
+
+	roc->grant = false;
+	ieee80211_iterate_active_interfaces(phy->hw,
+					    IEEE80211_IFACE_ITER_RESUME_ALL,
+					    mt76_connac_roc_iter, phy->dev);
+	ieee80211_remain_on_channel_expired(phy->hw);
+}
+EXPORT_SYMBOL_GPL(mt76_connac_roc_handler);

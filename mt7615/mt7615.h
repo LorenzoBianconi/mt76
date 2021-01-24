@@ -528,9 +528,6 @@ int mt7615_mcu_apply_rx_dcoc(struct mt7615_phy *phy);
 int mt7615_mcu_apply_tx_dpd(struct mt7615_phy *phy);
 int mt7615_dfs_init_radar_detector(struct mt7615_phy *phy);
 
-int mt7615_mcu_set_roc(struct mt7615_phy *phy, struct ieee80211_vif *vif,
-		       struct ieee80211_channel *chan, int duration);
-
 int mt7615_init_debugfs(struct mt7615_dev *dev);
 int mt7615_mcu_wait_response(struct mt7615_dev *dev, int cmd, int seq);
 

@@ -1692,6 +1692,37 @@ int mt76_connac_mcu_set_p2p_oppps(struct ieee80211_hw *hw,
 }
 EXPORT_SYMBOL_GPL(mt76_connac_mcu_set_p2p_oppps);
 
+int mt76_connac_mcu_set_roc(struct mt76_dev *dev, struct ieee80211_vif *vif,
+			    struct ieee80211_channel *chan, int duration)
+{
+	struct mt76_vif *mvif = (struct mt76_vif *)vif->drv_priv;
+	struct mt76_connac_roc_tlv req = {
+		.bss_idx = mvif->idx,
+		.active = !chan,
+		.max_interval = cpu_to_le32(duration),
+		.primary_chan = chan ? chan->hw_value : 0,
+		.band = chan ? chan->band : 0,
+		.req_type = 2,
+	};
+
+	return mt76_mcu_send_msg(dev, MCU_CMD_SET_ROC, &req, sizeof(req),
+				 false);
+}
+
+void mt76_connac_mcu_roc_event(struct mt76_phy *phy,
+			       struct mt76_connac_roc *roc,
+			       struct mt76_connac_roc_tlv *event)
+{
+	int duration = le32_to_cpu(event->max_interval);
+
+	ieee80211_ready_on_channel(phy->hw);
+	roc->grant = true;
+	wake_up(&roc->wait);
+	mod_timer(&roc->timer,
+		  round_jiffies_up(jiffies + msecs_to_jiffies(duration)));
+}
+EXPORT_SYMBOL_GPL(mt76_connac_mcu_roc_event);
+
 #ifdef CONFIG_PM
 
 const struct wiphy_wowlan_support mt76_connac_wowlan_support = {
