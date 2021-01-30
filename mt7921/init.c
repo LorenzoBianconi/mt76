@@ -99,7 +99,8 @@ mt7921_init_wiphy(struct ieee80211_hw *hw)
 	wiphy->reg_notifier = mt7921_regd_notifier;
 
 	wiphy->max_remain_on_channel_duration = 5000;
-	wiphy->features |= NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR |
+	wiphy->features |= NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR |
+			   NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR |
 			   WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
 			   NL80211_FEATURE_P2P_GO_CTWIN |
 			   NL80211_FEATURE_P2P_GO_OPPPS;
