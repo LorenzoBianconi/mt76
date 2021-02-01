@@ -1143,12 +1143,12 @@ int mt7615_mcu_set_bcn(struct mt7615_dev *dev, struct ieee80211_vif *vif,
 	memcpy(req.pkt + MT_TXD_SIZE, skb->data, skb->len);
 	req.pkt_len = cpu_to_le16(MT_TXD_SIZE + skb->len);
 	req.tim_ie_pos = cpu_to_le16(MT_TXD_SIZE + offs.tim_offset);
-	if (offs.csa_counter_offs[0]) {
+	if (offs.cntdwn_counter_offs[0]) {
 		u16 csa_offs;
 
-		csa_offs = MT_TXD_SIZE + offs.csa_counter_offs[0] - 4;
+		csa_offs = MT_TXD_SIZE + offs.cntdwn_counter_offs[0] - 4;
 		req.csa_ie_pos = cpu_to_le16(csa_offs);
-		req.csa_cnt = skb->data[offs.csa_counter_offs[0]];
+		req.csa_cnt = skb->data[offs.cntdwn_counter_offs[0]];
 	}
 	dev_kfree_skb(skb);
 

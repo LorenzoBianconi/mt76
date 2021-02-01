@@ -938,6 +938,12 @@ int mt76_get_txpower(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 }
 EXPORT_SYMBOL_GPL(mt76_get_txpower);
 
+/* XXX */
+static bool ieee80211_csa_is_complete(struct ieee80211_vif *vif)
+{
+	return false;
+}
+
 static void
 __mt76_csa_finish(void *priv, u8 *mac, struct ieee80211_vif *vif)
 {
