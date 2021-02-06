@@ -535,6 +535,9 @@ struct mt76_testmode_data {
 	u32 param_set[DIV_ROUND_UP(NUM_MT76_TM_ATTRS, 32)];
 	struct sk_buff *tx_skb;
 
+	wait_queue_head_t wait;
+	bool done;
+
 	u32 tx_count;
 	u16 tx_msdu_len;
 

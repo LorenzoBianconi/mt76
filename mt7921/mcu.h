@@ -408,4 +408,30 @@ struct mt7921_txpwr_event {
 	struct mt7921_txpwr txpwr;
 } __packed;
 
+enum {
+	MCU_TESTMODE_CMD		= 1,
+	MCU_TESTMODE_POWER		= 2,
+	MCU_TESTMODE_RATE		= 3,
+	MCU_TESTMODE_PKTLEN		= 6,
+	MCU_TESTMODE_PKTCNT		= 7,
+	MCU_TESTMODE_TXGI		= 16,
+	MCU_TESTMODE_CHAN		= 18,
+	MCU_TESTMODE_BW			= 71,
+	MCU_TESTMODE_RESET_COUNTERS	= 91,
+	MCU_TESTMODE_FREQ_OFFSET	= 107,
+};
+
+enum {
+	MCU_TESTMODE_STOP,
+	MCU_TESTMODE_START_TX,
+	MCU_TESTMODE_START_RX,
+};
+
+struct mt7921_test_ctrl {
+	u8 action;
+	u8 rsv[3];
+	__le32 data0;
+	__le32 data1;
+} __packed;
+
 #endif

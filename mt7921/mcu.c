@@ -180,6 +180,9 @@ mt7921_mcu_parse_response(struct mt76_dev *mdev, int cmd,
 	case MCU_EXT_CMD_EFUSE_ACCESS:
 		ret = mt7921_mcu_parse_eeprom(mdev, skb);
 		break;
+	case MCU_CMD_GET_RX_STATS:
+		/* XXX testmode rx stats */
+		break;
 	case MCU_UNI_CMD_DEV_INFO_UPDATE:
 	case MCU_UNI_CMD_BSS_INFO_UPDATE:
 	case MCU_UNI_CMD_STA_REC_UPDATE:
@@ -505,6 +508,16 @@ mt7921_mcu_debug_msg_event(struct mt7921_dev *dev, struct sk_buff *skb)
 }
 
 static void
+mt7921_mcu_test_status(struct mt7921_dev *dev)
+{
+	/* XXX: load nvram data if available */
+	struct mt76_testmode_data *td = &dev->mphy.test;
+
+	td->done = true;
+	wake_up(&td->wait);
+}
+
+static void
 mt7921_mcu_rx_unsolicited_event(struct mt7921_dev *dev, struct sk_buff *skb)
 {
 	struct mt7921_mcu_rxd *rxd = (struct mt7921_mcu_rxd *)skb->data;
@@ -530,6 +543,9 @@ mt7921_mcu_rx_unsolicited_event(struct mt7921_dev *dev, struct sk_buff *skb)
 		mt76_connac_mcu_coredump_event(&dev->mt76, skb,
 					       &dev->coredump);
 		return;
+	case MCU_EVENT_TEST_STATUS:
+		mt7921_mcu_test_status(dev);
+		break;
 	default:
 		break;
 	}
@@ -549,6 +565,7 @@ void mt7921_mcu_rx_event(struct mt7921_dev *dev, struct sk_buff *skb)
 	    rxd->eid == MCU_EVENT_BSS_BEACON_LOSS ||
 	    rxd->eid == MCU_EVENT_SCHED_SCAN_DONE ||
 	    rxd->eid == MCU_EVENT_BSS_ABSENCE ||
+	    rxd->eid == MCU_EVENT_TEST_STATUS ||
 	    rxd->eid == MCU_EVENT_SCAN_DONE ||
 	    rxd->eid == MCU_EVENT_DBG_MSG ||
 	    rxd->eid == MCU_EVENT_COREDUMP ||

@@ -239,6 +239,7 @@ static inline u8 mt7921_lmac_mapping(struct mt7921_dev *dev, u8 ac)
 
 extern const struct ieee80211_ops mt7921_ops;
 extern struct pci_driver mt7921_pci_driver;
+extern const struct mt76_testmode_ops mt7921_testmode_ops;
 
 u32 mt7921_reg_map(struct mt7921_dev *dev, u32 addr);
 
@@ -375,4 +376,7 @@ int mt7921_mac_set_beacon_filter(struct mt7921_phy *phy,
 void mt7921_pm_interface_iter(void *priv, u8 *mac, struct ieee80211_vif *vif);
 void mt7921_coredump_work(struct work_struct *work);
 int mt7921_get_txpwr_info(struct mt7921_dev *dev, struct mt7921_txpwr *txpwr);
+
+/* testmode */
+int mt7921_tm_set_rate(struct mt7921_dev *dev, int rate);
 #endif

@@ -218,6 +218,16 @@ static int mt7921_init_hardware(struct mt7921_dev *dev)
 	return 0;
 }
 
+static void mt7921_testmode_init(struct mt7921_dev *dev)
+{
+#ifdef CONFIG_NL80211_TESTMODE
+	struct mt76_testmode_data *td = &dev->mphy.test;
+
+	init_waitqueue_head(&td->wait);
+	dev->mt76.test_ops = &mt7921_testmode_ops;
+#endif
+}
+
 int mt7921_register_device(struct mt7921_dev *dev)
 {
 	struct ieee80211_hw *hw = mt76_hw(dev);
@@ -271,6 +281,8 @@ int mt7921_register_device(struct mt7921_dev *dev)
 
 	mt76_set_stream_caps(&dev->mphy, true);
 	mt7921_set_stream_he_caps(&dev->phy);
+
+	mt7921_testmode_init(dev);
 
 	ret = mt76_register_device(&dev->mt76, true, mt7921_rates,
 				   ARRAY_SIZE(mt7921_rates));
