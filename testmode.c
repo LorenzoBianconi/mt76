@@ -249,12 +249,13 @@ __mt76_testmode_set_state(struct mt76_phy *phy, enum mt76_testmode_state state)
 			return err;
 	}
 
-	err = dev->test_ops->set_state(phy, state);
-	if (err) {
-		if (state == MT76_TM_STATE_TX_FRAMES)
-			mt76_testmode_tx_stop(phy);
-
-		return err;
+	if (dev->test_ops->set_state) {
+		err = dev->test_ops->set_state(phy, state);
+		if (err) {
+			if (state == MT76_TM_STATE_TX_FRAMES)
+				mt76_testmode_tx_stop(phy);
+			return err;
+		}
 	}
 
 	if (state == MT76_TM_STATE_TX_FRAMES)
