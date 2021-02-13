@@ -519,7 +519,10 @@ struct mt76_rx_status {
 	s8 chain_signal[IEEE80211_MAX_CHAINS];
 };
 
+#define MT76_TM_OFFLOAD		BIT(0)
+
 struct mt76_testmode_ops {
+	u32 flags;
 	int (*set_state)(struct mt76_phy *phy, enum mt76_testmode_state state);
 	int (*set_params)(struct mt76_phy *phy, struct nlattr **tb,
 			  enum mt76_testmode_state new_state);
@@ -1085,6 +1088,12 @@ static inline void mt76_testmode_reset(struct mt76_phy *phy, bool disable)
 #endif
 }
 
+#ifdef CONFIG_NL80211_TESTMODE
+static inline bool mt76_testmode_offload(struct mt76_dev *dev)
+{
+	return !!(dev->test_ops->flags & MT76_TM_OFFLOAD);
+}
+#endif
 
 /* internal */
 static inline struct ieee80211_hw *

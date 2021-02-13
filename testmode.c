@@ -76,6 +76,9 @@ mt76_testmode_tx_init(struct mt76_phy *phy)
 	u8 max_nss = hweight8(phy->antenna_mask);
 	bool ext_phy = phy != &phy->dev->phy;
 
+	if (mt76_testmode_offload(phy->dev))
+		return 0;
+
 	if (td->tx_antenna_mask)
 		max_nss = min_t(u8, max_nss, hweight8(td->tx_antenna_mask));
 
@@ -182,6 +185,9 @@ mt76_testmode_tx_start(struct mt76_phy *phy)
 	struct mt76_testmode_data *td = &phy->test;
 	struct mt76_dev *dev = phy->dev;
 
+	if (mt76_testmode_offload(dev))
+		return;
+
 	td->tx_queued = 0;
 	td->tx_done = 0;
 	td->tx_pending = td->tx_count;
@@ -193,6 +199,9 @@ mt76_testmode_tx_stop(struct mt76_phy *phy)
 {
 	struct mt76_testmode_data *td = &phy->test;
 	struct mt76_dev *dev = phy->dev;
+
+	if (mt76_testmode_offload(dev))
+		return;
 
 	mt76_worker_disable(&dev->tx_worker);
 
