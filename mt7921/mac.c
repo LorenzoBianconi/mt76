@@ -1330,6 +1330,8 @@ mt7921_mac_update_mib_stats(struct mt7921_phy *phy)
 				       MT_MIB_RTS_COUNT_MASK);
 	mib->rts_retries_cnt += mt76_get_field(dev, MT_MIB_MB_BSDR1(0),
 					       MT_MIB_RTS_FAIL_COUNT_MASK);
+	mib->retries_cnt += mt76_get_field(dev, MT_MIB_MB_BSDR4(0),
+					   MT_MIB_RETRIES_COUNT_MASK);
 
 	for (i = 0, aggr1 = aggr0 + 4; i < 4; i++) {
 		u32 val, val2;

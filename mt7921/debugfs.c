@@ -58,6 +58,7 @@ mt7921_ampdu_stat_read_phy(struct mt7921_phy *phy,
 	seq_puts(file, "\n");
 
 	seq_printf(file, "BA miss count: %d\n", phy->mib.ba_miss_cnt);
+	seq_printf(file, "Retries count: %d\n", phy->mib.retries_cnt);
 }
 
 static int

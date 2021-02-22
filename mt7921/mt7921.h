@@ -103,6 +103,7 @@ struct mt7921_vif {
 
 struct mib_stats {
 	u32 ack_fail_cnt;
+	u32 retries_cnt;
 	u32 fcs_err_cnt;
 	u32 rts_cnt;
 	u32 rts_retries_cnt;
