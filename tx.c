@@ -514,6 +514,7 @@ mt76_txq_schedule_list(struct mt76_phy *phy, enum mt76_txq_id qid)
 
 void mt76_txq_schedule(struct mt76_phy *phy, enum mt76_txq_id qid)
 {
+	struct mt76_dev *dev = phy->dev;
 	int len;
 
 	if (qid >= 4)
@@ -524,6 +525,8 @@ void mt76_txq_schedule(struct mt76_phy *phy, enum mt76_txq_id qid)
 	do {
 		ieee80211_txq_schedule_start(phy->hw, qid);
 		len = mt76_txq_schedule_list(phy, qid);
+		if (dev->debug && len > 0)
+			printk("%s-%d: qid=%d len=%d\n", __func__, __LINE__, qid, len);
 		ieee80211_txq_schedule_end(phy->hw, qid);
 	} while (len > 0);
 

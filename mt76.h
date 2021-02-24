@@ -694,6 +694,8 @@ struct mt76_dev {
 
 	u32 rxfilter;
 
+	bool debug;
+
 #ifdef CONFIG_NL80211_TESTMODE
 	const struct mt76_testmode_ops *test_ops;
 	struct {
