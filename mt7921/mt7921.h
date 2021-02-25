@@ -329,6 +329,7 @@ void mt7921_mac_fill_rx_vector(struct mt7921_dev *dev, struct sk_buff *skb);
 void mt7921_mac_tx_free(struct mt7921_dev *dev, struct sk_buff *skb);
 int mt7921_mac_sta_add(struct mt76_dev *mdev, struct ieee80211_vif *vif,
 		       struct ieee80211_sta *sta);
+int __mt7921_start(struct mt7921_phy *phy);
 void mt7921_mac_sta_remove(struct mt76_dev *mdev, struct ieee80211_vif *vif,
 			   struct ieee80211_sta *sta);
 void mt7921_mac_work(struct work_struct *work);
