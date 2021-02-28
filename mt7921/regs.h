@@ -81,6 +81,12 @@
 #define MT_DMA_DCR0_MAX_RX_LEN		GENMASK(15, 3)
 #define MT_DMA_DCR0_RXD_G5_EN		BIT(23)
 
+#define MT_WF_LMAC_BASE			0x22000
+#define MT_WF_LMAC(ofs)			(MT_WF_LMAC_BASE + (ofs))
+
+#define MT_WF_PFCR			MT_WF_LMAC(0)
+#define MT_PF_TDLS_EN			BIT(9)
+
 /* LPON: band 0(0x24200), band 1(0xa4200) */
 #define MT_WF_LPON_BASE(_band)		((_band) ? 0xa4200 : 0x24200)
 #define MT_WF_LPON(_band, ofs)		(MT_WF_LPON_BASE(_band) + (ofs))

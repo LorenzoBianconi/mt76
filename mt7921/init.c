@@ -215,6 +215,8 @@ static int mt7921_init_hardware(struct mt7921_dev *dev)
 	dev->mt76.global_wcid.tx_info |= MT_WCID_TX_INFO_SET;
 	rcu_assign_pointer(dev->mt76.wcid[idx], &dev->mt76.global_wcid);
 
+	mt76_clear(dev, MT_WF_PFCR, MT_PF_TDLS_EN);
+
 	return 0;
 }
 
