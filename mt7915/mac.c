@@ -117,23 +117,15 @@ static void mt7915_mac_sta_poll(struct mt7915_dev *dev)
 
 	rcu_read_lock();
 
-	while (true) {
+	while (!list_empty(&sta_poll_list)) {
 		bool clear = false;
 		u32 addr;
-		u16 idx;
 
-		spin_lock_bh(&dev->sta_poll_lock);
-		if (list_empty(&sta_poll_list)) {
-			spin_unlock_bh(&dev->sta_poll_lock);
-			break;
-		}
 		msta = list_first_entry(&sta_poll_list,
 					struct mt7915_sta, poll_list);
 		list_del_init(&msta->poll_list);
-		spin_unlock_bh(&dev->sta_poll_lock);
 
-		idx = msta->wcid.idx;
-		addr = mt7915_mac_wtbl_lmac_addr(dev, idx) + 20 * 4;
+		addr = mt7915_mac_wtbl_lmac_addr(dev, msta->wcid.idx) + 20 * 4;
 
 		for (i = 0; i < IEEE80211_NUM_ACS; i++) {
 			u32 tx_last = msta->airtime_ac[i];
@@ -152,7 +144,7 @@ static void mt7915_mac_sta_poll(struct mt7915_dev *dev)
 		}
 
 		if (clear) {
-			mt7915_mac_wtbl_update(dev, idx,
+			mt7915_mac_wtbl_update(dev, msta->wcid.idx,
 					       MT_WTBL_UPDATE_ADM_COUNT_CLEAR);
 			memset(msta->airtime_ac, 0, sizeof(msta->airtime_ac));
 		}
