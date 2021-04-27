@@ -7,9 +7,16 @@
 
 int mt7915_init_tx_queues(struct mt7915_phy *phy, int idx, int n_desc)
 {
+	u32 base = MT_TX_RING_BASE;
 	int i, err;
 
-	err = mt76_init_tx_queue(phy->mt76, 0, idx, n_desc, MT_TX_RING_BASE);
+	if (mtk_wed_device_active(&phy->dev->mt76.mmio.wed)) {
+		base = MT_WED_TX_RING_BASE;
+		idx -= MT7915_TXQ_BAND0;
+	}
+
+	err = mt76_init_tx_queue(phy->mt76, 0, idx, n_desc, base,
+				 MT_WED_Q_TX(idx));
 	if (err < 0)
 		return err;
 
@@ -79,6 +86,9 @@ void mt7915_dma_prefetch(struct mt7915_dev *dev)
 
 int mt7915_dma_init(struct mt7915_dev *dev)
 {
+	u32 irq_mask = MT_INT_RX_DONE_ALL | MT_INT_TX_DONE_MCU |
+		       MT_INT_MCU_CMD;
+	u32 wa_rx_base = MT_RX_EVENT_RING_BASE;
 	u32 hif1_ofs = 0;
 	int ret;
 
@@ -110,6 +120,15 @@ int mt7915_dma_init(struct mt7915_dev *dev)
 
 		mt76_wr(dev, MT_WFDMA0_PRI_DLY_INT_CFG0 + hif1_ofs, 0);
 		mt76_wr(dev, MT_WFDMA1_PRI_DLY_INT_CFG0 + hif1_ofs, 0);
+	}
+
+	if (mtk_wed_device_active(&dev->mt76.mmio.wed)) {
+		mt76_set(dev, MT_WFDMA_HOST_CONFIG, MT_WFDMA_HOST_CONFIG_WED);
+
+		mt76_wr(dev, MT_WFDMA_WED_RING_CONTROL,
+			FIELD_PREP(MT_WFDMA_WED_RING_CONTROL_TX0, 18) |
+			FIELD_PREP(MT_WFDMA_WED_RING_CONTROL_TX1, 19) |
+			FIELD_PREP(MT_WFDMA_WED_RING_CONTROL_RX1, 1));
 	}
 
 	/* configure perfetch settings */
@@ -147,9 +166,13 @@ int mt7915_dma_init(struct mt7915_dev *dev)
 		return ret;
 
 	/* event from WA */
+	if (mtk_wed_device_active(&dev->mt76.mmio.wed)) {
+		wa_rx_base = MT_WED_RX_RING_BASE;
+		dev->mt76.q_rx[MT_RXQ_MCU_WA].flags = MT_WED_Q_TXFREE;
+	}
 	ret = mt76_queue_alloc(dev, &dev->mt76.q_rx[MT_RXQ_MCU_WA],
 			       MT7915_RXQ_MCU_WA, MT7915_RX_MCU_RING_SIZE,
-			       MT_RX_BUF_SIZE, MT_RX_EVENT_RING_BASE);
+			       MT_RX_BUF_SIZE, wa_rx_base);
 	if (ret)
 		return ret;
 
@@ -227,9 +250,16 @@ int mt7915_dma_init(struct mt7915_dev *dev)
 			 MT_WFDMA_HOST_CONFIG_PDMA_BAND);
 	}
 
+	if (mtk_wed_device_active(&dev->mt76.mmio.wed)) {
+		u32 wed_irq_mask = irq_mask;
+
+		wed_irq_mask |= MT_INT_TX_DONE_BAND0 | MT_INT_TX_DONE_BAND1;
+		mt76_wr(dev, MT_INT_WED_MASK_CSR, wed_irq_mask);
+		mtk_wed_device_start(&dev->mt76.mmio.wed, wed_irq_mask);
+	}
+
 	/* enable interrupts for TX/RX rings */
-	mt7915_irq_enable(dev, MT_INT_RX_DONE_ALL | MT_INT_TX_DONE_MCU |
-			  MT_INT_MCU_CMD);
+	mt7915_irq_enable(dev, irq_mask);
 
 	return 0;
 }
