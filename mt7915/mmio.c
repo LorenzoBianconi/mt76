@@ -123,7 +123,7 @@ static u32 mt7915_rmw(struct mt76_dev *mdev, u32 offset, u32 mask, u32 val)
 	return dev->bus_ops->rmw(mdev, addr, mask, val);
 }
 
-int mt7915_mmio_init(struct mt76_dev *mdev, void __iomem *mem_base, int irq)
+int mt7915_mmio_init(struct mt76_dev *mdev, void __iomem *mem_base)
 {
 	struct mt76_bus_ops *bus_ops;
 	struct mt7915_dev *dev;

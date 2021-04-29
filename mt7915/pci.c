@@ -271,7 +271,7 @@ static int mt7915_pci_probe(struct pci_dev *pdev,
 	if (ret < 0)
 		goto free;
 
-	ret = mt7915_mmio_init(mdev, pcim_iomap_table(pdev)[0], pdev->irq);
+	ret = mt7915_mmio_init(mdev, pcim_iomap_table(pdev)[0]);
 	if (ret)
 		goto error;
 
