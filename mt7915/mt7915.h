@@ -416,7 +416,8 @@ void mt7915_mac_sta_remove(struct mt76_dev *mdev, struct ieee80211_vif *vif,
 void mt7915_mac_work(struct work_struct *work);
 void mt7915_mac_reset_work(struct work_struct *work);
 void mt7915_mac_sta_rc_work(struct work_struct *work);
-int mt7915_mmio_init(struct mt76_dev *mdev, void __iomem *mem_base, int irq);
+void mt7915_mac_update_stats(struct mt7915_phy *phy);
+int mt7915_mmio_init(struct mt76_dev *mdev, void __iomem *mem_base);
 int mt7915_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
 			  enum mt76_txq_id qid, struct mt76_wcid *wcid,
 			  struct ieee80211_sta *sta,
