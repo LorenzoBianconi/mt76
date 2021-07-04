@@ -41,6 +41,9 @@
 
 #define MT7915_SKU_RATE_NUM		161
 
+#define MT7915_MAX_TWT_AGRT		16
+#define MT7915_MAX_STA_TWT_AGRT		8
+
 struct mt7915_vif;
 struct mt7915_sta;
 struct mt7915_dfs_pulse;
@@ -96,6 +99,11 @@ struct mt7915_sta {
 	unsigned long ampdu_state;
 
 	struct mt7915_sta_key_conf bip;
+
+	struct {
+		u8 flowid_mask;
+		struct mt7915_twt_flow flow[MT7915_MAX_STA_TWT_AGRT];
+	} twt;
 };
 
 struct mt7915_vif {
@@ -194,6 +202,7 @@ struct mt7915_dev {
 
 	struct list_head sta_rc_list;
 	struct list_head sta_poll_list;
+	struct list_head twt_list;
 	spinlock_t sta_poll_lock;
 
 	u32 hw_pattern;
@@ -204,6 +213,8 @@ struct mt7915_dev {
 	bool ibf;
 
 	void *cal;
+
+	u8 n_twt_agrt;
 };
 
 enum {
@@ -416,6 +427,12 @@ void mt7915_mac_work(struct work_struct *work);
 void mt7915_mac_reset_work(struct work_struct *work);
 void mt7915_mac_sta_rc_work(struct work_struct *work);
 int mt7915_mmio_init(struct mt76_dev *mdev, void __iomem *mem_base, int irq);
+void mt7915_mac_twt_teardown_flow(struct mt7915_dev *dev,
+				  struct mt7915_sta *msta,
+				  u8 flowid);
+void mt7915_mac_add_twt_setup(struct ieee80211_hw *hw,
+			      struct ieee80211_sta *sta,
+			      struct ieee80211_twt_setup *twt);
 int mt7915_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
 			  enum mt76_txq_id qid, struct mt76_wcid *wcid,
 			  struct ieee80211_sta *sta,
