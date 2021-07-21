@@ -259,7 +259,7 @@ mt7915_init_wiphy(struct ieee80211_hw *hw)
 	}
 
 	mt76_set_stream_caps(phy->mt76, true);
-	mt7915_set_stream_vht_txbf_caps(phy);
+	mt76_set_stream_vht_txbf_caps(phy->mt76);
 	mt7915_set_stream_he_caps(phy);
 }
 
@@ -492,34 +492,6 @@ static int mt7915_init_hardware(struct mt7915_dev *dev)
 	rcu_assign_pointer(dev->mt76.wcid[idx], &dev->mt76.global_wcid);
 
 	return 0;
-}
-
-void mt7915_set_stream_vht_txbf_caps(struct mt7915_phy *phy)
-{
-	int nss;
-	u32 *cap;
-
-	if (!phy->mt76->cap.has_5ghz)
-		return;
-
-	nss = hweight8(phy->mt76->chainmask);
-	cap = &phy->mt76->sband_5g.sband.vht_cap.cap;
-
-	*cap |= IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE |
-		IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE |
-		(3 << IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT);
-
-	*cap &= ~(IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MASK |
-		  IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE |
-		  IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE);
-
-	if (nss < 2)
-		return;
-
-	*cap |= IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE |
-		IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE |
-		FIELD_PREP(IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MASK,
-			   nss - 1);
 }
 
 static void
