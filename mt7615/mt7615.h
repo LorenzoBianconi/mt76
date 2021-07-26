@@ -497,6 +497,16 @@ mt7615_is_ebf_supported(struct mt7615_phy *phy, struct ieee80211_sta *sta)
 		       (peer_cap->cap & IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE);
 }
 
+static inline void mt7615_set_stream_vht_txbf_caps(struct mt7615_phy *phy)
+{
+	struct mt7615_dev *dev = phy->dev;
+
+	if (!is_mt7615(&dev->mt76))
+		return;
+
+	mt76_set_stream_vht_txbf_caps(phy->mt76);
+}
+
 void mt7615_dma_reset(struct mt7615_dev *dev);
 void mt7615_scan_work(struct work_struct *work);
 void mt7615_roc_work(struct work_struct *work);
