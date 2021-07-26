@@ -381,4 +381,10 @@ enum {
 	CH_SWITCH_SCAN_BYPASS_DPD = 9
 };
 
+enum {
+	MT_BF_SOUNDING_ON = 1,
+	MT_BF_TYPE_UPDATE = 20,
+	MT_BF_MODULE_UPDATE = 25
+};
+
 #endif

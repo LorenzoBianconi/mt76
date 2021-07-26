@@ -10,7 +10,27 @@
 #include <linux/etherdevice.h>
 #include "mt7615.h"
 #include "mac.h"
+#include "mcu.h"
 #include "eeprom.h"
+
+static int mt7615_txbf_init(struct mt7615_dev *dev)
+{
+	int err;
+
+	if (dev->dbdc_support) {
+		err = mt7615_mcu_set_txbf(dev, MT_BF_MODULE_UPDATE);
+		if (err)
+			return err;
+	}
+
+	/* trigger sounding packets */
+	err = mt7615_mcu_set_txbf(dev, MT_BF_SOUNDING_ON);
+	if (err)
+		return err;
+
+	/* enable eBF */
+	return mt7615_mcu_set_txbf(dev, MT_BF_TYPE_UPDATE);
+}
 
 static void mt7615_pci_init_work(struct work_struct *work)
 {
@@ -28,6 +48,10 @@ static void mt7615_pci_init_work(struct work_struct *work)
 		return;
 
 	mt7615_init_work(dev);
+	ret = mt7615_txbf_init(dev);
+	if (ret)
+		return;
+
 	if (dev->dbdc_support)
 		mt7615_register_ext_phy(dev);
 }

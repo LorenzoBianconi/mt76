@@ -2702,6 +2702,55 @@ int mt7615_mcu_set_rx_hdr_trans_blacklist(struct mt7615_dev *dev)
 				 &req, sizeof(req), false);
 }
 
+int mt7615_mcu_set_txbf(struct mt7615_dev *dev, u8 action)
+{
+	struct {
+		u8 action;
+		union {
+			struct {
+				u8 snd_mode;
+				u8 sta_num;
+				u8 rsv;
+				u8 wlan_idx[4];
+				__le32 snd_period; /* ms */
+			} __packed snd;
+			struct {
+				bool ebf;
+				bool ibf;
+				u8 rsv;
+			} __packed type;
+			struct {
+				u8 bf_num;
+				u8 bf_bitmap;
+				u8 bf_sel[8];
+				u8 rsv[5];
+			} __packed mod;
+		};
+	} __packed req = {
+		.action = action,
+	};
+
+	switch (action) {
+	case MT_BF_SOUNDING_ON:
+		req.snd.snd_mode = 4; /* MT_BF_PROCESSING */
+		break;
+	case MT_BF_TYPE_UPDATE:
+		req.type.ebf = true;
+		req.type.ibf = dev->ibf;
+		break;
+	case MT_BF_MODULE_UPDATE:
+		req.mod.bf_num = 1;
+		req.mod.bf_bitmap = 1;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	return mt76_mcu_send_msg(&dev->mt76, MCU_EXT_CMD_TXBF_ACTION, &req,
+				 sizeof(req), true);
+}
+EXPORT_SYMBOL_GPL(mt7615_mcu_set_txbf);
+
 int mt7615_mcu_set_bss_pm(struct mt7615_dev *dev, struct ieee80211_vif *vif,
 			  bool enable)
 {
