@@ -467,6 +467,36 @@ mt7615_get_macwork_timeout(struct mt7615_dev *dev)
 	return dev->pm.enable ? HZ / 3 : HZ / 10;
 }
 
+static inline bool
+mt7615_is_bf_supported(struct mt7615_phy *phy, struct ieee80211_vif *vif,
+		       struct ieee80211_sta *sta)
+{
+	int tx_ant = hweight8(phy->mt76->chainmask) - 1;
+
+	if (vif->type != NL80211_IFTYPE_STATION &&
+	    vif->type != NL80211_IFTYPE_AP)
+		return false;
+
+	if (!sta->vht_cap.vht_supported &&
+	    !sta->ht_cap.ht_supported)
+		return false;
+
+	return tx_ant > 1;
+}
+
+static inline bool
+mt7615_is_ebf_supported(struct mt7615_phy *phy, struct ieee80211_sta *sta)
+{
+	struct ieee80211_sta_vht_cap *cap = &phy->mt76->sband_5g.sband.vht_cap;
+	struct ieee80211_sta_vht_cap *peer_cap = &sta->vht_cap;
+
+	if (!sta->vht_cap.vht_supported)
+		return false;
+
+	return (cap->cap & IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE) &&
+		       (peer_cap->cap & IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE);
+}
+
 void mt7615_dma_reset(struct mt7615_dev *dev);
 void mt7615_scan_work(struct work_struct *work);
 void mt7615_roc_work(struct work_struct *work);

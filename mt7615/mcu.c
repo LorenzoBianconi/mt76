@@ -1010,6 +1010,136 @@ mt7615_mcu_wtbl_rx_ba(struct mt7615_dev *dev,
 				     true);
 }
 
+static void
+mt7615_mcu_wtbl_bf_tlv(struct mt7615_phy *phy, struct ieee80211_vif *vif,
+		       struct ieee80211_sta *sta, struct sk_buff *skb,
+		       struct wtbl_req_hdr *wtbl_hdr)
+{
+	struct mt7615_dev *dev = phy->dev;
+	struct wtbl_bf *bf;
+	struct tlv *tlv;
+
+	if (!mt7615_is_bf_supported(phy, vif, sta))
+		return;
+
+	tlv = mt76_connac_mcu_add_nested_tlv(skb, WTBL_BF, sizeof(*bf),
+					     wtbl_hdr, NULL);
+	bf = (struct wtbl_bf *)tlv;
+
+	if (sta->vht_cap.vht_supported) {
+		bool ebf = mt7615_is_ebf_supported(phy, sta);
+
+		bf->ebf_vht = ebf;
+		bf->ibf_vht = !ebf && dev->ibf;
+		/* XXX: bf->gid = 63; */
+		return;
+	}
+	bf->ibf = dev->ibf;
+}
+
+static void
+mt7615_mcu_sta_bf_tlv(struct mt7615_phy *phy, struct ieee80211_vif *vif,
+		      struct ieee80211_sta *sta, struct sk_buff *skb,
+		      bool enable)
+{
+	u8 tx_ant = hweight8(phy->mt76->chainmask) - 1;
+	const u8 matrix[][4] = {
+		{ 0, 0, 0, 0 },
+		{ 1, 1, 0, 0 },	/* 2x1, 2x2, 2x3, 2x4 */
+		{ 2, 4, 4, 0 },	/* 3x1, 3x2, 3x3, 3x4 */
+		{ 3, 5, 6, 0 }	/* 4x1, 4x2, 4x3, 4x4 */
+	};
+	struct sta_rec_bf *bf;
+	struct tlv *tlv;
+
+	if (!mt7615_is_bf_supported(phy, vif, sta))
+		return;
+
+	tlv = mt76_connac_mcu_add_tlv(skb, STA_REC_BF, sizeof(*bf));
+	bf = (struct sta_rec_bf *)tlv;
+
+	if (!enable) {
+		bf->pfmu = cpu_to_le16(GENMASK(15, 0));
+		return;
+	}
+
+	bf->ebf = mt7615_is_ebf_supported(phy, sta);
+	if (sta->vht_cap.vht_supported) {
+		struct ieee80211_sta_vht_cap *peer = &sta->vht_cap;
+		u16 mcs_map = le16_to_cpu(peer->vht_mcs.rx_mcs_map);
+		u8 nss_mcs = mt76_get_sta_nss(mcs_map);
+
+		bf->tx_mode = MT_PHY_TYPE_VHT;
+		if (bf->ebf) {
+			u8 bfee_nr, bfer_nr;
+			struct ieee80211_sta_vht_cap *cap =
+				&phy->mt76->sband_5g.sband.vht_cap;
+
+			bf->sounding_phy = MT_PHY_TYPE_OFDM;
+			bf->ndp_rate = 0; /* mcs0 */
+			bf->ndpa_rate = MT7615_CFEND_RATE_DEFAULT; /* XXX 9 */
+			bf->rept_poll_rate = MT7615_CFEND_RATE_DEFAULT;
+
+			bfer_nr = FIELD_GET(IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MASK,
+					    cap->cap);
+			bfee_nr = FIELD_GET(IEEE80211_VHT_CAP_BEAMFORMEE_STS_MASK,
+					    peer->cap);
+			bf->nr = min_t(u8, min_t(u8, bfer_nr, bfee_nr), tx_ant);
+			bf->ibf_ncol = bf->nc;
+		} else {
+			bf->nr = tx_ant;
+			bf->ibf_ncol = nss_mcs;
+		}
+		bf->nc = min_t(u8, nss_mcs, bf->nr);
+	} else {
+		struct ieee80211_mcs_info *mcs = &sta->ht_cap.mcs;
+		u8 nc = 0;
+
+		bf->tx_mode = MT_PHY_TYPE_HT;
+		bf->nr = tx_ant;
+
+		if ((mcs->tx_params & IEEE80211_HT_MCS_TX_RX_DIFF) &&
+		    (mcs->tx_params & IEEE80211_HT_MCS_TX_DEFINED))
+			nc = FIELD_GET(IEEE80211_HT_MCS_TX_MAX_STREAMS_MASK,
+				       mcs->tx_params);
+		else if (mcs->rx_mask[3])
+			nc = 3;
+		else if (mcs->rx_mask[2])
+			nc = 2;
+		else if (mcs->rx_mask[1])
+			nc = 1;
+
+		bf->nc = min_t(u8, bf->nr, nc);
+		bf->ibf_ncol = nc;
+	}
+
+	bf->bw = sta->bandwidth;
+	bf->ibf_nrow = tx_ant;
+
+	if (!bf->ebf && sta->bandwidth < IEEE80211_STA_RX_BW_80 && !bf->nc)
+		bf->ibf_timeout = 0x48;
+	else
+		bf->ibf_timeout = 0x18;
+
+	if (bf->ebf && bf->nr != tx_ant)
+		bf->mem_20m = matrix[tx_ant][bf->nc];
+	else
+		bf->mem_20m = matrix[bf->nr][bf->nc];
+
+	switch (sta->bandwidth) {
+	case IEEE80211_STA_RX_BW_160:
+	case IEEE80211_STA_RX_BW_80:
+		bf->mem_total = bf->mem_20m * 2;
+		break;
+	case IEEE80211_STA_RX_BW_40:
+		bf->mem_total = bf->mem_20m;
+		break;
+	case IEEE80211_STA_RX_BW_20:
+	default:
+		break;
+	}
+}
+
 static int
 mt7615_mcu_wtbl_sta_add(struct mt7615_phy *phy, struct ieee80211_vif *vif,
 			struct ieee80211_sta *sta, bool enable)
@@ -1029,9 +1159,12 @@ mt7615_mcu_wtbl_sta_add(struct mt7615_phy *phy, struct ieee80211_vif *vif,
 		return PTR_ERR(sskb);
 
 	mt76_connac_mcu_sta_basic_tlv(sskb, vif, sta, enable, true);
-	if (enable && sta)
-		mt76_connac_mcu_sta_tlv(phy->mt76, sskb, sta, vif, 0,
-					MT76_STA_INFO_STATE_ASSOC);
+	if (sta) {
+		if (enable)
+			mt76_connac_mcu_sta_tlv(phy->mt76, sskb, sta, vif, 0,
+						MT76_STA_INFO_STATE_ASSOC);
+		mt7615_mcu_sta_bf_tlv(phy, vif, sta, sskb, enable);
+	}
 
 	wtbl_hdr = mt76_connac_mcu_alloc_wtbl_req(&dev->mt76, &msta->wcid,
 						  WTBL_RESET_AND_SET, NULL,
@@ -1042,9 +1175,11 @@ mt7615_mcu_wtbl_sta_add(struct mt7615_phy *phy, struct ieee80211_vif *vif,
 	if (enable) {
 		mt76_connac_mcu_wtbl_generic_tlv(&dev->mt76, wskb, vif, sta,
 						 NULL, wtbl_hdr);
-		if (sta)
+		if (sta) {
 			mt76_connac_mcu_wtbl_ht_tlv(&dev->mt76, wskb, sta,
 						    NULL, wtbl_hdr);
+			mt7615_mcu_wtbl_bf_tlv(phy, vif, sta, wskb, wtbl_hdr);
+		}
 		mt76_connac_mcu_wtbl_hdr_trans_tlv(wskb, vif, &msta->wcid,
 						   NULL, wtbl_hdr);
 	}

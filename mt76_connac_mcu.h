@@ -114,6 +114,39 @@ struct sta_rec_amsdu {
 	u8 rsv;
 } __packed;
 
+struct sta_rec_bf {
+	__le16 tag;
+	__le16 len;
+	__le16 pfmu;		/* 0xffff: no access right for PFMU */
+	bool su_mu;		/* 0: SU, 1: MU */
+	bool ebf;		/* 0: iBF, 1: eBF */
+	u8 sounding_phy;	/* 0: legacy, 1: OFDM, 2: HT, 4: VHT */
+	u8 ndpa_rate;
+	u8 ndp_rate;
+	u8 rept_poll_rate;
+	u8 tx_mode;		/* 0: legacy, 1: OFDM, 2: HT, 4: VHT ... */
+	u8 nc;
+	u8 nr;
+	u8 bw;			/* 0: 20M, 1: 40M, 2: 80M, 3: 160M */
+	u8 mem_total;
+	u8 mem_20m;
+	struct {
+		u8 row;
+		u8 col;
+	} mem[4];
+	__le16 smart_ant;
+	u8 se_idx;
+	u8 auto_sounding;	/* b7: low traffic indicator
+				 * b6: Stop sounding for this entry
+				 * b5 ~ b0: postpone sounding
+				 */
+	u8 ibf_timeout;
+	u8 ibf_dbw;
+	u8 ibf_ncol;
+	u8 ibf_nrow;
+	u8 rsv[2];
+} __packed;
+
 struct sta_rec_state {
 	__le16 tag;
 	__le16 len;
@@ -301,6 +334,7 @@ struct wtbl_raw {
 					 sizeof(struct sta_rec_vht) +	\
 					 sizeof(struct sta_rec_uapsd) + \
 					 sizeof(struct sta_rec_amsdu) +	\
+					 sizeof(struct sta_rec_bf) +	\
 					 sizeof(struct tlv) +		\
 					 MT76_CONNAC_WTBL_UPDATE_MAX_SIZE)
 
