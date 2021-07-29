@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: ISC
 
 #include "mt7615.h"
+#include "mcu.h"
 
 static int
 mt7615_radar_pattern_set(void *data, u64 val)
@@ -502,6 +503,30 @@ mt7663s_sched_quota_read(struct seq_file *s, void *data)
 	return 0;
 }
 
+static int
+mt7615_implicit_txbf_set(void *data, u64 val)
+{
+	struct mt7615_dev *dev = data;
+
+	if (test_bit(MT76_STATE_RUNNING, &dev->mphy.state))
+		return -EBUSY;
+
+	dev->ibf = !!val;
+	return mt7615_mcu_set_txbf(dev, MT_BF_TYPE_UPDATE);
+}
+
+static int
+mt7615_implicit_txbf_get(void *data, u64 *val)
+{
+	struct mt7615_dev *dev = data;
+
+	*val = dev->ibf;
+	return 0;
+}
+
+DEFINE_DEBUGFS_ATTRIBUTE(fops_implicit_txbf, mt7615_implicit_txbf_get,
+			 mt7615_implicit_txbf_set, "%lld\n");
+
 int mt7615_init_debugfs(struct mt7615_dev *dev)
 {
 	struct dentry *dir;
@@ -544,6 +569,8 @@ int mt7615_init_debugfs(struct mt7615_dev *dev)
 				   &dev->radar_pattern.power);
 		debugfs_create_file("radar_trigger", 0200, dir, dev,
 				    &fops_radar_pattern);
+		debugfs_create_file("implicit_txbf", 0600, dir, dev,
+				    &fops_implicit_txbf);
 	}
 
 	debugfs_create_file("reset_test", 0200, dir, dev,
