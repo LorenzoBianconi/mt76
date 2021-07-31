@@ -194,21 +194,6 @@ mt7915_get_phy_mode(struct ieee80211_vif *vif, struct ieee80211_sta *sta)
 	return mode;
 }
 
-static u8
-mt7915_mcu_get_sta_nss(u16 mcs_map)
-{
-	u8 nss;
-
-	for (nss = 8; nss > 0; nss--) {
-		u8 nss_mcs = (mcs_map >> (2 * (nss - 1))) & 3;
-
-		if (nss_mcs != IEEE80211_VHT_MCS_NOT_SUPPORTED)
-			break;
-	}
-
-	return nss - 1;
-}
-
 static void
 mt7915_mcu_set_sta_he_mcs(struct ieee80211_sta *sta, __le16 *he_mcs,
 			  const u16 *mask)
@@ -1783,7 +1768,7 @@ mt7915_mcu_sta_bfer_vht(struct ieee80211_sta *sta, struct mt7915_phy *phy,
 	struct ieee80211_sta_vht_cap *pc = &sta->vht_cap;
 	struct ieee80211_sta_vht_cap *vc = &phy->mt76->sband_5g.sband.vht_cap;
 	u16 mcs_map = le16_to_cpu(pc->vht_mcs.rx_mcs_map);
-	u8 nss_mcs = mt7915_mcu_get_sta_nss(mcs_map);
+	u8 nss_mcs = mt76_get_sta_nss(mcs_map);
 	u8 tx_ant = hweight8(phy->mt76->chainmask) - 1;
 
 	bf->tx_mode = MT_PHY_TYPE_VHT;
@@ -1822,7 +1807,7 @@ mt7915_mcu_sta_bfer_he(struct ieee80211_sta *sta, struct ieee80211_vif *vif,
 	const struct ieee80211_sta_he_cap *vc = mt7915_get_he_phy_cap(phy, vif);
 	const struct ieee80211_he_cap_elem *ve = &vc->he_cap_elem;
 	u16 mcs_map = le16_to_cpu(pc->he_mcs_nss_supp.rx_mcs_80);
-	u8 nss_mcs = mt7915_mcu_get_sta_nss(mcs_map);
+	u8 nss_mcs = mt76_get_sta_nss(mcs_map);
 	u8 bfee_nr, bfer_nr;
 
 	bf->tx_mode = MT_PHY_TYPE_HE_SU;
@@ -1846,7 +1831,7 @@ mt7915_mcu_sta_bfer_he(struct ieee80211_sta *sta, struct ieee80211_vif *vif,
 	if (pe->phy_cap_info[0] &
 	    IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_160MHZ_IN_5G) {
 		mcs_map = le16_to_cpu(pc->he_mcs_nss_supp.rx_mcs_160);
-		nss_mcs = mt7915_mcu_get_sta_nss(mcs_map);
+		nss_mcs = mt76_get_sta_nss(mcs_map);
 
 		bf->nc_bw160 = nss_mcs;
 	}
@@ -1854,7 +1839,7 @@ mt7915_mcu_sta_bfer_he(struct ieee80211_sta *sta, struct ieee80211_vif *vif,
 	if (pe->phy_cap_info[0] &
 	    IEEE80211_HE_PHY_CAP0_CHANNEL_WIDTH_SET_80PLUS80_MHZ_IN_5G) {
 		mcs_map = le16_to_cpu(pc->he_mcs_nss_supp.rx_mcs_80p80);
-		nss_mcs = mt7915_mcu_get_sta_nss(mcs_map);
+		nss_mcs = mt76_get_sta_nss(mcs_map);
 
 		if (bf->nc_bw160)
 			bf->nc_bw160 = min_t(u8, bf->nc_bw160, nss_mcs);

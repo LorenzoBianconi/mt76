@@ -1280,6 +1280,19 @@ static inline void mt76_set_tx_blocked(struct mt76_dev *dev, bool blocked)
 	spin_unlock_bh(&dev->token_lock);
 }
 
+static inline u8 mt76_get_sta_nss(u16 mcs_map)
+{
+	u8 nss;
+
+	for (nss = 8; nss > 0; nss--) {
+		u8 nss_mcs = (mcs_map >> (2 * (nss - 1))) & 3;
+
+		if (nss_mcs != IEEE80211_VHT_MCS_NOT_SUPPORTED)
+			break;
+	}
+	return nss - 1;
+}
+
 static inline int
 mt76_token_get(struct mt76_dev *dev, struct mt76_txwi_cache **ptxwi)
 {
