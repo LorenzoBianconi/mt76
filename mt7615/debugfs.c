@@ -294,6 +294,53 @@ mt7615_ampdu_stat_show(struct seq_file *file, void *data)
 
 DEFINE_SHOW_ATTRIBUTE(mt7615_ampdu_stat);
 
+static int
+mt7615_txbf_stat_show(struct seq_file *file, void *data)
+{
+	struct mt7615_dev *dev = file->private;
+	static const char * const bw[] = {
+		"BW20", "BW40", "BW80", "BW160"
+	};
+	int count;
+
+	mt7615_mutex_acquire(dev);
+
+	/* Tx Beamformer monitor */
+	seq_puts(file, "\nTx Beamformer applied PPDU counts: ");
+	count = mt76_rr(dev, MT_ETBF_TX_APP_CNT);
+	seq_printf(file, "iBF: %ld, eBF: %ld\n",
+		   FIELD_GET(MT_ETBF_TX_IBF_CNT, count),
+		   FIELD_GET(MT_ETBF_TX_EBF_CNT, count));
+
+	/* Tx Beamformer Rx feedback monitor */
+	seq_puts(file, "Tx Beamformer Rx feedback statistics: ");
+
+	count = mt76_rr(dev, MT_ETBF_RX_FB_CNT);
+	seq_printf(file, "All: %ld, VHT: %ld, HT: %ld, ",
+		   FIELD_GET(MT_ETBF_RX_FB_ALL, count),
+		   FIELD_GET(MT_ETBF_RX_FB_VHT, count),
+		   FIELD_GET(MT_ETBF_RX_FB_HT, count));
+
+	count = mt76_rr(dev, MT_ETBF_RX_FB_CONT);
+	seq_printf(file, "%s, NC: %ld, NR: %ld\n",
+		   bw[FIELD_GET(MT_ETBF_RX_FB_BW, count)],
+		   FIELD_GET(MT_ETBF_RX_FB_NC, count),
+		   FIELD_GET(MT_ETBF_RX_FB_NR, count));
+
+	/* Tx Beamformee Rx NDPA & Tx feedback report */
+	count = mt76_rr(dev, MT_ETBF_TX_NDP_BFRP);
+	seq_printf(file, "Tx Beamformee successful feedback frames: %ld\n",
+		   FIELD_GET(MT_ETBF_TX_FB_CPL, count));
+	seq_printf(file, "Tx Beamformee feedback triggered counts: %ld\n",
+		   FIELD_GET(MT_ETBF_TX_FB_TRI, count));
+
+	mt7615_mutex_release(dev);
+
+	return 0;
+}
+
+DEFINE_SHOW_ATTRIBUTE(mt7615_txbf_stat);
+
 static void
 mt7615_radio_read_phy(struct mt7615_phy *phy, struct seq_file *s)
 {
@@ -571,6 +618,8 @@ int mt7615_init_debugfs(struct mt7615_dev *dev)
 				    &fops_radar_pattern);
 		debugfs_create_file("implicit_txbf", 0600, dir, dev,
 				    &fops_implicit_txbf);
+		debugfs_create_file("txbf_stat", 0400, dir, dev,
+				     &mt7615_txbf_stat_fops);
 	}
 
 	debugfs_create_file("reset_test", 0200, dir, dev,

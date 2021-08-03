@@ -29,6 +29,7 @@ enum mt7615_reg_base {
 	MT_TOP_MISC_BASE,
 	MT_EFUSE_ADDR_BASE,
 	MT_PP_BASE,
+	MT_ETBF_BASE,
 	__MT_BASE_MAX,
 };
 
@@ -469,6 +470,27 @@ enum mt7615_reg_base {
 
 #define MT_LPON_UTTR0			MT_LPON(0x018)
 #define MT_LPON_UTTR1			MT_LPON(0x01c)
+
+#define MT_WF_ETBF_BASE			(dev->reg_map[MT_ETBF_BASE])
+#define MT_WF_ETBF(ofs)			(MT_WF_ETBF_BASE + (ofs))
+
+#define MT_ETBF_TX_NDP_BFRP		MT_WF_ETBF(0x030)
+#define MT_ETBF_TX_FB_CPL		GENMASK(31, 16)
+#define MT_ETBF_TX_FB_TRI		GENMASK(15, 0)
+
+#define MT_ETBF_RX_FB_CONT		MT_WF_ETBF(0x068)
+#define MT_ETBF_RX_FB_NC		GENMASK(7, 6)
+#define MT_ETBF_RX_FB_NR		GENMASK(5, 4)
+#define MT_ETBF_RX_FB_BW		GENMASK(1, 0)
+
+#define MT_ETBF_TX_APP_CNT		MT_WF_ETBF(0x09c)
+#define MT_ETBF_TX_IBF_CNT		GENMASK(31, 16)
+#define MT_ETBF_TX_EBF_CNT		GENMASK(15, 0)
+
+#define MT_ETBF_RX_FB_CNT		MT_WF_ETBF(0x0ac)
+#define MT_ETBF_RX_FB_ALL		GENMASK(31, 24)
+#define MT_ETBF_RX_FB_VHT		GENMASK(15, 8)
+#define MT_ETBF_RX_FB_HT		GENMASK(7, 0)
 
 #define MT_WF_MIB_BASE			(dev->reg_map[MT_MIB_BASE])
 #define MT_WF_MIB(_band, ofs)		(MT_WF_MIB_BASE + (ofs) + (_band) * 0x200)
