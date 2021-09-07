@@ -262,6 +262,9 @@ struct mt76_wcid {
 	bool sw_iv;
 
 	u8 packet_id;
+
+	struct list_head list;
+	struct idr pid;
 };
 
 struct mt76_txq {
@@ -702,6 +705,7 @@ struct mt76_dev {
 
 	struct mt76_wcid global_wcid;
 	struct mt76_wcid __rcu *wcid[MT76_N_WCIDS];
+	struct list_head wcid_list;
 
 	u32 rev;
 
@@ -1114,8 +1118,7 @@ mt76_tx_complete_skb(struct mt76_dev *dev, u16 wcid, struct sk_buff *skb)
     __mt76_tx_complete_skb(dev, wcid, skb, NULL);
 }
 
-void mt76_tx_status_check(struct mt76_dev *dev, struct mt76_wcid *wcid,
-			  bool flush);
+void mt76_tx_status_check(struct mt76_dev *dev, bool flush);
 int mt76_sta_state(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 		   struct ieee80211_sta *sta,
 		   enum ieee80211_sta_state old_state,
@@ -1311,14 +1314,30 @@ mt76_token_put(struct mt76_dev *dev, int token)
 	return txwi;
 }
 
-static inline int
-mt76_get_next_pkt_id(struct mt76_wcid *wcid)
+static inline void mt76_packet_id_init(struct mt76_wcid *wcid)
 {
-	wcid->packet_id = (wcid->packet_id + 1) & MT_PACKET_ID_MASK;
-	if (wcid->packet_id == MT_PACKET_ID_NO_ACK ||
-	    wcid->packet_id == MT_PACKET_ID_NO_SKB)
-		wcid->packet_id = MT_PACKET_ID_FIRST;
+	INIT_LIST_HEAD(&wcid->list);
+	idr_init(&wcid->pid);
+}
 
-	return wcid->packet_id;
+static inline void
+mt76_packet_id_deinit(struct mt76_dev *dev, struct mt76_wcid *wcid)
+{
+	spin_lock_bh(&dev->status_list.lock);
+	if (!list_empty(&wcid->list))
+		list_del_init(&wcid->list);
+	spin_unlock_bh(&dev->status_list.lock);
+
+	idr_destroy(&wcid->pid);
+}
+
+static inline void
+mt76_packet_id_flush(struct mt76_dev *dev, struct mt76_wcid *wcid)
+{
+	struct sk_buff_head list;
+
+	mt76_tx_status_lock(dev, &list);
+	mt76_tx_status_skb_get(dev, wcid, -1, &list);
+	mt76_tx_status_unlock(dev, &list);
 }
 #endif

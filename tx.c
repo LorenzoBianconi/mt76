@@ -133,12 +133,21 @@ mt76_tx_status_skb_add(struct mt76_dev *dev, struct mt76_wcid *wcid,
 	spin_lock_bh(&dev->status_list.lock);
 
 	memset(cb, 0, sizeof(*cb));
-	pid = mt76_get_next_pkt_id(wcid);
+	pid = idr_alloc(&wcid->pid, skb, MT_PACKET_ID_FIRST,
+			MT_PACKET_ID_MASK, GFP_ATOMIC);
+	if (pid < 0) {
+		pid = MT_PACKET_ID_NO_SKB;
+		goto out;
+	}
+
 	cb->wcid = wcid->idx;
 	cb->pktid = pid;
 	cb->jiffies = jiffies;
 
-	__skb_queue_tail(&dev->status_list, skb);
+	if (list_empty(&wcid->list))
+		list_add_tail(&wcid->list, &dev->wcid_list);
+
+out:
 	spin_unlock_bh(&dev->status_list.lock);
 
 	return pid;
@@ -149,36 +158,48 @@ struct sk_buff *
 mt76_tx_status_skb_get(struct mt76_dev *dev, struct mt76_wcid *wcid, int pktid,
 		       struct sk_buff_head *list)
 {
-	struct sk_buff *skb, *tmp;
+	struct sk_buff *skb;
+	int id;
 
-	skb_queue_walk_safe(&dev->status_list, skb, tmp) {
+	lockdep_assert_held(&dev->status_list.lock);
+
+	skb = idr_remove(&wcid->pid, pktid);
+	if (skb)
+		goto out;
+
+	/* look for stale entries in the wcid idr queue */
+	idr_for_each_entry(&wcid->pid, skb, id) {
 		struct mt76_tx_cb *cb = mt76_tx_skb_cb(skb);
-
-		if (wcid && cb->wcid != wcid->idx)
-			continue;
-
-		if (cb->pktid == pktid)
-			return skb;
 
 		if (pktid >= 0 && !time_after(jiffies, cb->jiffies +
 					      MT_TX_STATUS_SKB_TIMEOUT))
 			continue;
 
+		idr_remove(&wcid->pid, cb->pktid);
 		__mt76_tx_status_skb_done(dev, skb, MT_TX_CB_TXS_FAILED |
 						    MT_TX_CB_TXS_DONE, list);
 	}
 
-	return NULL;
+out:
+	if (idr_is_empty(&wcid->pid))
+		list_del_init(&wcid->list);
+
+	return skb;
 }
 EXPORT_SYMBOL_GPL(mt76_tx_status_skb_get);
 
 void
-mt76_tx_status_check(struct mt76_dev *dev, struct mt76_wcid *wcid, bool flush)
+mt76_tx_status_check(struct mt76_dev *dev, bool flush)
 {
 	struct sk_buff_head list;
+	struct mt76_wcid *wcid;
 
 	mt76_tx_status_lock(dev, &list);
-	mt76_tx_status_skb_get(dev, wcid, flush ? -1 : 0, &list);
+	while (!list_empty(&dev->wcid_list)) {
+		wcid = list_first_entry(&dev->wcid_list, struct mt76_wcid,
+					list);
+		mt76_tx_status_skb_get(dev, wcid, flush ? -1 : 0, &list);
+	}
 	mt76_tx_status_unlock(dev, &list);
 }
 EXPORT_SYMBOL_GPL(mt76_tx_status_check);

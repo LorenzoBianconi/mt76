@@ -515,7 +515,7 @@ void mt76_unregister_phy(struct mt76_phy *phy)
 {
 	struct mt76_dev *dev = phy->dev;
 
-	mt76_tx_status_check(dev, NULL, true);
+	mt76_tx_status_check(dev, true);
 	ieee80211_unregister_hw(phy->hw);
 	dev->phy2 = NULL;
 }
@@ -569,6 +569,8 @@ mt76_alloc_device(struct device *pdev, unsigned int size,
 
 	spin_lock_init(&dev->token_lock);
 	idr_init(&dev->token);
+
+	INIT_LIST_HEAD(&dev->wcid_list);
 
 	INIT_LIST_HEAD(&dev->txwi_cache);
 
@@ -641,7 +643,7 @@ void mt76_unregister_device(struct mt76_dev *dev)
 
 	if (IS_ENABLED(CONFIG_MT76_LEDS))
 		mt76_led_cleanup(dev);
-	mt76_tx_status_check(dev, NULL, true);
+	mt76_tx_status_check(dev, true);
 	ieee80211_unregister_hw(hw);
 }
 EXPORT_SYMBOL_GPL(mt76_unregister_device);
@@ -1236,6 +1238,7 @@ mt76_sta_add(struct mt76_dev *dev, struct ieee80211_vif *vif,
 	wcid->ext_phy = ext_phy;
 	rcu_assign_pointer(dev->wcid[wcid->idx], wcid);
 
+	mt76_packet_id_init(wcid);
 out:
 	mutex_unlock(&dev->mutex);
 
@@ -1254,9 +1257,12 @@ void __mt76_sta_remove(struct mt76_dev *dev, struct ieee80211_vif *vif,
 	if (dev->drv->sta_remove)
 		dev->drv->sta_remove(dev, vif, sta);
 
-	mt76_tx_status_check(dev, wcid, true);
+	mt76_packet_id_flush(dev, wcid);
+	mt76_packet_id_deinit(dev, wcid);
+
 	mt76_wcid_mask_clear(dev->wcid_mask, idx);
 	mt76_wcid_mask_clear(dev->wcid_phy_mask, idx);
+
 }
 EXPORT_SYMBOL_GPL(__mt76_sta_remove);
 
