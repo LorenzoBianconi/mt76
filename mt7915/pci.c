@@ -353,7 +353,7 @@ static int mt7915_pci_probe(struct pci_dev *pdev,
 
 	return 0;
 free_irq:
-	devm_free_irq(mdev->dev, pdev->irq, dev);
+	devm_free_irq(mdev->dev, irq, dev);
 error:
 	if (mtk_wed_device_active(wed))
 		mtk_wed_device_detach(wed);
