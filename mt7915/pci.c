@@ -7,6 +7,7 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/pci.h>
+#include <linux/of.h>
 
 #include "mt7915.h"
 #include "mac.h"
@@ -277,9 +278,11 @@ static int mt7915_pci_probe(struct pci_dev *pdev,
 		.sta_remove = mt7915_mac_sta_remove,
 		.update_survey = mt7915_update_channel,
 	};
+	struct device_node *np = pdev->dev.of_node;
 	struct mtk_wed_device *wed;
 	struct mt7915_dev *dev;
 	struct mt76_dev *mdev;
+	u32 wed_idx;
 	int irq;
 	int ret;
 
@@ -327,7 +330,10 @@ static int mt7915_pci_probe(struct pci_dev *pdev,
 	wed->wlan.offload_enable = mt7915_wed_offload_enable;
 	wed->wlan.offload_disable = mt7915_wed_offload_disable;
 
-	if (mtk_wed_device_attach(wed) == 0) {
+	if (of_property_read_u32(np, "mediatek,wed-index", &wed_idx))
+		wed_idx = 0;
+
+	if (mtk_wed_device_attach(wed, wed_idx) == 0) {
 		irq = wed->irq;
 	} else {
 		ret = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_ALL_TYPES);
