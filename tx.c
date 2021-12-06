@@ -687,6 +687,7 @@ EXPORT_SYMBOL_GPL(__mt76_set_tx_blocked);
 
 int mt76_token_consume(struct mt76_dev *dev, struct mt76_txwi_cache **ptxwi)
 {
+	struct mtk_wed_device *wed = &dev->mmio.wed;
 	int token;
 
 	spin_lock_bh(&dev->token_lock);
@@ -694,6 +695,10 @@ int mt76_token_consume(struct mt76_dev *dev, struct mt76_txwi_cache **ptxwi)
 	token = idr_alloc(&dev->token, *ptxwi, 0, dev->token_size, GFP_ATOMIC);
 	if (token >= 0)
 		dev->token_count++;
+
+	if (mtk_wed_device_active(wed) &&
+	    token >= wed->wlan.token_start)
+		dev->wed_token_count++;
 
 	if (dev->token_count >= dev->token_size - MT76_TOKEN_FREE_THR)
 		__mt76_set_tx_blocked(dev, true);
@@ -707,13 +712,20 @@ EXPORT_SYMBOL_GPL(mt76_token_consume);
 struct mt76_txwi_cache *
 mt76_token_release(struct mt76_dev *dev, int token, bool *wake)
 {
+	struct mtk_wed_device *wed = &dev->mmio.wed;
 	struct mt76_txwi_cache *txwi;
 
 	spin_lock_bh(&dev->token_lock);
 
 	txwi = idr_remove(&dev->token, token);
-	if (txwi)
+	if (txwi) {
 		dev->token_count--;
+
+		if (mtk_wed_device_active(wed) &&
+		    token >= wed->wlan.token_start &&
+		    --dev->wed_token_count == 0)
+			wake_up(&dev->tx_wait);
+	}
 
 	if (dev->token_count < dev->token_size - MT76_TOKEN_FREE_THR &&
 	    dev->phy.q_tx[0]->blocked)
