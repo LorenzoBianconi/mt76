@@ -91,6 +91,7 @@ int mt7915_dma_init(struct mt7915_dev *dev)
 	u32 wa_rx_base = MT_RX_EVENT_RING_BASE;
 	u32 hif1_ofs = 0;
 	int ret;
+	int rx_buf_size = MT_RX_BUF_SIZE;
 
 	mt76_dma_attach(&dev->mt76);
 
