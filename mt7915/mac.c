@@ -1454,7 +1454,7 @@ void mt7915_queue_rx_skb(struct mt76_dev *mdev, enum mt76_rxq_id q,
 
 	switch (type) {
 	case PKT_TYPE_TXRX_NOTIFY:
-		mt7915_mac_tx_free(dev, skb);
+		mt7915_mac_tx_free(dev, skb->data, skb->len);
 		break;
 	case PKT_TYPE_TXRX_NOTIFY_V0:
 		mt7915_mac_tx_free_v0(dev, skb->data, skb->len);
