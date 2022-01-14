@@ -239,5 +239,8 @@ void mt76_connac_pm_queue_skb(struct ieee80211_hw *hw,
 			      struct sk_buff *skb);
 void mt76_connac_pm_dequeue_skbs(struct mt76_phy *phy,
 				 struct mt76_connac_pm *pm);
+int mt76_connac_reverse_frag0_hdr_trans(struct sk_buff *skb, u16 hdr_offset,
+					struct ieee80211_sta *sta,
+					struct ieee80211_vif *vif);
 
 #endif /* __MT76_CONNAC_H */

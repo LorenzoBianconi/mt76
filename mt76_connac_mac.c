@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: ISC
 /* Copyright (C) 2020 MediaTek Inc. */
 
+#include "mt76_connac_mac.h"
 #include "mt76_connac.h"
 
 int mt76_connac_pm_wake(struct mt76_phy *phy, struct mt76_connac_pm *pm)
@@ -115,3 +116,70 @@ void mt76_connac_pm_dequeue_skbs(struct mt76_phy *phy,
 	mt76_worker_schedule(&phy->dev->tx_worker);
 }
 EXPORT_SYMBOL_GPL(mt76_connac_pm_dequeue_skbs);
+
+/* The HW does not translate the mac header to 802.3 for mesh point */
+int mt76_connac_reverse_frag0_hdr_trans(struct sk_buff *skb, u16 hdr_offset,
+					struct ieee80211_sta *sta,
+					struct ieee80211_vif *vif)
+{
+	struct ethhdr *eth_hdr = (struct ethhdr *)(skb->data + hdr_offset);
+	__le32 *rxd = (__le32 *)skb->data;
+	struct ieee80211_hdr hdr;
+	__le32 qos_ctrl, ht_ctrl;
+
+	if (FIELD_GET(MT_RXD3_NORMAL_ADDR_TYPE, le32_to_cpu(rxd[3])) !=
+	    MT_RXD3_NORMAL_U2M)
+		return -EINVAL;
+
+	if (!(le32_to_cpu(rxd[1]) & MT_RXD1_NORMAL_GROUP_4))
+		return -EINVAL;
+
+	/* store the info from RXD and ethhdr to avoid being overridden */
+	hdr.frame_control = FIELD_GET(MT_RXD6_FRAME_CONTROL, rxd[6]);
+	hdr.seq_ctrl = FIELD_GET(MT_RXD8_SEQ_CTRL, rxd[8]);
+	qos_ctrl = FIELD_GET(MT_RXD8_QOS_CTL, rxd[8]);
+	ht_ctrl = FIELD_GET(MT_RXD9_HT_CONTROL, rxd[9]);
+
+	hdr.duration_id = 0;
+	ether_addr_copy(hdr.addr1, vif->addr);
+	ether_addr_copy(hdr.addr2, sta->addr);
+	switch (le16_to_cpu(hdr.frame_control) &
+		(IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) {
+	case 0:
+		ether_addr_copy(hdr.addr3, vif->bss_conf.bssid);
+		break;
+	case IEEE80211_FCTL_FROMDS:
+		ether_addr_copy(hdr.addr3, eth_hdr->h_source);
+		break;
+	case IEEE80211_FCTL_TODS:
+		ether_addr_copy(hdr.addr3, eth_hdr->h_dest);
+		break;
+	case IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS:
+		ether_addr_copy(hdr.addr3, eth_hdr->h_dest);
+		ether_addr_copy(hdr.addr4, eth_hdr->h_source);
+		break;
+	default:
+		break;
+	}
+
+	skb_pull(skb, hdr_offset + sizeof(struct ethhdr) - 2);
+	if (eth_hdr->h_proto == cpu_to_be16(ETH_P_AARP) ||
+	    eth_hdr->h_proto == cpu_to_be16(ETH_P_IPX))
+		ether_addr_copy(skb_push(skb, ETH_ALEN), bridge_tunnel_header);
+	else if (eth_hdr->h_proto >= cpu_to_be16(ETH_P_802_3_MIN))
+		ether_addr_copy(skb_push(skb, ETH_ALEN), rfc1042_header);
+	else
+		skb_pull(skb, 2);
+
+	if (ieee80211_has_order(hdr.frame_control))
+		memcpy(skb_push(skb, 2), &ht_ctrl, 2);
+	if (ieee80211_is_data_qos(hdr.frame_control))
+		memcpy(skb_push(skb, 2), &qos_ctrl, 2);
+	if (ieee80211_has_a4(hdr.frame_control))
+		memcpy(skb_push(skb, sizeof(hdr)), &hdr, sizeof(hdr));
+	else
+		memcpy(skb_push(skb, sizeof(hdr) - 6), &hdr, sizeof(hdr) - 6);
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(mt76_connac_reverse_frag0_hdr_trans);
