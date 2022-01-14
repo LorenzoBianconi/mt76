@@ -668,8 +668,8 @@ mt7921_mac_fill_rx(struct mt7921_dev *dev, struct sk_buff *skb)
 		if (status->signal == -128)
 			status->flag |= RX_FLAG_NO_SIGNAL_VAL;
 
-		stbc = FIELD_GET(MT_PRXV_STBC, v0);
-		gi = FIELD_GET(MT_PRXV_SGI, v0);
+		stbc = FIELD_GET(MT_PRXV_HT_STBC, v0);
+		gi = FIELD_GET(MT_PRXV_HT_SHORT_GI, v0);
 		cck = false;
 
 		idx = i = FIELD_GET(MT_PRXV_TX_RATE, v0);
