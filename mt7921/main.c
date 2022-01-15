@@ -537,11 +537,10 @@ static int
 mt7921_conf_tx(struct ieee80211_hw *hw, struct ieee80211_vif *vif, u16 queue,
 	       const struct ieee80211_tx_queue_params *params)
 {
-	struct mt7921_dev *dev = mt7921_hw_dev(hw);
 	struct mt7921_vif *mvif = (struct mt7921_vif *)vif->drv_priv;
 
 	/* no need to update right away, we'll get BSS_CHANGED_QOS */
-	queue = mt7921_lmac_mapping(dev, queue);
+	queue = mt76_connac_lmac_mapping(queue);
 	mvif->queue_params[queue] = *params;
 
 	return 0;
@@ -626,8 +625,10 @@ static void mt7921_bss_info_changed(struct ieee80211_hw *hw,
 	if (changed & (BSS_CHANGED_QOS | BSS_CHANGED_BEACON_ENABLED))
 		mt7921_mcu_set_tx(dev, vif);
 
-	if (changed & BSS_CHANGED_PS)
+	if (changed & BSS_CHANGED_PS) {
+		printk("%s-%d: PS %d\n", __func__, __LINE__, vif->bss_conf.ps);
 		mt7921_mcu_uni_bss_ps(dev, vif);
+	}
 
 	if (changed & BSS_CHANGED_ASSOC) {
 		mt7921_mcu_sta_update(dev, NULL, vif, true,
