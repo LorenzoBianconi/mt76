@@ -242,5 +242,7 @@ void mt76_connac_pm_dequeue_skbs(struct mt76_phy *phy,
 int mt76_connac_reverse_frag0_hdr_trans(struct sk_buff *skb, u16 hdr_offset,
 					struct ieee80211_sta *sta,
 					struct ieee80211_vif *vif);
+void mt76_connac_mac_decode_he_radiotap(struct sk_buff *skb,
+					__le32 *rxv, u32 mode);
 
 #endif /* __MT76_CONNAC_H */
