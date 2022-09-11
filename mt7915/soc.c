@@ -1171,10 +1171,6 @@ static int mt7986_wmac_probe(struct platform_device *pdev)
 
 	chip_id = (uintptr_t)of_device_get_match_data(&pdev->dev);
 
-	irq = platform_get_irq(pdev, 0);
-	if (irq < 0)
-		return irq;
-
 	mem_base = devm_platform_ioremap_resource(pdev, 0);
 	if (IS_ERR(mem_base)) {
 		dev_err(&pdev->dev, "Failed to get memory resource\n");
@@ -1184,6 +1180,18 @@ static int mt7986_wmac_probe(struct platform_device *pdev)
 	dev = mt7915_mmio_probe(&pdev->dev, mem_base, chip_id);
 	if (IS_ERR(dev))
 		return PTR_ERR(dev);
+
+	ret = mt7915_mmio_wed_init(dev, pdev, false, &irq);
+	if (ret < 0)
+		goto free_device;
+
+	if (!ret) {
+		irq = platform_get_irq(pdev, 0);
+		if (irq < 0) {
+			ret = irq;
+			goto free_device;
+		}
+	}
 
 	mdev = &dev->mt76;
 	ret = devm_request_irq(mdev->dev, irq, mt7915_irq_handler,
@@ -1205,8 +1213,9 @@ static int mt7986_wmac_probe(struct platform_device *pdev)
 
 free_irq:
 	devm_free_irq(mdev->dev, irq, dev);
-
 free_device:
+	if (mtk_wed_device_active(&mdev->mmio.wed))
+		mtk_wed_device_detach(&mdev->mmio.wed);
 	mt76_free_device(&dev->mt76);
 
 	return ret;
