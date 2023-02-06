@@ -25,6 +25,13 @@
 #define MT_DMA_PPE_ENTRY		GENMASK(30, 16)
 #define MT_DMA_INFO_PPE_VLD		BIT(31)
 
+#define MT_DMA_CTL_PN_CHK_FAIL		BIT(13)
+#define MT_DMA_CTL_VER_MASK		BIT(7)
+
+#define MT_DMA_RRO_EN		BIT(13)
+
+#define MT_DMA_WED_IND_CMD_CNT		8
+
 #define MT_DMA_HDR_LEN			4
 #define MT_RX_INFO_LEN			4
 #define MT_FCE_INFO_LEN			4
@@ -35,6 +42,11 @@ struct mt76_desc {
 	__le32 ctrl;
 	__le32 buf1;
 	__le32 info;
+} __packed __aligned(4);
+
+struct mt76_wed_rro_desc {
+	__le32 buf0;
+	__le32 buf1;
 } __packed __aligned(4);
 
 enum mt76_qsel {

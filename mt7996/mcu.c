@@ -889,7 +889,7 @@ int mt7996_mcu_set_timing(struct mt7996_phy *phy, struct ieee80211_vif *vif)
 }
 
 static int
-mt7996_mcu_sta_ba(struct mt76_dev *dev, struct mt76_vif *mvif,
+mt7996_mcu_sta_ba(struct mt7996_dev *dev, struct mt76_vif *mvif,
 		  struct ieee80211_ampdu_params *params,
 		  bool enable, bool tx)
 {
@@ -898,7 +898,7 @@ mt7996_mcu_sta_ba(struct mt76_dev *dev, struct mt76_vif *mvif,
 	struct sk_buff *skb;
 	struct tlv *tlv;
 
-	skb = __mt76_connac_mcu_alloc_sta_req(dev, mvif, wcid,
+	skb = __mt76_connac_mcu_alloc_sta_req(&dev->mt76, mvif, wcid,
 					      MT7996_STA_UPDATE_MAX_SIZE);
 	if (IS_ERR(skb))
 		return PTR_ERR(skb);
@@ -912,8 +912,9 @@ mt7996_mcu_sta_ba(struct mt76_dev *dev, struct mt76_vif *mvif,
 	ba->ba_en = enable << params->tid;
 	ba->amsdu = params->amsdu;
 	ba->tid = params->tid;
+	ba->ba_rdd_rro = !tx && enable && dev->has_rro;
 
-	return mt76_mcu_skb_send_msg(dev, skb,
+	return mt76_mcu_skb_send_msg(&dev->mt76, skb,
 				     MCU_WMWA_UNI_CMD(STA_REC_UPDATE), true);
 }
 
@@ -928,8 +929,7 @@ int mt7996_mcu_add_tx_ba(struct mt7996_dev *dev,
 	if (enable && !params->amsdu)
 		msta->wcid.amsdu = false;
 
-	return mt7996_mcu_sta_ba(&dev->mt76, &mvif->mt76, params,
-				 enable, true);
+	return mt7996_mcu_sta_ba(dev, &mvif->mt76, params, enable, true);
 }
 
 int mt7996_mcu_add_rx_ba(struct mt7996_dev *dev,
@@ -939,8 +939,7 @@ int mt7996_mcu_add_rx_ba(struct mt7996_dev *dev,
 	struct mt7996_sta *msta = (struct mt7996_sta *)params->sta->drv_priv;
 	struct mt7996_vif *mvif = msta->vif;
 
-	return mt7996_mcu_sta_ba(&dev->mt76, &mvif->mt76, params,
-				 enable, false);
+	return mt7996_mcu_sta_ba(dev, &mvif->mt76, params, enable, false);
 }
 
 static void
