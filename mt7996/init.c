@@ -334,6 +334,7 @@ static int mt7996_register_phy(struct mt7996_dev *dev, struct mt7996_phy *phy,
 	struct mt76_phy *mphy;
 	u32 mac_ofs, hif1_ofs = 0;
 	int ret;
+	struct mtk_wed_device *wed = &dev->mt76.mmio.wed;
 
 	if (band != MT_BAND1 && band != MT_BAND2)
 		return 0;
@@ -345,8 +346,10 @@ static int mt7996_register_phy(struct mt7996_dev *dev, struct mt7996_phy *phy,
 	if (phy)
 		return 0;
 
-	if (band == MT_BAND2 && dev->hif2)
+	if (band == MT_BAND2 && dev->hif2) {
 		hif1_ofs = MT_WFDMA0_PCIE1(0) - MT_WFDMA0(0);
+		wed = &dev->mt76.mmio.wed_hif2;
+	}
 
 	mphy = mt76_alloc_phy(&dev->mt76, sizeof(*phy), &mt7996_ops, band);
 	if (!mphy)
@@ -380,10 +383,11 @@ static int mt7996_register_phy(struct mt7996_dev *dev, struct mt7996_phy *phy,
 
 	/* init wiphy according to mphy and phy */
 	mt7996_init_wiphy(mphy->hw);
-	ret = mt76_connac_init_tx_queues(phy->mt76,
-					 MT_TXQ_ID(band),
-					 MT7996_TX_RING_SIZE,
-					 MT_TXQ_RING_BASE(band) + hif1_ofs, 0);
+	ret = mt7996_init_tx_queues(mphy->priv,
+				    MT_TXQ_ID(band),
+				    MT7996_TX_RING_SIZE,
+				    MT_TXQ_RING_BASE(band) + hif1_ofs,
+				    wed);
 	if (ret)
 		goto error;
 
@@ -889,6 +893,13 @@ int mt7996_register_device(struct mt7996_dev *dev)
 	ret = mt7996_register_phy(dev, mt7996_phy3(dev), MT_BAND2);
 	if (ret)
 		return ret;
+
+	if (mtk_wed_device_active(&dev->mt76.mmio.wed_hif2)) {
+		mt76_wr(dev, MT_INT1_MASK_CSR,
+			dev->mt76.mmio.irqmask|MT_INT_TX_DONE_BAND2);
+		mtk_wed_device_start(&dev->mt76.mmio.wed_hif2,
+				     dev->mt76.mmio.irqmask |MT_INT_TX_DONE_BAND2);
+	}
 
 	dev->recovery.hw_init_done = true;
 
