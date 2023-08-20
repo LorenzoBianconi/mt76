@@ -1048,6 +1048,8 @@ void mt76_pci_disable_aspm(struct pci_dev *pdev);
 int mt76_net_setup_tc(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 		      struct net_device *netdev, enum tc_setup_type type,
 		      void *type_data);
+u32 mt76_mmio_wed_init_rx_buf(struct mtk_wed_device *wed, int size);
+void mt76_mmio_wed_release_rx_buf(struct mtk_wed_device *wed);
 #endif /*CONFIG_NET_MEDIATEK_SOC_WED */
 
 static inline u16 mt76_chip(struct mt76_dev *dev)
