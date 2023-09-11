@@ -12,7 +12,7 @@
 #include "../trace.h"
 #include "../dma.h"
 
-static bool wed_enable;
+static bool wed_enable = true;
 module_param(wed_enable, bool, 0644);
 
 static const struct __base mt7996_reg_base[] = {
