@@ -1115,7 +1115,7 @@ mt7996_mcu_sta_muru_tlv(struct mt7996_dev *dev, struct sk_buff *skb,
 	tlv = mt76_connac_mcu_add_tlv(skb, STA_REC_MURU, sizeof(*muru));
 
 	muru = (struct sta_rec_muru *)tlv;
-	muru->cfg.mimo_dl_en = vif->bss_conf.eht_mu_beamformer ||
+	muru->cfg.mimo_dl_en = /*vif->bss_conf.eht_mu_beamformer ||*/
 			       vif->bss_conf.he_mu_beamformer ||
 			       vif->bss_conf.vht_mu_beamformer ||
 			       vif->bss_conf.vht_mu_beamformee;
@@ -1171,10 +1171,10 @@ mt7996_is_ebf_supported(struct mt7996_phy *phy, struct ieee80211_vif *vif,
 		struct ieee80211_eht_cap_elem_fixed *pe = &pc->eht_cap_elem;
 
 		if (bfee)
-			return vif->bss_conf.eht_su_beamformee &&
+			return vif->bss_conf.vht_su_beamformee &&
 			       EHT_PHY(CAP0_SU_BEAMFORMEE, pe->phy_cap_info[0]);
 		else
-			return vif->bss_conf.eht_su_beamformer &&
+			return vif->bss_conf.vht_su_beamformer &&
 			       EHT_PHY(CAP0_SU_BEAMFORMER, pe->phy_cap_info[0]);
 	}
 

@@ -1076,6 +1076,7 @@ mt76_rx_convert(struct mt76_dev *dev, struct sk_buff *skb,
 	status->enc_flags = mstat.enc_flags;
 	status->encoding = mstat.encoding;
 	status->bw = mstat.bw;
+#if 0
 	if (status->encoding == RX_ENC_EHT) {
 		status->eht.ru = mstat.eht.ru;
 		status->eht.gi = mstat.eht.gi;
@@ -1084,6 +1085,11 @@ mt76_rx_convert(struct mt76_dev *dev, struct sk_buff *skb,
 		status->he_gi = mstat.he_gi;
 		status->he_dcm = mstat.he_dcm;
 	}
+#endif
+	status->he_ru = mstat.he_ru;
+	status->he_gi = mstat.he_gi;
+	status->he_dcm = mstat.he_dcm;
+
 	status->rate_idx = mstat.rate_idx;
 	status->nss = mstat.nss;
 	status->band = mstat.band;

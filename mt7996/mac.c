@@ -391,7 +391,8 @@ mt7996_mac_fill_rx_rate(struct mt7996_dev *dev,
 	case MT_PHY_TYPE_HE_EXT_SU:
 	case MT_PHY_TYPE_HE_TB:
 		status->nss = nss;
-		status->encoding = RX_ENC_HE;
+		//status->encoding = RX_ENC_HE;
+		status->encoding = RX_ENC_VHT;
 		i &= GENMASK(3, 0);
 
 		if (gi <= NL80211_RATE_INFO_HE_GI_3_2)
@@ -403,7 +404,8 @@ mt7996_mac_fill_rx_rate(struct mt7996_dev *dev,
 	case MT_PHY_TYPE_EHT_TRIG:
 	case MT_PHY_TYPE_EHT_MU:
 		status->nss = nss;
-		status->encoding = RX_ENC_EHT;
+		//status->encoding = RX_ENC_EHT;
+		status->encoding = RX_ENC_VHT;
 		i &= GENMASK(3, 0);
 
 		if (gi <= NL80211_RATE_INFO_EHT_GI_3_2)
