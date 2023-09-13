@@ -1050,6 +1050,8 @@ int mt76_net_setup_tc(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 		      void *type_data);
 u32 mt76_mmio_wed_init_rx_buf(struct mtk_wed_device *wed, int size);
 void mt76_mmio_wed_release_rx_buf(struct mtk_wed_device *wed);
+int mt76_mmio_wed_offload_enable(struct mtk_wed_device *wed);
+void mt76_mmio_wed_offload_disable(struct mtk_wed_device *wed);
 #endif /*CONFIG_NET_MEDIATEK_SOC_WED */
 
 static inline u16 mt76_chip(struct mt76_dev *dev)
