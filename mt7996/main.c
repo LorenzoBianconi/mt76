@@ -1059,7 +1059,7 @@ mt7996_mac_sta_add(struct mt76_phy *mphy, struct ieee80211_vif *vif,
 	struct mt7996_dev *dev = container_of(mdev, struct mt7996_dev, mt76);
 	struct mt7996_sta *msta = (struct mt7996_sta *)sta->drv_priv;
 	struct mt7996_vif *mvif = (struct mt7996_vif *)vif->drv_priv;
-	unsigned long links = sta->mlo ? sta->valid_links : BIT(0);
+	unsigned long links = sta->valid_links ? sta->valid_links : BIT(0);
 	int err;
 
 	mutex_lock(&mdev->mutex);
@@ -1209,12 +1209,17 @@ static void mt7996_tx(struct ieee80211_hw *hw,
 	struct mt76_wcid *wcid = &dev->mt76.global_wcid;
 	u8 link_id = u32_get_bits(info->control.flags,
 				  IEEE80211_TX_CTRL_MLO_LINK);
+	struct mt7996_sta *msta;
 
 	rcu_read_lock();
 
+	msta = control->sta ? (void *)control->sta->drv_priv : NULL;
 	if (vif) {
 		struct mt7996_vif *mvif = (void *)vif->drv_priv;
 		struct mt76_vif_link *mlink;
+
+		if (link_id >= IEEE80211_LINK_UNSPECIFIED)
+			link_id = msta ? msta->deflink_id : mvif->mt76.deflink_id;
 
 		mlink = rcu_dereference(mvif->mt76.link[link_id]);
 		if (mlink && mlink->wcid)
@@ -1235,8 +1240,7 @@ static void mt7996_tx(struct ieee80211_hw *hw,
 		goto unlock;
 	}
 
-	if (control->sta) {
-		struct mt7996_sta *msta = (void *)control->sta->drv_priv;
+	if (msta) {
 		struct mt7996_sta_link *msta_link;
 
 		msta_link = rcu_dereference(msta->link[link_id]);
