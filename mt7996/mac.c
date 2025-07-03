@@ -1087,6 +1087,8 @@ int mt7996_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
 		if (wcid->offchannel)
 			mlink = rcu_dereference(mvif->mt76.offchannel_link);
 		if (!mlink)
+			mlink = rcu_dereference(mvif->mt76.link[wcid->link_id]);
+		if (!mlink)
 			mlink = &mvif->deflink.mt76;
 
 		txp->fw.bss_idx = mlink->idx;
