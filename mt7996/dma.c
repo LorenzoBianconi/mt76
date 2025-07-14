@@ -500,7 +500,10 @@ int mt7996_dma_rro_init(struct mt7996_dev *dev)
 	if (dev->mt76.hwrro_mode == MT76_HWRRO_V3_1) {
 		/* rxdmad_c */
 		mdev->q_rx[MT_RXQ_RRO_RXDMAD_C].flags = MT_WED_RRO_Q_RXDMAD_C;
-		mdev->q_rx[MT_RXQ_RRO_RXDMAD_C].flags |= MT_QFLAG_EMI_EN;
+		if (mtk_wed_device_active(&mdev->mmio.wed))
+			mdev->q_rx[MT_RXQ_RRO_RXDMAD_C].wed = &mdev->mmio.wed;
+		else if (!mt76_npu_device_active(&dev->mt76))
+			mdev->q_rx[MT_RXQ_RRO_RXDMAD_C].flags |= MT_QFLAG_EMI_EN;
 		ret = mt76_queue_alloc(dev, &mdev->q_rx[MT_RXQ_RRO_RXDMAD_C],
 				       MT_RXQ_ID(MT_RXQ_RRO_RXDMAD_C),
 				       MT7996_RX_RING_SIZE,
