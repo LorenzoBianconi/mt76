@@ -882,4 +882,25 @@ int mt7996_mtk_init_debugfs(struct mt7996_phy *phy, struct dentry *dir);
 
 int mt7996_dma_rro_init(struct mt7996_dev *dev);
 
+#if (IS_BUILTIN(CONFIG_NET_AIROHA_NPU) || IS_MODULE(CONFIG_NET_AIROHA_NPU))
+int mt7996_npu_hw_init(struct mt7996_dev *dev);
+int mt7996_npu_hw_stop(struct mt7996_dev *dev);
+int mt7996_npu_rx_queues_init(struct mt7996_dev *dev);
+#else
+static inline int mt7996_npu_hw_init(struct mt7996_dev *dev)
+{
+	return 0;
+}
+
+static inline int mt7996_npu_hw_stop(struct mt7996_dev *dev)
+{
+	return 0;
+}
+
+static inline int mt7996_npu_rx_queues_init(struct mt7996_dev *dev)
+{
+	return 0;
+}
+#endif /* CONFIG_NET_AIROHA_NPU */
+
 #endif

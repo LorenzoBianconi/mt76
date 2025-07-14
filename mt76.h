@@ -1704,6 +1704,22 @@ static inline bool mt76_ppe_device_active(struct mt76_dev *dev)
 	return !!rcu_access_pointer(dev->mmio.ppe_dev);
 }
 
+static inline int mt76_npu_send_msg(struct airoha_npu *npu, int ifindex,
+				    enum airoha_npu_wlan_set_cmd cmd,
+				    u32 val, gfp_t gfp)
+{
+	return airoha_npu_wlan_send_msg(npu, ifindex, cmd, &val, sizeof(val),
+					gfp);
+}
+
+static inline int mt76_npu_get_msg(struct airoha_npu *npu, int ifindex,
+				   enum airoha_npu_wlan_get_cmd cmd,
+				   u32 *val, gfp_t gfp)
+{
+	return airoha_npu_wlan_get_msg(npu, ifindex, cmd, val, sizeof(*val),
+				       gfp);
+}
+
 static inline void mt76_testmode_reset(struct mt76_phy *phy, bool disable)
 {
 #ifdef CONFIG_NL80211_TESTMODE
