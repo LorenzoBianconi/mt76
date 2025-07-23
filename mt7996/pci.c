@@ -136,10 +136,11 @@ static int mt7996_pci_probe(struct pci_dev *pdev,
 		return PTR_ERR(dev);
 
 	mdev = &dev->mt76;
+	mdev->hwrro_mode = is_mt7996(mdev) ? MT76_HWRRO_V3 : MT76_HWRRO_V3_1;
+
 	mt7996_wfsys_reset(dev);
 	hif2 = mt7996_pci_init_hif2(pdev);
 	dev->hif2 = hif2;
-	dev->has_rro = true;
 
 	ret = mt7996_mmio_wed_init(dev, pdev, false, &irq);
 	if (ret < 0)
