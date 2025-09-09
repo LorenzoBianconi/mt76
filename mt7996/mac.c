@@ -1071,6 +1071,9 @@ int mt7996_tx_prepare_skb(struct mt76_dev *mdev, void *txwi_ptr,
 		if (!link_sta)
 			return -EINVAL;
 
+		dma_sync_single_for_cpu(mdev->dma_dev, tx_info->buf[1].addr,
+					tx_info->buf[1].len, DMA_TO_DEVICE);
+
 		memcpy(hdr->addr1, link_sta->addr, ETH_ALEN);
 		memcpy(hdr->addr2, link_conf->addr, ETH_ALEN);
 		if (ieee80211_has_a4(hdr->frame_control)) {
