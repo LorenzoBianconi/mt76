@@ -251,11 +251,15 @@ struct mt7996_vif_link {
 	struct mt76_vif_link mt76; /* must be first */
 
 	struct mt7996_sta_link msta_link;
+	struct mt7996_vif *vif;
 	struct mt7996_phy *phy;
 
 	struct cfg80211_bitrate_mask bitrate_mask;
 
 	u8 mld_idx;
+
+	struct work_struct csa_work;
+	struct timer_list csa_timer;
 };
 
 struct mt7996_vif_link_info {

@@ -283,6 +283,100 @@ mt7996_key_iter(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 	WARN_ON(mt7996_set_hw_key(hw, it->cmd, vif, NULL, it->link_id, key));
 }
 
+static void mt7996_csa_timer(struct timer_list *timer)
+{
+	struct mt7996_vif_link *link = timer_container_of(link, timer,
+							  csa_timer);
+	struct mt7996_phy *phy = mt7996_vif_link_phy(link);
+
+	ieee80211_queue_work(phy->mt76->hw, &link->csa_work);
+}
+
+static void mt7996_csa_work(struct work_struct *work)
+{
+	struct mt7996_vif_link *link;
+	struct ieee80211_vif *vif;
+
+	link = container_of(work, struct mt7996_vif_link, csa_work);
+	vif = container_of((void *)link->vif, struct ieee80211_vif, drv_priv);
+
+	ieee80211_chswitch_done(vif, true, link->mt76.link_idx);
+}
+
+static void mt7996_channel_switch(struct ieee80211_hw *hw,
+				  struct ieee80211_vif *vif,
+				  struct ieee80211_channel_switch *chsw)
+{
+	struct mt7996_dev *dev = mt7996_hw_dev(hw);
+	struct ieee80211_bss_conf *link_conf;
+	struct mt7996_vif_link *link;
+
+	mutex_lock(&dev->mt76.mutex);
+
+	link = mt7996_vif_link(dev, vif, chsw->link_id);
+	if (!link)
+		goto unlock;
+
+	link_conf = link_conf_dereference_protected(vif, chsw->link_id);
+	if (!link_conf)
+		goto unlock;
+
+	link->csa_timer.expires = TU_TO_EXP_TIME(link_conf->beacon_int *
+						 chsw->count);
+	add_timer(&link->csa_timer);
+unlock:
+	mutex_unlock(&dev->mt76.mutex);
+}
+
+static void mt7996_abort_channel_switch(struct ieee80211_hw *hw,
+					struct ieee80211_vif *vif,
+					struct ieee80211_bss_conf *link_conf)
+{
+	struct mt7996_dev *dev = mt7996_hw_dev(hw);
+	struct mt7996_vif_link *link;
+
+	mutex_lock(&dev->mt76.mutex);
+
+	link = mt7996_vif_link(dev, vif, link_conf->link_id);
+	if (link) {
+		timer_delete_sync(&link->csa_timer);
+		cancel_work_sync(&link->csa_work);
+	}
+
+	mutex_unlock(&dev->mt76.mutex);
+}
+
+static void mt7996_channel_switch_rx_beacon(struct ieee80211_hw *hw,
+					    struct ieee80211_vif *vif,
+					    struct ieee80211_channel_switch *chsw)
+{
+	struct mt7996_dev *dev = mt7996_hw_dev(hw);
+	struct mt7996_vif_link *link;
+
+	if (!chsw->count)
+		return;
+
+	mutex_lock(&dev->mt76.mutex);
+
+	link = mt7996_vif_link(dev, vif, chsw->link_id);
+	if (!link)
+		goto unlock;
+
+	if (cfg80211_chandef_identical(&chsw->chandef, &link->mt76.ctx->def)) {
+		struct ieee80211_bss_conf *link_conf;
+
+		link_conf = link_conf_dereference_protected(vif,
+							    chsw->link_id);
+		if (!link_conf)
+			goto unlock;
+
+		mod_timer(&link->csa_timer,
+			  TU_TO_EXP_TIME(link_conf->beacon_int * chsw->count));
+	}
+unlock:
+	mutex_unlock(&dev->mt76.mutex);
+}
+
 int mt7996_vif_link_add(struct mt76_phy *mphy, struct ieee80211_vif *vif,
 			struct ieee80211_bss_conf *link_conf,
 			struct mt76_vif_link *mlink)
@@ -319,6 +413,7 @@ int mt7996_vif_link_add(struct mt76_phy *mphy, struct ieee80211_vif *vif,
 		return -ENOSPC;
 
 	link->mld_idx = mld_idx;
+	link->vif = mvif;
 	link->phy = phy;
 	mlink->omac_idx = idx;
 	mlink->band_idx = band_idx;
@@ -345,6 +440,9 @@ int mt7996_vif_link_add(struct mt76_phy *mphy, struct ieee80211_vif *vif,
 	msta_link->wcid.link_id = link_conf->link_id;
 	msta_link->wcid.tx_info |= MT_WCID_TX_INFO_SET;
 	mt76_wcid_init(&msta_link->wcid, band_idx);
+
+	INIT_WORK(&link->csa_work, mt7996_csa_work);
+	timer_setup(&link->csa_timer, mt7996_csa_timer, 0);
 
 	mt7996_mac_wtbl_update(dev, idx,
 			       MT_WTBL_UPDATE_ADM_COUNT_CLEAR);
@@ -398,6 +496,10 @@ void mt7996_vif_link_remove(struct mt76_phy *mphy, struct ieee80211_vif *vif,
 	int idx = msta_link->wcid.idx;
 
 	ieee80211_iter_keys(mphy->hw, vif, mt7996_key_iter, &it);
+	if (link_conf->csa_active) {
+		timer_delete_sync(&link->csa_timer);
+		cancel_work_sync(&link->csa_work);
+	}
 
 	mt7996_mcu_add_sta(dev, link_conf, NULL, link, NULL,
 			   CONN_STATE_DISCONNECT, false);
@@ -2236,6 +2338,9 @@ const struct ieee80211_ops mt7996_ops = {
 	.assign_vif_chanctx = mt76_assign_vif_chanctx,
 	.unassign_vif_chanctx = mt76_unassign_vif_chanctx,
 	.switch_vif_chanctx = mt76_switch_vif_chanctx,
+	.channel_switch = mt7996_channel_switch,
+	.abort_channel_switch = mt7996_abort_channel_switch,
+	.channel_switch_rx_beacon = mt7996_channel_switch_rx_beacon,
 	.tx = mt7996_tx,
 	.start = mt7996_start,
 	.stop = mt7996_stop,
