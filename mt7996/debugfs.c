@@ -8,6 +8,7 @@
 #include "eeprom.h"
 #include "mcu.h"
 #include "mac.h"
+#include "mtk_debug.h"
 
 #define FW_BIN_LOG_MAGIC	0x44d9c99a
 
@@ -851,6 +852,667 @@ mt7996_rf_regval_set(void *data, u64 val)
 DEFINE_DEBUGFS_ATTRIBUTE(fops_rf_regval, mt7996_rf_regval_get,
 			 mt7996_rf_regval_set, "0x%08llx\n");
 
+static void
+dump_dma_tx_ring_info(struct seq_file *s, struct mt7996_dev *dev,  char *str1, char *str2, u32 ring_base)
+{
+	u32 base, cnt, cidx, didx, queue_cnt;
+
+	base= mt76_rr(dev, ring_base);
+	cnt = mt76_rr(dev, ring_base + 4);
+	cidx = mt76_rr(dev, ring_base + 8);
+	didx = mt76_rr(dev, ring_base + 12);
+	queue_cnt = (cidx >= didx) ? (cidx - didx) : (cidx - didx + cnt);
+
+	seq_printf(s, "%20s %6s %10x %15x %10x %10x %10x\n", str1, str2, base, cnt, cidx, didx, queue_cnt);
+}
+
+static void
+dump_dma_rx_ring_info(struct seq_file *s, struct mt7996_dev *dev,  char *str1, char *str2, u32 ring_base)
+{
+	u32 base, ctrl1, cnt, cidx, didx, queue_cnt;
+
+	base= mt76_rr(dev, ring_base);
+	ctrl1 = mt76_rr(dev, ring_base + 4);
+	cidx = mt76_rr(dev, ring_base + 8) & 0xfff;
+	didx = mt76_rr(dev, ring_base + 12) & 0xfff;
+	cnt = ctrl1 & 0xfff;
+	queue_cnt = (didx > cidx) ? (didx - cidx - 1) : (didx - cidx + cnt - 1);
+
+	seq_printf(s, "%20s %6s %10x %10x(%3x) %10x %10x %10x\n",
+		   str1, str2, base, ctrl1, cnt, cidx, didx, queue_cnt);
+}
+
+static void
+mt7996_show_dma_info(struct seq_file *s, struct mt7996_dev *dev)
+{
+	u32 sys_ctrl[10];
+
+	/* HOST DMA0 information */
+	sys_ctrl[0] = mt76_rr(dev, WF_WFDMA_HOST_DMA0_HOST_INT_STA_ADDR);
+	sys_ctrl[1] = mt76_rr(dev, WF_WFDMA_HOST_DMA0_HOST_INT_ENA_ADDR);
+	sys_ctrl[2] = mt76_rr(dev, WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_ADDR);
+
+	seq_printf(s, "HOST_DMA Configuration\n");
+	seq_printf(s, "%10s %10s %10s %10s %10s %10s\n",
+		"DMA", "IntCSR", "IntMask", "Glocfg", "Tx/RxEn", "Tx/RxBusy");
+	seq_printf(s, "%10s %10x %10x %10x %4x/%5x %4x/%5x\n",
+		"DMA0", sys_ctrl[0], sys_ctrl[1], sys_ctrl[2],
+		(sys_ctrl[2] & WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_TX_DMA_EN_MASK)
+			>> WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_TX_DMA_EN_SHFT,
+		(sys_ctrl[2] & WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_RX_DMA_EN_MASK)
+			>> WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_RX_DMA_EN_SHFT,
+		(sys_ctrl[2] & WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_TX_DMA_BUSY_MASK)
+			>> WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_TX_DMA_BUSY_SHFT,
+		(sys_ctrl[2] & WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_RX_DMA_BUSY_MASK)
+			>> WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_RX_DMA_BUSY_SHFT);
+
+	if (dev->hif2) {
+		/* HOST DMA1 information */
+		sys_ctrl[0] = mt76_rr(dev, WF_WFDMA_HOST_DMA0_PCIE1_HOST_INT_STA_ADDR);
+		sys_ctrl[1] = mt76_rr(dev, WF_WFDMA_HOST_DMA0_PCIE1_HOST_INT_ENA_ADDR);
+		sys_ctrl[2] = mt76_rr(dev, WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_GLO_CFG_ADDR);
+
+		seq_printf(s, "%10s %10x %10x %10x %4x/%5x %4x/%5x\n",
+			"DMA0P1", sys_ctrl[0], sys_ctrl[1], sys_ctrl[2],
+			(sys_ctrl[2] & WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_GLO_CFG_TX_DMA_EN_MASK)
+				>> WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_GLO_CFG_TX_DMA_EN_SHFT,
+			(sys_ctrl[2] & WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_GLO_CFG_RX_DMA_EN_MASK)
+				>> WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_GLO_CFG_RX_DMA_EN_SHFT,
+			(sys_ctrl[2] & WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_GLO_CFG_TX_DMA_BUSY_MASK)
+				>> WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_GLO_CFG_TX_DMA_BUSY_SHFT,
+			(sys_ctrl[2] & WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_GLO_CFG_RX_DMA_BUSY_MASK)
+				>> WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_GLO_CFG_RX_DMA_BUSY_SHFT);
+	}
+
+	seq_printf(s, "HOST_DMA0 Ring Configuration\n");
+	seq_printf(s, "%20s %6s %10s %15s %10s %10s %10s\n",
+		"Name", "Used", "Base", "Ctrl1(Cnt)", "CIDX", "DIDX", "QCnt");
+	dump_dma_tx_ring_info(s, dev, "T0:TXD0(H2MAC)", "STA",
+		WF_WFDMA_HOST_DMA0_WPDMA_TX_RING0_CTRL0_ADDR);
+	dump_dma_tx_ring_info(s, dev, "T1:TXD1(H2MAC)", "STA",
+		WF_WFDMA_HOST_DMA0_WPDMA_TX_RING1_CTRL0_ADDR);
+	dump_dma_tx_ring_info(s, dev, "T2:TXD2(H2MAC)", "STA",
+		WF_WFDMA_HOST_DMA0_WPDMA_TX_RING2_CTRL0_ADDR);
+	dump_dma_tx_ring_info(s, dev, "T3:", "STA",
+		WF_WFDMA_HOST_DMA0_WPDMA_TX_RING3_CTRL0_ADDR);
+	dump_dma_tx_ring_info(s, dev, "T4:", "STA",
+		WF_WFDMA_HOST_DMA0_WPDMA_TX_RING4_CTRL0_ADDR);
+	dump_dma_tx_ring_info(s, dev, "T5:", "STA",
+		WF_WFDMA_HOST_DMA0_WPDMA_TX_RING5_CTRL0_ADDR);
+	dump_dma_tx_ring_info(s, dev, "T6:", "STA",
+		WF_WFDMA_HOST_DMA0_WPDMA_TX_RING6_CTRL0_ADDR);
+	dump_dma_tx_ring_info(s, dev, "T16:FWDL", "Both",
+		WF_WFDMA_HOST_DMA0_WPDMA_TX_RING16_CTRL0_ADDR);
+	dump_dma_tx_ring_info(s, dev, "T17:Cmd(H2WM)", "Both",
+		WF_WFDMA_HOST_DMA0_WPDMA_TX_RING17_CTRL0_ADDR);
+	if (mt7996_has_wa(dev)) {
+		dump_dma_tx_ring_info(s, dev, "T18:TXD0(H2WA)", "AP",
+			WF_WFDMA_HOST_DMA0_WPDMA_TX_RING18_CTRL0_ADDR);
+		dump_dma_tx_ring_info(s, dev, "T19:TXD1(H2WA)", "AP",
+			WF_WFDMA_HOST_DMA0_WPDMA_TX_RING19_CTRL0_ADDR);
+		dump_dma_tx_ring_info(s, dev, "T20:Cmd(H2WA)", "AP",
+			WF_WFDMA_HOST_DMA0_WPDMA_TX_RING20_CTRL0_ADDR);
+		dump_dma_tx_ring_info(s, dev, "T21:TXD2(H2WA)", "AP",
+			WF_WFDMA_HOST_DMA0_WPDMA_TX_RING21_CTRL0_ADDR);
+		dump_dma_tx_ring_info(s, dev, "T22:TXD3(H2WA)", "AP",
+			WF_WFDMA_HOST_DMA0_WPDMA_TX_RING22_CTRL0_ADDR);
+	} else {
+		dump_dma_tx_ring_info(s, dev, "T18:TXD0(H2SDO)", "AP",
+			WF_WFDMA_HOST_DMA0_WPDMA_TX_RING18_CTRL0_ADDR);
+		dump_dma_tx_ring_info(s, dev, "T19:TXD1(H2SDO)", "AP",
+			WF_WFDMA_HOST_DMA0_WPDMA_TX_RING19_CTRL0_ADDR);
+		dump_dma_tx_ring_info(s, dev, "T20:Reserved", "AP",
+			WF_WFDMA_HOST_DMA0_WPDMA_TX_RING20_CTRL0_ADDR);
+		dump_dma_tx_ring_info(s, dev, "T21:TXD2(H2SDO)", "AP",
+			WF_WFDMA_HOST_DMA0_WPDMA_TX_RING21_CTRL0_ADDR);
+		dump_dma_tx_ring_info(s, dev, "T22:TXD3(H2SDO)", "AP",
+			WF_WFDMA_HOST_DMA0_WPDMA_TX_RING22_CTRL0_ADDR);
+	}
+
+
+	dump_dma_rx_ring_info(s, dev, "R0:Event(WM2H)", "Both",
+		WF_WFDMA_HOST_DMA0_WPDMA_RX_RING0_CTRL0_ADDR);
+	if (mt7996_has_wa(dev)) {
+		dump_dma_rx_ring_info(s, dev, "R1:Event(WA2H)", "AP",
+			WF_WFDMA_HOST_DMA0_WPDMA_RX_RING1_CTRL0_ADDR);
+		dump_dma_rx_ring_info(s, dev, "R2:TxDone0(WA2H)", "AP",
+			WF_WFDMA_HOST_DMA0_WPDMA_RX_RING2_CTRL0_ADDR);
+		dump_dma_rx_ring_info(s, dev, "R3:TxDone1(WA2H)", "AP",
+			WF_WFDMA_HOST_DMA0_WPDMA_RX_RING3_CTRL0_ADDR);
+	} else {
+		dump_dma_rx_ring_info(s, dev, "R1:Event(SDO2H)", "AP",
+			WF_WFDMA_HOST_DMA0_WPDMA_RX_RING1_CTRL0_ADDR);
+		dump_dma_rx_ring_info(s, dev, "R2:Reserved", "AP",
+			WF_WFDMA_HOST_DMA0_WPDMA_RX_RING2_CTRL0_ADDR);
+		dump_dma_rx_ring_info(s, dev, "R3:Reserved", "AP",
+			WF_WFDMA_HOST_DMA0_WPDMA_RX_RING3_CTRL0_ADDR);
+	}
+	dump_dma_rx_ring_info(s, dev, "R4:Data0(MAC2H)", "Both",
+		WF_WFDMA_HOST_DMA0_WPDMA_RX_RING4_CTRL0_ADDR);
+	dump_dma_rx_ring_info(s, dev, "R5:Data1(MAC2H)", "Both",
+		WF_WFDMA_HOST_DMA0_WPDMA_RX_RING5_CTRL0_ADDR);
+	if (is_mt7996(&dev->mt76))
+		dump_dma_rx_ring_info(s, dev, "R6:BUF1(MAC2H)", "Both",
+			WF_WFDMA_HOST_DMA0_WPDMA_RX_RING6_CTRL0_ADDR);
+	else
+		dump_dma_rx_ring_info(s, dev, "R6:TxDone0(MAC2H)", "Both",
+			WF_WFDMA_HOST_DMA0_WPDMA_RX_RING6_CTRL0_ADDR);
+	if (is_mt7990(&dev->mt76))
+		dump_dma_rx_ring_info(s, dev, "R7:Reserved)", "Both",
+			WF_WFDMA_HOST_DMA0_WPDMA_RX_RING7_CTRL0_ADDR);
+	else
+		dump_dma_rx_ring_info(s, dev, "R7:TxDone1(MAC2H)", "Both",
+			WF_WFDMA_HOST_DMA0_WPDMA_RX_RING7_CTRL0_ADDR);
+	dump_dma_rx_ring_info(s, dev, "R8:BUF0(MAC2H)", "Both",
+		WF_WFDMA_HOST_DMA0_WPDMA_RX_RING8_CTRL0_ADDR);
+	if (is_mt7996(&dev->mt76))
+		dump_dma_rx_ring_info(s, dev, "R9:TxDone0(MAC2H)", "Both",
+			WF_WFDMA_HOST_DMA0_WPDMA_RX_RING9_CTRL0_ADDR);
+	else
+		dump_dma_rx_ring_info(s, dev, "R9:BUF0(MAC2H)", "Both",
+			WF_WFDMA_HOST_DMA0_WPDMA_RX_RING9_CTRL0_ADDR);
+	dump_dma_rx_ring_info(s, dev, "R10:MSDU_PG0(MAC2H)", "Both",
+		WF_WFDMA_HOST_DMA0_WPDMA_RX_RING10_CTRL0_ADDR);
+	dump_dma_rx_ring_info(s, dev, "R11:MSDU_PG1(MAC2H)", "Both",
+		WF_WFDMA_HOST_DMA0_WPDMA_RX_RING11_CTRL0_ADDR);
+	dump_dma_rx_ring_info(s, dev, "R12:MSDU_PG2(MAC2H)", "Both",
+		WF_WFDMA_HOST_DMA0_WPDMA_RX_RING12_CTRL0_ADDR);
+	dump_dma_rx_ring_info(s, dev, "IND:IND_CMD(MAC2H)", "Both",
+		WF_RRO_TOP_IND_CMD_0_CTRL0_ADDR);
+	dump_dma_rx_ring_info(s, dev, "RRO:Data0(MAC2H)", "Both",
+		WF_RRO_TOP_RX_RING_AP_0_CTRL0_ADDR);
+
+	if (dev->hif2) {
+		seq_printf(s, "HOST_DMA0 PCIe1 Ring Configuration\n");
+		seq_printf(s, "%20s %6s %10s %15s %10s %10s %10s\n",
+			"Name", "Used", "Base", "Ctrl1(Cnt)", "CIDX", "DIDX", "QCnt");
+		if (mt7996_has_wa(dev)) {
+			dump_dma_tx_ring_info(s, dev, "T21:TXD2(H2WA)", "AP",
+				WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_TX_RING21_CTRL0_ADDR);
+			dump_dma_tx_ring_info(s, dev, "T22:TXD?(H2WA)", "AP",
+				WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_TX_RING22_CTRL0_ADDR);
+			dump_dma_rx_ring_info(s, dev, "R3:TxDone1(WA2H)", "AP",
+				WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING3_CTRL0_ADDR);
+		} else {
+			dump_dma_tx_ring_info(s, dev, "T21:TXD2(H2SDO)", "AP",
+				WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_TX_RING21_CTRL0_ADDR);
+			dump_dma_tx_ring_info(s, dev, "T22:TXD?(H2SDO)", "AP",
+				WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_TX_RING22_CTRL0_ADDR);
+			dump_dma_rx_ring_info(s, dev, "R3:Reserved", "AP",
+				WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING3_CTRL0_ADDR);
+		}
+		dump_dma_rx_ring_info(s, dev, "R5:Data1(MAC2H)", "Both",
+			WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING5_CTRL0_ADDR);
+		if (is_mt7996(&dev->mt76))
+			dump_dma_rx_ring_info(s, dev, "R6:BUF1(MAC2H)", "Both",
+				WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING6_CTRL0_ADDR);
+		dump_dma_rx_ring_info(s, dev, "R7:TxDone1(MAC2H)", "Both",
+			WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING7_CTRL0_ADDR);
+		if (is_mt7992(&dev->mt76) || is_mt7990(&dev->mt76))
+			dump_dma_rx_ring_info(s, dev, "R9:BUF1(MAC2H)", "Both",
+				WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING9_CTRL0_ADDR);
+	}
+
+	/* MCU DMA information */
+	sys_ctrl[0] = mt76_rr(dev, WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_ADDR);
+	sys_ctrl[1] = mt76_rr(dev, WF_WFDMA_MCU_DMA0_HOST_INT_STA_ADDR);
+	sys_ctrl[2] = mt76_rr(dev, WF_WFDMA_MCU_DMA0_HOST_INT_ENA_ADDR);
+
+	seq_printf(s, "MCU_DMA Configuration\n");
+	seq_printf(s, "%10s %10s %10s %10s %10s %10s\n",
+		"DMA", "IntCSR", "IntMask", "Glocfg", "Tx/RxEn", "Tx/RxBusy");
+	seq_printf(s, "%10s %10x %10x %10x %4x/%5x %4x/%5x\n",
+		"DMA0", sys_ctrl[1], sys_ctrl[2], sys_ctrl[0],
+		(sys_ctrl[0] & WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_TX_DMA_EN_MASK)
+			>> WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_TX_DMA_EN_SHFT,
+		(sys_ctrl[0] & WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_RX_DMA_EN_MASK)
+			>> WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_RX_DMA_EN_SHFT,
+		(sys_ctrl[0] & WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_TX_DMA_BUSY_MASK)
+			>> WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_TX_DMA_BUSY_SHFT,
+		(sys_ctrl[0] & WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_RX_DMA_BUSY_MASK)
+			>> WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_RX_DMA_BUSY_SHFT);
+
+	seq_printf(s, "MCU_DMA0 Ring Configuration\n");
+	seq_printf(s, "%20s %6s %10s %15s %10s %10s %10s\n",
+		"Name", "Used", "Base", "Cnt", "CIDX", "DIDX", "QCnt");
+	dump_dma_tx_ring_info(s, dev, "T0:Event(WM2H)", "Both",
+		WF_WFDMA_MCU_DMA0_WPDMA_TX_RING0_CTRL0_ADDR);
+	if (mt7996_has_wa(dev)) {
+		dump_dma_tx_ring_info(s, dev, "T1:Event(WA2H)", "AP",
+			WF_WFDMA_MCU_DMA0_WPDMA_TX_RING1_CTRL0_ADDR);
+		dump_dma_tx_ring_info(s, dev, "T2:TxDone0(WA2H)", "AP",
+			WF_WFDMA_MCU_DMA0_WPDMA_TX_RING2_CTRL0_ADDR);
+		dump_dma_tx_ring_info(s, dev, "T3:TxDone1(WA2H)", "AP",
+			WF_WFDMA_MCU_DMA0_WPDMA_TX_RING3_CTRL0_ADDR);
+	} else {
+		dump_dma_tx_ring_info(s, dev, "T1:Event(SDO2H)", "AP",
+			WF_WFDMA_MCU_DMA0_WPDMA_TX_RING1_CTRL0_ADDR);
+		dump_dma_tx_ring_info(s, dev, "T2:Reserved", "AP",
+			WF_WFDMA_MCU_DMA0_WPDMA_TX_RING2_CTRL0_ADDR);
+		dump_dma_tx_ring_info(s, dev, "T3:Reserved", "AP",
+			WF_WFDMA_MCU_DMA0_WPDMA_TX_RING3_CTRL0_ADDR);
+	}
+	dump_dma_tx_ring_info(s, dev, "T4:TXD(WM2MAC)", "Both",
+		WF_WFDMA_MCU_DMA0_WPDMA_TX_RING4_CTRL0_ADDR);
+	dump_dma_tx_ring_info(s, dev, "T5:TXCMD(WM2MAC)", "Both",
+		WF_WFDMA_MCU_DMA0_WPDMA_TX_RING5_CTRL0_ADDR);
+	if (mt7996_has_wa(dev))
+		dump_dma_tx_ring_info(s, dev, "T6:TXD(WA2MAC)", "AP",
+			WF_WFDMA_MCU_DMA0_WPDMA_TX_RING6_CTRL0_ADDR);
+	else
+		dump_dma_tx_ring_info(s, dev, "T6:TXD(SDO2MAC)", "AP",
+			WF_WFDMA_MCU_DMA0_WPDMA_TX_RING6_CTRL0_ADDR);
+	dump_dma_rx_ring_info(s, dev, "R0:FWDL", "Both",
+		WF_WFDMA_MCU_DMA0_WPDMA_RX_RING0_CTRL0_ADDR);
+	dump_dma_rx_ring_info(s, dev, "R1:Cmd(H2WM)", "Both",
+		WF_WFDMA_MCU_DMA0_WPDMA_RX_RING1_CTRL0_ADDR);
+	if (mt7996_has_wa(dev)) {
+		dump_dma_rx_ring_info(s, dev, "R2:TXD0(H2WA)", "AP",
+			WF_WFDMA_MCU_DMA0_WPDMA_RX_RING2_CTRL0_ADDR);
+		dump_dma_rx_ring_info(s, dev, "R3:TXD1(H2WA)", "AP",
+			WF_WFDMA_MCU_DMA0_WPDMA_RX_RING3_CTRL0_ADDR);
+		dump_dma_rx_ring_info(s, dev, "R4:Cmd(H2WA)", "AP",
+			WF_WFDMA_MCU_DMA0_WPDMA_RX_RING4_CTRL0_ADDR);
+	} else {
+		dump_dma_rx_ring_info(s, dev, "R2:TXD0(H2SDO)", "AP",
+			WF_WFDMA_MCU_DMA0_WPDMA_RX_RING2_CTRL0_ADDR);
+		dump_dma_rx_ring_info(s, dev, "R3:TXD1(H2SDO)", "AP",
+			WF_WFDMA_MCU_DMA0_WPDMA_RX_RING3_CTRL0_ADDR);
+		dump_dma_rx_ring_info(s, dev, "R4:Reserved", "AP",
+			WF_WFDMA_MCU_DMA0_WPDMA_RX_RING4_CTRL0_ADDR);
+	}
+	dump_dma_rx_ring_info(s, dev, "R5:Data0(MAC2WM)", "Both",
+		WF_WFDMA_MCU_DMA0_WPDMA_RX_RING5_CTRL0_ADDR);
+	dump_dma_rx_ring_info(s, dev, "R6:TxDone(MAC2WM)", "Both",
+		WF_WFDMA_MCU_DMA0_WPDMA_RX_RING6_CTRL0_ADDR);
+	dump_dma_rx_ring_info(s, dev, "R7:SPL/RPT(MAC2WM)", "Both",
+		WF_WFDMA_MCU_DMA0_WPDMA_RX_RING7_CTRL0_ADDR);
+	if (mt7996_has_wa(dev))
+		dump_dma_rx_ring_info(s, dev, "R8:TxDone(MAC2WA)", "AP",
+			WF_WFDMA_MCU_DMA0_WPDMA_RX_RING8_CTRL0_ADDR);
+	else
+		dump_dma_rx_ring_info(s, dev, "R8:Reserved", "AP",
+			WF_WFDMA_MCU_DMA0_WPDMA_RX_RING8_CTRL0_ADDR);
+	dump_dma_rx_ring_info(s, dev, "R9:Data1(MAC2WM)", "Both",
+		WF_WFDMA_MCU_DMA0_WPDMA_RX_RING9_CTRL0_ADDR);
+	dump_dma_rx_ring_info(s, dev, "R10:TXD2(H2WA)", "AP",
+		WF_WFDMA_MCU_DMA0_WPDMA_RX_RING10_CTRL0_ADDR);
+
+	/* MEM DMA information */
+	sys_ctrl[0] = mt76_rr(dev, WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_ADDR);
+	sys_ctrl[1] = mt76_rr(dev, WF_WFDMA_MEM_DMA_HOST_INT_STA_ADDR);
+	sys_ctrl[2] = mt76_rr(dev, WF_WFDMA_MEM_DMA_HOST_INT_ENA_ADDR);
+
+	seq_printf(s, "MEM_DMA Configuration\n");
+	seq_printf(s, "%10s %10s %10s %10s %10s %10s\n",
+		"DMA", "IntCSR", "IntMask", "Glocfg", "Tx/RxEn", "Tx/RxBusy");
+	seq_printf(s, "%10s %10x %10x %10x %4x/%5x %4x/%5x\n",
+		"MEM", sys_ctrl[1], sys_ctrl[2], sys_ctrl[0],
+		(sys_ctrl[0] & WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_TX_DMA_EN_MASK)
+			>> WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_TX_DMA_EN_SHFT,
+		(sys_ctrl[0] & WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_RX_DMA_EN_MASK)
+			>> WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_RX_DMA_EN_SHFT,
+		(sys_ctrl[0] & WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_TX_DMA_BUSY_MASK)
+			>> WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_TX_DMA_BUSY_SHFT,
+		(sys_ctrl[0] & WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_RX_DMA_BUSY_MASK)
+			>> WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_RX_DMA_BUSY_SHFT);
+
+	seq_printf(s, "MEM_DMA Ring Configuration\n");
+	seq_printf(s, "%20s %6s %10s %10s %10s %10s %10s\n",
+		"Name", "Used", "Base", "Cnt", "CIDX", "DIDX", "QCnt");
+	dump_dma_tx_ring_info(s, dev, "T0:CmdEvent(WM2WA)", "AP",
+		WF_WFDMA_MEM_DMA_WPDMA_TX_RING0_CTRL0_ADDR);
+	dump_dma_tx_ring_info(s, dev, "T1:CmdEvent(WA2WM)", "AP",
+		WF_WFDMA_MEM_DMA_WPDMA_TX_RING1_CTRL0_ADDR);
+	dump_dma_rx_ring_info(s, dev, "R0:CmdEvent(WM2WA)", "AP",
+		WF_WFDMA_MEM_DMA_WPDMA_RX_RING0_CTRL0_ADDR);
+	dump_dma_rx_ring_info(s, dev, "R1:CmdEvent(WA2WM)", "AP",
+		WF_WFDMA_MEM_DMA_WPDMA_RX_RING1_CTRL0_ADDR);
+}
+
+static int mt7996_trinfo_read(struct seq_file *s, void *data)
+{
+	struct mt7996_dev *dev = dev_get_drvdata(s->private);
+	mt7996_show_dma_info(s, dev);
+	return 0;
+}
+
+unsigned long int counter_base[BAND_NUM]={0};
+static void npu_wifi_offload_get_dbg_counter_address(struct mt7996_dev *dev)
+{
+    int i=0;
+	struct airoha_npu *npu;
+    //unsigned long int counter_base[band_num]={0};
+	u32 val;
+	npu = rcu_dereference(dev->mt76.mmio.npu);
+	if(!npu)
+	{
+		printk("%s:%d npu load fail !!!!!\n",__func__,__LINE__);
+		return;
+	}
+    for(i = 0; i< (BAND_NUM-1); i++)
+    {
+		if( mt76_npu_get_msg(npu, i, WLAN_FUNC_GET_WAIT_DBG_COUNTER, &val, GFP_ATOMIC)){
+			printk("%s:%d band:%d get dbg counter addr error \n",__func__,__LINE__,i);
+			return;
+		} 
+        if(i == 2)
+        {
+            
+            counter_base[i] = (unsigned long int)ioremap((phys_addr_t)val, (UCOUNTER_BOTTOM * sizeof(unsigned int)));
+        }
+        else
+        {
+            counter_base[i] = (unsigned long int)ioremap((phys_addr_t)val, (COUNTER_BOTTOM * sizeof(unsigned int)));
+        }
+		
+        printk("counter_base[%d]=%lx(%x) \n", i,counter_base[i],val);
+    }
+    return;
+}
+
+int npu_debug_band;
+static ssize_t
+npu_wifioffload_dbg_set(struct file *file, const char __user *user_buf,
+			size_t count, loff_t *ppos)
+{
+	struct mt7996_phy *phy = file->private_data;
+	struct mt7996_dev *dev = phy->dev;
+	char buf[16];
+	int ret = 0;
+	u16 val;
+	if (count >= sizeof(buf))
+		return -EINVAL;
+
+	if (copy_from_user(buf, user_buf, count))
+		return -EFAULT;
+
+	if (count && buf[count - 1] == '\n')
+		buf[count - 1] = '\0';
+	else
+		buf[count] = '\0';
+
+	if (kstrtou16(buf, 0, &val))
+		return -EINVAL;
+
+	switch (val) {
+	case 0:
+	case 1:
+		printk("[%s debug counter]\n",(val==0)?"2.4G/5G":"6G");
+		//print_npu_wifi_offload_dbg_counter(dev, val);
+		npu_debug_band = val;
+		if(counter_base[2] == 0)
+		{
+		    npu_wifi_offload_get_dbg_counter_address(dev);
+		}				
+		break;
+	default:
+		printk("plz echo 0(2.4G) or 1(5G).\n");
+		break;
+	}
+
+	return ret ? ret : count;
+}
+
+static ssize_t
+npu_wifioffload_dbg_get(struct file *file, char __user *user_buf,
+			size_t count, loff_t *ppos)
+{
+	char *buff;
+	int desc = 0;
+	ssize_t ret;
+	unsigned long int *Counter_Base;
+	static const size_t bufsz = 3072;
+
+	buff = kmalloc(bufsz, GFP_KERNEL);
+	if (!buff)
+		return -ENOMEM;
+
+	if(counter_base[npu_debug_band]==0)
+		return 0;
+	else 
+		Counter_Base = (unsigned long int *)counter_base[npu_debug_band];	
+	desc += scnprintf(buff + desc, bufsz - desc,
+			  "[%s debug counter ]\n", (npu_debug_band==0)?"2.4G/5G":"6G");
+	desc += scnprintf(buff + desc, bufsz - desc,
+			  "get packet while count:\t\t%u\n", NPU_COUNTER(Counter_Base,WHILE_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,
+			  "RX_DESC_DDONE\t\t\t%u\n", NPU_COUNTER(Counter_Base,RX_DESC_DDONE));
+	desc += scnprintf(buff + desc, bufsz - desc,
+			  "ALL_GET_PKT_COUNT\t\t%u\n", NPU_COUNTER(Counter_Base,ALL_GET_PKT_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,
+			  "DROP_PACKETS\t\t\t%u\n", NPU_COUNTER(Counter_Base,DROP_PACKETS));
+	desc += scnprintf(buff + desc, bufsz - desc,
+			  "TO_TDMA_COUNT\t\t\t%u\n", NPU_COUNTER(Counter_Base,TO_QDMA_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"GET_BUFID_FAIL\t\t\t%u\n", NPU_COUNTER(Counter_Base,GET_BUFID_FAIL));
+				//printk("NO_BUFID\t\t\t%lu\n", NPU_COUNTER(Counter_Base,NO_BUFID));
+	desc += scnprintf(buff + desc, bufsz - desc,"SCATTER_CNT_MORE1\t\t%u\n", NPU_COUNTER(Counter_Base, SCATTER_CNT_MORE1));
+	desc += scnprintf(buff + desc, bufsz - desc,"BIGGER_PACKET\t\t\t%u\n", NPU_COUNTER(Counter_Base,BIGGER_PACKET));
+	desc += scnprintf(buff + desc, bufsz - desc,"SCATTER_PKT_ONE_BUFID\t\t%u\n", NPU_COUNTER(Counter_Base, SCATTER_PKT_ONE_BUFID));
+	desc += scnprintf(buff + desc, bufsz - desc,"ENQ_BIGPKT_TOSRAM_FAIL_COUNT\t%u\n", NPU_COUNTER(Counter_Base, 
+	ENQ_BIGPKT_TOSRAM_FAIL_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"------Enq & Deq Counter----------\n");
+	desc += scnprintf(buff + desc, bufsz - desc,"ENQ_DEQ_WHILE_COUNT\t\t%u\n", NPU_COUNTER(Counter_Base,ENQ_DEQ_WHILE_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"ENQ_SRAM_COUNT:\t\t\t%u\n",NPU_COUNTER(Counter_Base,ENQ_SRAM_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"ENQ_SRAM_FULL_COUNT:\t\t%u\n",NPU_COUNTER(Counter_Base,ENQ_SRAM_FULL_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"ENQ_SRAM_FAIL_COUNT:\t\t%u\n",NPU_COUNTER(Counter_Base,ENQ_SRAM_FAIL_COUNT));	
+	desc += scnprintf(buff + desc, bufsz - desc,"DEQ_SRAM_COUNT:\t\t\t%u\nDEQ_SRAM_FAIL_BUFID_COUNT:\t%u\nDEQ_SRAM_FAIL_LEN_COUNT:\t\t%u\n",NPU_COUNTER(Counter_Base,DEQ_SRAM_COUNT),NPU_COUNTER(Counter_Base, DEQ_SRAM_FAIL_BUFID_COUNT), NPU_COUNTER(Counter_Base,DEQ_SRAM_FAIL_LEN_COUNT));
+				//printk("DEQ_SRAM_NO_INFO_COUNT\t\t%lu\n", NPU_COUNTER(Counter_Base, DEQ_SRAM_NO_INFO_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"TO_HOSTAPD_COUNT\t%u\n", NPU_COUNTER(Counter_Base, TO_HOSTAPD_COUNT));
+				//printk("ENQ_DRAM_FAIL_COUNT:\t\t%lu\n",NPU_COUNTER(Counter_Base, ENQ_DRAM_FAIL_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"HOST_APD_ERROR_COUNT:\t\t%u\n", NPU_COUNTER(Counter_Base, HOST_APD_ERROR_COUNT));
+	
+	desc += scnprintf(buff + desc, bufsz - desc,"HOSTADPT_API_Q_FULL:\t\t%u\n", NPU_COUNTER(Counter_Base, HOSTADPT_API_Q_FULL));
+	desc += scnprintf(buff + desc, bufsz - desc,"API_HOSTADPT_SEND:\t\t%u\n", NPU_COUNTER(Counter_Base, API_HOSTADPT_SEND));
+	desc += scnprintf(buff + desc, bufsz - desc,"RX_G4_PKT_NO_SN:\t\t\t%u\n", NPU_COUNTER(Counter_Base, RX_G4_PKT_NO_SN));
+	desc += scnprintf(buff + desc, bufsz - desc,"------pipe queue----------\n");
+	desc += scnprintf(buff + desc, bufsz - desc,"RX_PIPE_Q_FULL:\t\t\t%u\n", NPU_COUNTER(Counter_Base, RX_PIPE_Q_FULL));
+	desc += scnprintf(buff + desc, bufsz - desc,"RX_PIPE_Q3_Q4_FULL:\t\t\t%u\n", NPU_COUNTER(Counter_Base, RX_PIPE_Q3_Q4_FULL));
+	desc += scnprintf(buff + desc, bufsz - desc,"PIPE_Q3_ENQ:\t\t\t%u\n", NPU_COUNTER(Counter_Base, PIPE_Q3_ENQ));
+	desc += scnprintf(buff + desc, bufsz - desc,"PIPE_Q3_DEQ:\t\t\t%u\n", NPU_COUNTER(Counter_Base, PIPE_Q3_DEQ));
+	desc += scnprintf(buff + desc, bufsz - desc,"PIPE_Q4_ENQ:\t\t\t%u\n", NPU_COUNTER(Counter_Base, PIPE_Q4_ENQ));
+	desc += scnprintf(buff + desc, bufsz - desc,"PIPE_Q4_DEQ:\t\t\t%u\n", NPU_COUNTER(Counter_Base, PIPE_Q4_DEQ));
+	desc += scnprintf(buff + desc, bufsz - desc,"------Enq & Deq scatter packet Counter----------\n");
+	desc += scnprintf(buff + desc, bufsz - desc,"NO_BIGPKT_COUNT:\t%u\n", NPU_COUNTER(Counter_Base, NO_BIGPKT_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"GET_BUFID_FOR_BIGPKT_FAIL:\t%u\n", NPU_COUNTER(Counter_Base, GET_BUFID_FOR_BIGPKT_FAIL));
+	desc += scnprintf(buff + desc, bufsz - desc,"BIGPKT_TO_HOSTADPT_ERROR_COUNT:\t%u\n", NPU_COUNTER(Counter_Base, BIGPKT_TO_HOSTADPT_ERROR_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"ENQ_BIGPKT_SRAM_FULL_COUNT:\t%u\n", NPU_COUNTER(Counter_Base, ENQ_BIGPKT_SRAM_FULL_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"ENQ_BIGPKT_SRAM_COUNT:\t\t%u\n", NPU_COUNTER(Counter_Base, ENQ_BIGPKT_SRAM_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"CHECK_BIGPKT:\t\t\t%u\n", NPU_COUNTER(Counter_Base, CHECK_BIGPKT));
+	desc += scnprintf(buff + desc, bufsz - desc,"CHECK_BIGPKT2:\t\t\t%u\n", NPU_COUNTER(Counter_Base, CHECK_BIGPKT2));
+	desc += scnprintf(buff + desc, bufsz - desc,"CHECK_BIGPKT_ISLAST:\t\t%u\n", NPU_COUNTER(Counter_Base, CHECK_BIGPKT_ISLAST));
+	desc += scnprintf(buff + desc, bufsz - desc,"CHECK_BIGPKT_IDX_FAIL:\t\t%u\n", NPU_COUNTER(Counter_Base, CHECK_BIGPKT_IDX_FAIL));
+	desc += scnprintf(buff + desc, bufsz - desc,"CHECK_BIGPKT_CNT_FAIL:\t\t%u\n", NPU_COUNTER(Counter_Base, CHECK_BIGPKT_CNT_FAIL));
+	desc += scnprintf(buff + desc, bufsz - desc,"CHECK_BIGPKT_FAIL:\t\t%u\n", NPU_COUNTER(Counter_Base, CHECK_BIGPKT_FAIL));
+	desc += scnprintf(buff + desc, bufsz - desc,"CHECK_BIGPKT_OVER_RETRY:\t\t%u\n", NPU_COUNTER(Counter_Base, CHECK_BIGPKT_OVER_RETRY));
+	desc += scnprintf(buff + desc, bufsz - desc,"BIGPKT_TO_HOSTAPD_COUNT:\t\t%u\n", NPU_COUNTER(Counter_Base,BIGPKT_TO_HOSTAPD_COUNT ));
+	desc += scnprintf(buff + desc, bufsz - desc,"BIGPKT_DESC_FREE_COUNT:\t\t%u\n", NPU_COUNTER(Counter_Base,BIGPKT_DESC_FREE_COUNT ));
+	desc += scnprintf(buff + desc, bufsz - desc,"------TDMA----------\n");
+	desc += scnprintf(buff + desc, bufsz - desc,"TDMA_TXDESC_FULL_COUNT: \t\t%u\n", NPU_COUNTER(Counter_Base,TDMA_TXDESC_FULL_COUNT ));
+	desc += scnprintf(buff + desc, bufsz - desc,"TDMA_TXDESC_FULL_COUNT2: \t\t%u\n", NPU_COUNTER(Counter_Base,TDMA_TXDESC_FULL_COUNT2 ));
+
+
+	desc += scnprintf(buff + desc, bufsz - desc,"------BA Counter----------\n");	
+	desc += scnprintf(buff + desc, bufsz - desc,"BA1(in order):\t\t\t%u\nBA2(Dupl Packet):\t\t%u\nBA3(old packet):\t\t\t%u\nBA4(with in window):\t\t%u\nBA5(surpasses Win):\t\t%u\nBA_AMSDU:\t\t\t%u\n!AMPDU_COUNT:\t\t\t%u\n",
+	NPU_COUNTER(Counter_Base, BA_IN_ORDER_PKT_COUNT),NPU_COUNTER(Counter_Base, BA_DUPL_PKT_COUNT), NPU_COUNTER(Counter_Base,BA_OLD_PKT_COUNT), NPU_COUNTER(Counter_Base,BA_WITHIN_WS_PKT_COUNT), 	
+	NPU_COUNTER(Counter_Base, BA_POP_PKT_COUNT), NPU_COUNTER(Counter_Base, BA_AMSDU_COUNT),  NPU_COUNTER(Counter_Base, AMPDU_COUNT));
+				//printk("BA_NO_PKT_IN_LIST_COUNT:\t%lu\n", NPU_COUNTER(Counter_Base, BA_NO_PKT_IN_LIST_COUNT));
+				//printk("BA_NOT_DATA_PKT_COUNT:\t\t%lu\n", NPU_COUNTER(Counter_Base, BA_NOT_DATA_PKT_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"BA_NO_MEM_COUNT:\t\t\t%u\n", NPU_COUNTER(Counter_Base, BA_NO_MEM_COUNT));
+				//printk("BA_NODE_ALLOC_COUNT:\t\t%lu\n", NPU_COUNTER(Counter_Base, BA_NODE_ALLOC_COUNT));
+				//printk("BA_NODE_ALLOC_FAIL:\t\t%lu\n", NPU_COUNTER(Counter_Base, BA_NODE_ALLOC_FAIL));
+	desc += scnprintf(buff + desc, bufsz - desc,"BA_AMSDU_MISS:\t\t\t%u\n", NPU_COUNTER(Counter_Base, BA_AMSDU_MISS));
+				//printk("BA_TIMEOUT_FLUSH:\t\t%lu\n", NPU_COUNTER(Counter_Base, BA_TIMEOUT_FLUSH));
+	desc += scnprintf(buff + desc, bufsz - desc,"BA_TIMEOUT_FLUSH100:\t\t%u\n", NPU_COUNTER(Counter_Base, BA_TIMEOUT_FLUSH100));
+	desc += scnprintf(buff + desc, bufsz - desc,"BA_TIMEOUT_FLUSH250:\t\t%u\n", NPU_COUNTER(Counter_Base, BA_TIMEOUT_FLUSH250));
+	desc += scnprintf(buff + desc, bufsz - desc,"BA_ENQ_DUP_SEQ:\t\t\t%u\n", NPU_COUNTER(Counter_Base, BA_ENQ_DUP_SEQ));	
+	desc += scnprintf(buff + desc, bufsz - desc,"BA_REORDERING_NODE_ALLOC_COUNT\t%u\n", NPU_COUNTER(Counter_Base,BA_REORDERING_NODE_ALLOC_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"BA_REORDERING_NODE_ALLOC_DRAM_COUNT\t%u\n", NPU_COUNTER(Counter_Base,BA_REORDERING_NODE_ALLOC_DRAM_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"BA_REORDERING_NODE_FREE_COUNT\t%u\n", NPU_COUNTER(Counter_Base,BA_REORDERING_NODE_FREE_COUNT));	
+	desc += scnprintf(buff + desc, bufsz - desc,"BA_REORDERINT_NODE_ALLOC_FAIL\t%u\n", NPU_COUNTER(Counter_Base,BA_REORDERINT_NODE_ALLOC_FAIL));
+	desc += scnprintf(buff + desc, bufsz - desc,"BA_ENQ_QLEN_ERROR_COUNT:\t\t%u\n", NPU_COUNTER(Counter_Base,BA_ENQ_QLEN_ERROR_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"BA_WCID_ERROR:\t\t\t%u\n", NPU_COUNTER(Counter_Base,BA_WCID_ERROR));
+	desc += scnprintf(buff + desc, bufsz - desc,"BA_BAR_WCID_ERROR:\t\t\t%u\n", NPU_COUNTER(Counter_Base,BAR_WCID_ERROR));
+				
+	//printk("------TDMA return Counter----------\n");
+				//printk("TDMA_RETURN_UNBIND_COUNT:\t%lu\n", NPU_COUNTER(Counter_Base, QDMA_RETURN_UNBIND_COUNT));
+				//printk("TDMA_RETURN_FAIL_COUNT:\t\t%lu\n", NPU_COUNTER(Counter_Base, QDMA_RETURN_FAIL_COUNT));
+				//printk("TDMA_RETURN_OK_COUNT:\t\t%lu\n", NPU_COUNTER(Counter_Base, QDMA_RETURN_OK_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"============ TEMP_DBG ==========\n");
+	desc += scnprintf(buff + desc, bufsz - desc,"ENQ_PKT_TO_SLOWPATH_CASE1\t\t%u\n", NPU_COUNTER(Counter_Base,ENQ_PKT_TO_SLOWPATH_CASE1));
+	desc += scnprintf(buff + desc, bufsz - desc,"ENQ_PKT_TO_SLOWPATH_CASE2\t\t%u\n", NPU_COUNTER(Counter_Base,ENQ_PKT_TO_SLOWPATH_CASE2));
+	desc += scnprintf(buff + desc, bufsz - desc,"ENQ_PKT_TO_SLOWPATH_CASE3\t\t%u\n", NPU_COUNTER(Counter_Base,ENQ_PKT_TO_SLOWPATH_CASE3));
+	desc += scnprintf(buff + desc, bufsz - desc,"ENQ_PIPELINE_PKT_CNT\t\t%u\n", NPU_COUNTER(Counter_Base,ENQ_PIPELINE_PKT_CNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"DEQ_PIPELINE_PKT_CNT\t\t%u\n", NPU_COUNTER(Counter_Base,DEQ_PIPELINE_PKT_CNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"TDMA_TXRING_SEND\t\t%u\n", NPU_COUNTER(Counter_Base,TDMA_TXRING_SEND));
+	//printk("BUFID_FREE_CASE1\t\t%lu\n", NPU_COUNTER(Counter_Base,BUFID_FREE_CASE1));
+
+	desc += scnprintf(buff + desc, bufsz - desc,"========= RRO related ======== \n");
+	desc += scnprintf(buff + desc, bufsz - desc,"0:MSDU_PG_2G_PKT 1:IND_CMD_WHILE\t\t%u\n", NPU_COUNTER(Counter_Base,MSDU_PG_2G_PKT));
+	desc += scnprintf(buff + desc, bufsz - desc,"0:MSDU_PG_5G_PKT 1:IND_CMD_DESC\t\t%u\n", NPU_COUNTER(Counter_Base,MSDU_PG_5G_PKT));
+	desc += scnprintf(buff + desc, bufsz - desc,"0:MSDU_PG_6G_PKT 1:IND_CMD_SIG_FAIL\t\t%u\n", NPU_COUNTER(Counter_Base,MSDU_PG_6G_PKT));
+	desc += scnprintf(buff + desc, bufsz - desc,"0:MSDU_PG_READ_FAIL 1:OLD_DUP_PKT\t\t%u\n", NPU_COUNTER(Counter_Base,MSDU_PG_READ_FAIL));
+	desc += scnprintf(buff + desc, bufsz - desc,"0:RRO EXCEPT PKT 1:ALLOW_OLD_PN_CHK_PKT\t\t%u\n", 
+	NPU_COUNTER(Counter_Base,BUFID_FREE_CASE1));
+	desc += scnprintf(buff + desc, bufsz - desc,"0:PN_CHECK_FAIL 1:SP_TOKEN\t\t%u\n", NPU_COUNTER(Counter_Base,PN_CHECK_FAIL));
+	desc += scnprintf(buff + desc, bufsz - desc,"SKB_BUFID_STATE_ABNORMAL1\t\t%u\n", NPU_COUNTER(Counter_Base,SKB_BUFID_STATE_ABNORMAL1));
+	desc += scnprintf(buff + desc, bufsz - desc,"SKB_BUFID_STATE_ABNORMAL2\t\t%u\n", NPU_COUNTER(Counter_Base,SKB_BUFID_STATE_ABNORMAL2));
+	desc += scnprintf(buff + desc, bufsz - desc,"SKB_BUFID_STATE_ABNORMAL3\t\t%u\n", NPU_COUNTER(Counter_Base,SKB_BUFID_STATE_ABNORMAL3));
+
+	Counter_Base = (unsigned long int *)counter_base[2];
+
+	desc += scnprintf(buff + desc, bufsz - desc,"============ TDMA Counter =============\n");
+	//printk("TDMA_TXDESC_NULL_COUNT:\t\t%lu\n", NPU_COUNTER(Counter_Base,QDMA_TXDESC_NULL_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"TDMA_UNBIND_COUNT:\t\t%u\n", NPU_COUNTER(Counter_Base,QDMA_UNBIND_COUNT));
+				//printk("TDMA_TO_PPE_COUNT:\t\t%lu\n", NPU_COUNTER(Counter_Base,QDMA_TO_PPE_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"TDMA_DONE_COUNT:\t\t\t%u\n", NPU_COUNTER(Counter_Base,QDMA_DONE_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"TDMA_FREE_BUFID_COUNT:\t\t%u\n", NPU_COUNTER(Counter_Base,QDMA_FREE_BUFID_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"TDMA_TO_ENQ_FAIL_COUNT:\t\t%u\n", NPU_COUNTER(Counter_Base,QDMA_TO_ENQ_FAIL_COUNT));
+				//printk("TDMA_TO_ENQ_FAIL_COUNT2:\t%lu\n", NPU_COUNTER(Counter_Base,QDMA_TO_ENQ_FAIL_COUNT2));
+	desc += scnprintf(buff + desc, bufsz - desc,"TDMA_TX_DSCP_IDX_INVALID:\t%u\n", NPU_COUNTER(Counter_Base,QDMA_TX_DSCP_IDX_INVALID));
+	desc += scnprintf(buff + desc, bufsz - desc,"TDMA_TX_DSCP_INFO_ERROR:\t\t%u\n", NPU_COUNTER(Counter_Base,QDMA_TX_DSCP_INFO_ERROR));
+	desc += scnprintf(buff + desc, bufsz - desc,"TDMA_DONE_DROP_BIT_ERROR:\t%u\n", NPU_COUNTER(Counter_Base,QDMA_DONE_DROP_BIT_ERROR));
+				//printk("TDMA_TXDESC_PUSH_COUNT:\t\t%lu\n", NPU_COUNTER(Counter_Base,QDMA_TXDESC_PUSH_COUNT));
+				//printk("TDMA_TXDESC_PUSH2_COUNT:\t\t%lu\n", NPU_COUNTER(Counter_Base,QDMA_TXDESC_PUSH2_COUNT));
+				//printk("TDMA_TXDESC_POP_COUNT:\t\t%lu\n", NPU_COUNTER(Counter_Base,QDMA_TXDESC_POP_COUNT));
+
+	desc += scnprintf(buff + desc, bufsz - desc,"============ Bufid Counter ==========\n");
+	desc += scnprintf(buff + desc, bufsz - desc,"SKB_ALLOC_BUFID_COUNT\t\t%u\n", NPU_COUNTER(Counter_Base,SKB_ALLOC_BUFID_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"SKB_FREE_BUFID_COUNT\t\t%u\n", NPU_COUNTER(Counter_Base,SKB_FREE_BUFID_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"SKB_BUFID_ALLOC_FAIL\t\t%u\n", NPU_COUNTER(Counter_Base,SKB_BUFID_ALLOC_FAIL));
+	desc += scnprintf(buff + desc, bufsz - desc,"BMGR0_BUFID_OVERFLOW\t\t%u\n", NPU_COUNTER(Counter_Base,BMGR0_BUFID_OVERFLOW));
+
+	desc += scnprintf(buff + desc, bufsz - desc,"============ Hostadpt API Counter ==========\n");
+	desc += scnprintf(buff + desc, bufsz - desc,"API_BUFF_SEND_BIGPKT\t\t%u\n", NPU_COUNTER(Counter_Base,API_BUFF_SEND_BIGPKT));
+	desc += scnprintf(buff + desc, bufsz - desc,"API_BUFF_SEND_NOMALPKT\t\t%u\n", NPU_COUNTER(Counter_Base,API_BUFF_SEND_NOMALPKT));
+	desc += scnprintf(buff + desc, bufsz - desc,"HOSTADPT_API_DONE_COUNT\t\t%u\n", NPU_COUNTER(Counter_Base,HOSTADPT_API_DONE_COUNT));
+
+	desc += scnprintf(buff + desc, bufsz - desc,"======= RRO MSDU PG SKB counter =======\n");
+	desc += scnprintf(buff + desc, bufsz - desc,"MSDU_SKB_ALLOC_COUNT\t\t%u\n", NPU_COUNTER(Counter_Base,MSDU_SKB_ALLOC_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"MSDU_SKB_FREE_BUFID_COUNT\t\t%u\n", NPU_COUNTER(Counter_Base,MSDU_SKB_FREE_BUFID_COUNT));	
+	desc += scnprintf(buff + desc, bufsz - desc,"MSDU_SKB_BUFID_ALLOC_FAIL\t\t%u\n", NPU_COUNTER(Counter_Base,MSDU_SKB_BUFID_ALLOC_FAIL));
+	ret = simple_read_from_buffer(user_buf, count, ppos, buff, desc);
+	kfree(buff);
+	return ret;
+}		
+
+static ssize_t
+npu_tx_wifioffload_dbg_set(struct file *file, const char __user *user_buf,
+			size_t count, loff_t *ppos)
+{
+	struct mt7996_phy *phy = file->private_data;
+	struct mt7996_dev *dev = phy->dev;
+	char buf[16];
+	int ret = 0;
+	u16 val;
+	if (count >= sizeof(buf))
+		return -EINVAL;
+
+	if (copy_from_user(buf, user_buf, count))
+		return -EFAULT;
+
+	if (count && buf[count - 1] == '\n')
+		buf[count - 1] = '\0';
+	else
+		buf[count] = '\0';
+
+	if (kstrtou16(buf, 0, &val))
+		return -EINVAL;
+
+	switch (val) {
+	case 0:
+	case 1:
+		printk("[%s tx debug counter]\n",(val==0)?"2.4G/5G":"6G");
+		npu_debug_band = val;
+		if(counter_base[2] == 0)
+		{
+			npu_wifi_offload_get_dbg_counter_address(dev);
+		}		
+		break;
+	default:
+		printk("plz echo 0(2.4G) or 1(5G).\n");
+		break;
+	}
+
+	return ret ? ret : count;
+}
+
+static ssize_t
+npu_tx_wifioffload_dbg_get(struct file *file, char __user *user_buf,
+			size_t count, loff_t *ppos){
+	char *buff;
+	int desc = 0;
+	ssize_t ret;
+	unsigned long int *Counter_Base;
+	static const size_t bufsz = 1536;
+
+	buff = kmalloc(bufsz, GFP_KERNEL);
+	if (!buff)
+		return -ENOMEM;	
+	
+	if(counter_base[npu_debug_band]==0) 
+		return 0;
+	else Counter_Base = (unsigned long int *)
+		counter_base[npu_debug_band];
+	
+	desc += scnprintf(buff + desc, bufsz - desc,"------WIFI TX (band%d)----------\n", npu_debug_band);
+	desc += scnprintf(buff + desc, bufsz - desc,"TDMA_RX_GET_PKT: \t\t%u\n", NPU_COUNTER(Counter_Base,TDMA_RX_GET_PKT));
+	desc += scnprintf(buff + desc, bufsz - desc,"TX_PKT_FROM_HOSTADPT: \t\t%u\n", NPU_COUNTER(Counter_Base,TX_PKT_FROM_HOSTADPT));
+	desc += scnprintf(buff + desc, bufsz - desc,"TX_FULL_DESC: \t\t\t%u\n", NPU_COUNTER(Counter_Base,TX_FULL_DESC));
+	desc += scnprintf(buff + desc, bufsz - desc,"TX_DONE_GET_PKT: \t\t%u\n", NPU_COUNTER(Counter_Base, TX_DONE_GET_PKT));
+	desc += scnprintf(buff + desc, bufsz - desc,"TX_SLOW_PATH_Q_FULL: \t\t%u\n", NPU_COUNTER(Counter_Base, TX_SLOW_PATH_Q_FULL));
+	desc += scnprintf(buff + desc, bufsz - desc,"TX_SLOW_PATH_TXRING_FULL: \t\t%u\n", NPU_COUNTER(Counter_Base, TX_SLOW_PATH_TXRING_FULL));
+	desc += scnprintf(buff + desc, bufsz - desc,"TX_SLOW_PATH_TOO_MUCH_PKT: \t\t%u\n", NPU_COUNTER(Counter_Base, TX_SLOW_PATH_TOO_MUCH_PKT));
+	//printk("TX_PKT_FROM_HOSTADP: \t\t%lu(band%d)\n", NPU_COUNTER(Counter_Base,TX_PKT_FROM_HOSTADP),band);
+	Counter_Base = (unsigned long int *)counter_base[2];
+	desc += scnprintf(buff + desc, bufsz - desc,"TX_SKB_ALLOC_BUFID_COUNT\t\t%u\n", NPU_COUNTER(Counter_Base,TX_SKB_ALLOC_BUFID_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"TX_SKB_FREE_BUFID_COUNT\t\t%u\n", NPU_COUNTER(Counter_Base,TX_SKB_FREE_BUFID_COUNT));
+	desc += scnprintf(buff + desc, bufsz - desc,"TX_SKB_BUFID_ALLOC_FAIL\t\t%u\n", NPU_COUNTER(Counter_Base,TX_SKB_BUFID_ALLOC_FAIL));
+	desc += scnprintf(buff + desc, bufsz - desc,"TX_DONE_VER_ABNORMAL: \t\t%u\n", NPU_COUNTER(Counter_Base, TX_DONE_VER_ABNORMAL));
+	desc += scnprintf(buff + desc, bufsz - desc,"TX_DONE_TOKEN_LEAK: \t\t%u\n", NPU_COUNTER(Counter_Base, TX_DONE_TOKEN_LEAK));	
+	desc += scnprintf(buff + desc, bufsz - desc,"TX_BUF_POOL_ABNORMAL_ALLOC: \t\t%u\n", NPU_COUNTER(Counter_Base, TX_BUF_POOL_ABNORMAL_ALLOC));
+	desc += scnprintf(buff + desc, bufsz - desc,"TX_BUF_POOL_ABNORMAL_FREE: \t\t%u\n", NPU_COUNTER(Counter_Base, TX_BUF_POOL_ABNORMAL_FREE));
+	desc += scnprintf(buff + desc, bufsz - desc,"WIFI_TX_TOKEN_ABNORMAL: \t\t%u\n", NPU_COUNTER(Counter_Base, WIFI_TX_TOKEN_ABNORMAL));
+	desc += scnprintf(buff + desc, bufsz - desc,"WIFI_TX_MSDU_PKT: \t\t%u\n", NPU_COUNTER(Counter_Base, WIFI_TX_MSDU_PKT));	
+	ret = simple_read_from_buffer(user_buf, count, ppos, buff, desc);
+	kfree(buff);
+	return ret;	
+}	
+
+static const struct file_operations npu_wifioffload_dbg_counter = {
+	.write = npu_wifioffload_dbg_set,
+	.read = npu_wifioffload_dbg_get,
+	.open = simple_open,
+	.llseek = default_llseek,
+};
+
+static const struct file_operations npu_wifioffload_tx_dbg_counter = {
+	.write = npu_tx_wifioffload_dbg_set,
+	.read = npu_tx_wifioffload_dbg_get,
+	.open = simple_open,
+	.llseek = default_llseek,
+};
+
 int mt7996_init_debugfs(struct mt7996_dev *dev)
 {
 	struct dentry *dir;
@@ -883,6 +1545,13 @@ int mt7996_init_debugfs(struct mt7996_dev *dev)
 			    &fops_radar_trigger);
 	debugfs_create_devm_seqfile(dev->mt76.dev, "rdd_monitor", dir,
 				    mt7996_rdd_monitor);
+	debugfs_create_devm_seqfile(dev->mt76.dev, "tr_info", dir, mt7996_trinfo_read);
+
+	/*npu debug count*/
+	debugfs_create_file("npu_dbg", 0600, dir, dev, &npu_wifioffload_dbg_counter);
+	/*npu wifi tx count*/
+	debugfs_create_file("npu_tx_dbg", 0600, dir, dev,
+			    &npu_wifioffload_tx_dbg_counter);
 
 	dev->debugfs_dir = dir;
 

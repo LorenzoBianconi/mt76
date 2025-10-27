@@ -1,0 +1,3213 @@
+#ifndef __MTK_DEBUG_H
+#define __MTK_DEBUG_H
+
+#define NO_SHIFT_DEFINE 0xFFFFFFFF
+#define BITS(m, n)              (~(BIT(m)-1) & ((BIT(n) - 1) | BIT(n)))
+
+#define GET_FIELD(_field, _reg)	\
+	({	\
+		(((_reg) & (_field##_MASK)) >> (_field##_SHIFT));	\
+	})
+
+#define __DBG_OFFS(id)		(dev->dbg_reg->offs_rev[(id)])
+
+enum dbg_offs_rev {
+	AGG_AALCR2,
+	AGG_AALCR3,
+	AGG_AALCR4,
+	AGG_AALCR5,
+	AGG_AALCR6,
+	AGG_AALCR7,
+	MIB_TDRCR0,
+	MIB_TDRCR1,
+	MIB_TDRCR2,
+	MIB_TDRCR3,
+	MIB_TDRCR4,
+	MIB_RSCR26,
+	MIB_TSCR18,
+	MIB_TRDR0,
+	MIB_TRDR2,
+	MIB_TRDR3,
+	MIB_TRDR4,
+	MIB_TRDR5,
+	MIB_TRDR6,
+	MIB_TRDR7,
+	MIB_TRDR8,
+	MIB_TRDR9,
+	MIB_TRDR10,
+	MIB_TRDR11,
+	MIB_TRDR12,
+	MIB_TRDR13,
+	MIB_TRDR14,
+	MIB_TRDR15,
+	MIB_MSR0,
+	MIB_MSR1,
+	MIB_MSR2,
+	MIB_MCTR5,
+	MIB_MCTR6,
+	MIB_TSCR8,
+	MIB_TBCR0,
+	MIB_TBCR1,
+	MIB_TBCR2,
+	MIB_TBCR3,
+	__MT_DBG_OFFS_REV_MAX,
+};
+
+static const u32 mt7996_dbg_offs[] = {
+	[AGG_AALCR2]		= 0x128,
+	[AGG_AALCR3]		= 0x12c,
+	[AGG_AALCR4]		= 0x130,
+	[AGG_AALCR5]		= 0x134,
+	[AGG_AALCR6]		= 0x138,
+	[AGG_AALCR7]		= 0x13c,
+	[MIB_TDRCR0]		= 0x728,
+	[MIB_TDRCR1]		= 0x72c,
+	[MIB_TDRCR2]		= 0x730,
+	[MIB_TDRCR3]		= 0x734,
+	[MIB_TDRCR4]		= 0x738,
+	[MIB_RSCR26]		= 0x950,
+	[MIB_TSCR18]		= 0xa1c,
+	[MIB_TRDR0]		= 0xa24,
+	[MIB_TRDR2]		= 0xa2c,
+	[MIB_TRDR3]		= 0xa30,
+	[MIB_TRDR4]		= 0xa34,
+	[MIB_TRDR5]		= 0xa38,
+	[MIB_TRDR6]		= 0xa3c,
+	[MIB_TRDR7]		= 0xa40,
+	[MIB_TRDR8]		= 0xa44,
+	[MIB_TRDR9]		= 0xa48,
+	[MIB_TRDR10]		= 0xa4c,
+	[MIB_TRDR11]		= 0xa50,
+	[MIB_TRDR12]		= 0xa54,
+	[MIB_TRDR13]		= 0xa58,
+	[MIB_TRDR14]		= 0xa5c,
+	[MIB_TRDR15]		= 0xa60,
+	[MIB_MSR0]		= 0xa64,
+	[MIB_MSR1]		= 0xa68,
+	[MIB_MSR2]		= 0xa6c,
+	[MIB_MCTR5]		= 0xa70,
+	[MIB_MCTR6]		= 0xa74,
+	[MIB_TSCR8]		= 0x6cc,
+	[MIB_TBCR0]		= 0x6ec,
+	[MIB_TBCR1]		= 0x6f0,
+	[MIB_TBCR2]		= 0x6f4,
+	[MIB_TBCR3]		= 0x6f8,
+};
+
+static const u32 mt7992_dbg_offs[] = {
+	[AGG_AALCR2]		= 0x12c,
+	[AGG_AALCR3]		= 0x130,
+	[AGG_AALCR4]		= 0x134,
+	[AGG_AALCR5]		= 0x138,
+	[AGG_AALCR6]		= 0x13c,
+	[AGG_AALCR7]		= 0x140,
+	[MIB_TDRCR0]		= 0x768,
+	[MIB_TDRCR1]		= 0x76c,
+	[MIB_TDRCR2]		= 0x770,
+	[MIB_TDRCR3]		= 0x774,
+	[MIB_TDRCR4]		= 0x778,
+	[MIB_RSCR26]		= 0x994,
+	[MIB_TSCR18]		= 0xb18,
+	[MIB_TRDR0]		= 0xb20,
+	[MIB_TRDR2]		= 0xb28,
+	[MIB_TRDR3]		= 0xb2c,
+	[MIB_TRDR4]		= 0xb30,
+	[MIB_TRDR5]		= 0xb34,
+	[MIB_TRDR6]		= 0xb38,
+	[MIB_TRDR7]		= 0xb3c,
+	[MIB_TRDR8]		= 0xb40,
+	[MIB_TRDR9]		= 0xb44,
+	[MIB_TRDR10]		= 0xb48,
+	[MIB_TRDR11]		= 0xb4c,
+	[MIB_TRDR12]		= 0xb50,
+	[MIB_TRDR13]		= 0xb54,
+	[MIB_TRDR14]		= 0xb58,
+	[MIB_TRDR15]		= 0xb5c,
+	[MIB_MSR0]		= 0xb60,
+	[MIB_MSR1]		= 0xb64,
+	[MIB_MSR2]		= 0xb68,
+	[MIB_MCTR5]		= 0xb6c,
+	[MIB_MCTR6]		= 0xb70,
+	[MIB_TSCR8]		= 0x6cc,
+	[MIB_TBCR0]		= 0x6ec,
+	[MIB_TBCR1]		= 0x6f0,
+	[MIB_TBCR2]		= 0x6f4,
+	[MIB_TBCR3]		= 0x6f8,
+};
+
+static const u32 mt7990_dbg_offs[] = {
+	[AGG_AALCR2]		= 0x12c,
+	[AGG_AALCR3]		= 0x130,
+	[AGG_AALCR4]		= 0x134,
+	[AGG_AALCR5]		= 0x138,
+	[AGG_AALCR6]		= 0x13c,
+	[AGG_AALCR7]		= 0x140,
+	[MIB_TDRCR0]		= 0x808,
+	[MIB_TDRCR1]		= 0x80c,
+	[MIB_TDRCR2]		= 0x810,
+	[MIB_TDRCR3]		= 0x814,
+	[MIB_TDRCR4]		= 0x818,
+	[MIB_RSCR26]		= 0xa34,
+	[MIB_TSCR18]		= 0xc08,
+	[MIB_TRDR0]		= 0xc10,
+	[MIB_TRDR2]		= 0xc18,
+	[MIB_TRDR3]		= 0xc1c,
+	[MIB_TRDR4]		= 0xc20,
+	[MIB_TRDR5]		= 0xc24,
+	[MIB_TRDR6]		= 0xc28,
+	[MIB_TRDR7]		= 0xc2c,
+	[MIB_TRDR8]		= 0xc30,
+	[MIB_TRDR9]		= 0xc34,
+	[MIB_TRDR10]		= 0xc38,
+	[MIB_TRDR11]		= 0xc3c,
+	[MIB_TRDR12]		= 0xc40,
+	[MIB_TRDR13]		= 0xc44,
+	[MIB_TRDR14]		= 0xc48,
+	[MIB_TRDR15]		= 0xc4c,
+	[MIB_MSR0]		= 0xc50,
+	[MIB_MSR1]		= 0xc54,
+	[MIB_MSR2]		= 0xc58,
+	[MIB_MCTR5]		= 0xc5c,
+	[MIB_MCTR6]		= 0xc60,
+	[MIB_TSCR8]		= 0x76c,
+	[MIB_TBCR0]		= 0x78c,
+	[MIB_TBCR1]		= 0x790,
+	[MIB_TBCR2]		= 0x794,
+	[MIB_TBCR3]		= 0x798,
+};
+
+/* used to differentiate between generations */
+struct mt7996_dbg_reg_desc {
+	const u32 id;
+	const u32 *offs_rev;
+};
+
+/* AGG */
+#define BN0_WF_AGG_TOP_BASE                                    0x820e2000
+#define BN1_WF_AGG_TOP_BASE                                    0x820f2000
+#define IP1_BN0_WF_AGG_TOP_BASE                                0x830e2000
+
+#define BN0_WF_AGG_TOP_SCR_ADDR                                (BN0_WF_AGG_TOP_BASE + 0x0) // 2000
+#define BN0_WF_AGG_TOP_SCR0_ADDR                               (BN0_WF_AGG_TOP_BASE + 0x4) // 2004
+#define BN0_WF_AGG_TOP_SCR1_ADDR                               (BN0_WF_AGG_TOP_BASE + 0x8) // 2008
+#define BN0_WF_AGG_TOP_BCR_ADDR                                (BN0_WF_AGG_TOP_BASE + 0xc) // 200C
+#define BN0_WF_AGG_TOP_BWCR_ADDR                               (BN0_WF_AGG_TOP_BASE + 0x10) // 2010
+#define BN0_WF_AGG_TOP_ARCR0_ADDR                              (BN0_WF_AGG_TOP_BASE + 0x14) // 2014
+#define BN0_WF_AGG_TOP_ARUCR_ADDR                              (BN0_WF_AGG_TOP_BASE + 0x18) // 2018
+#define BN0_WF_AGG_TOP_ARDCR_ADDR                              (BN0_WF_AGG_TOP_BASE + 0x1c) // 201C
+#define BN0_WF_AGG_TOP_AALCR0_ADDR                             (BN0_WF_AGG_TOP_BASE + 0x20) // 2020
+#define BN0_WF_AGG_TOP_AALCR1_ADDR                             (BN0_WF_AGG_TOP_BASE + 0x24) // 2024
+#define BN0_WF_AGG_TOP_PCR0_ADDR                               (BN0_WF_AGG_TOP_BASE + 0x28) // 2028
+#define BN0_WF_AGG_TOP_PCR1_ADDR                               (BN0_WF_AGG_TOP_BASE + 0x2c) // 202C
+#define BN0_WF_AGG_TOP_TTCR0_ADDR                              (BN0_WF_AGG_TOP_BASE + 0x30) // 2030
+#define BN0_WF_AGG_TOP_TTCR1_ADDR                              (BN0_WF_AGG_TOP_BASE + 0x34) // 2034
+#define BN0_WF_AGG_TOP_ACR1_ADDR                               (BN0_WF_AGG_TOP_BASE + 0x38) // 2038
+#define BN0_WF_AGG_TOP_ACR4_ADDR                               (BN0_WF_AGG_TOP_BASE + 0x3c) // 203C
+#define BN0_WF_AGG_TOP_ACR5_ADDR                               (BN0_WF_AGG_TOP_BASE + 0x40) // 2040
+#define BN0_WF_AGG_TOP_ACR6_ADDR                               (BN0_WF_AGG_TOP_BASE + 0x44) // 2044
+#define BN0_WF_AGG_TOP_ACR8_ADDR                               (BN0_WF_AGG_TOP_BASE + 0x4c) // 204C
+#define BN0_WF_AGG_TOP_MRCR_ADDR                               (BN0_WF_AGG_TOP_BASE + 0x50) // 2050
+#define BN0_WF_AGG_TOP_MMPDR_ADDR                              (BN0_WF_AGG_TOP_BASE + 0x54) // 2054
+#define BN0_WF_AGG_TOP_GFPDR_ADDR                              (BN0_WF_AGG_TOP_BASE + 0x58) // 2058
+#define BN0_WF_AGG_TOP_VHTPDR_ADDR                             (BN0_WF_AGG_TOP_BASE + 0x5c) // 205C
+#define BN0_WF_AGG_TOP_HEPDR_ADDR                              (BN0_WF_AGG_TOP_BASE + 0x60) // 2060
+#define BN0_WF_AGG_TOP_CTCR_ADDR                               (BN0_WF_AGG_TOP_BASE + 0x64) // 2064
+#define BN0_WF_AGG_TOP_ATCR3_ADDR                              (BN0_WF_AGG_TOP_BASE + 0x68) // 2068
+#define BN0_WF_AGG_TOP_SRCR_ADDR                               (BN0_WF_AGG_TOP_BASE + 0x6c) // 206C
+#define BN0_WF_AGG_TOP_VBCR_ADDR                               (BN0_WF_AGG_TOP_BASE + 0x70) // 2070
+#define BN0_WF_AGG_TOP_TCR_ADDR                                (BN0_WF_AGG_TOP_BASE + 0x74) // 2074
+#define BN0_WF_AGG_TOP_SRHS_ADDR                               (BN0_WF_AGG_TOP_BASE + 0x78) // 2078
+#define BN0_WF_AGG_TOP_DBRCR0_ADDR                             (BN0_WF_AGG_TOP_BASE + 0x7c) // 207C
+#define BN0_WF_AGG_TOP_DBRCR1_ADDR                             (BN0_WF_AGG_TOP_BASE + 0x80) // 2080
+#define BN0_WF_AGG_TOP_CTETCR_ADDR                             (BN0_WF_AGG_TOP_BASE + 0x84) // 2084
+#define BN0_WF_AGG_TOP_WPDR_ADDR                               (BN0_WF_AGG_TOP_BASE + 0x88) // 2088
+#define BN0_WF_AGG_TOP_PLRPDR_ADDR                             (BN0_WF_AGG_TOP_BASE + 0x8c) // 208C
+#define BN0_WF_AGG_TOP_CECR_ADDR                               (BN0_WF_AGG_TOP_BASE + 0x90) // 2090
+#define BN0_WF_AGG_TOP_OMRCR0_ADDR                             (BN0_WF_AGG_TOP_BASE + 0x94) // 2094
+#define BN0_WF_AGG_TOP_OMRCR1_ADDR                             (BN0_WF_AGG_TOP_BASE + 0x98) // 2098
+#define BN0_WF_AGG_TOP_OMRCR2_ADDR                             (BN0_WF_AGG_TOP_BASE + 0x9c) // 209C
+#define BN0_WF_AGG_TOP_OMRCR3_ADDR                             (BN0_WF_AGG_TOP_BASE + 0xa0) // 20A0
+#define BN0_WF_AGG_TOP_TMCR_ADDR                               (BN0_WF_AGG_TOP_BASE + 0xa4) // 20A4
+#define BN0_WF_AGG_TOP_TWTCR_ADDR                              (BN0_WF_AGG_TOP_BASE + 0xa8) // 20A8
+#define BN0_WF_AGG_TOP_TWTSTACR_ADDR                           (BN0_WF_AGG_TOP_BASE + 0xac) // 20AC
+#define BN0_WF_AGG_TOP_TWTE0TB_ADDR                            (BN0_WF_AGG_TOP_BASE + 0xb0) // 20B0
+#define BN0_WF_AGG_TOP_TWTE1TB_ADDR                            (BN0_WF_AGG_TOP_BASE + 0xb4) // 20B4
+#define BN0_WF_AGG_TOP_TWTE2TB_ADDR                            (BN0_WF_AGG_TOP_BASE + 0xb8) // 20B8
+#define BN0_WF_AGG_TOP_TWTE3TB_ADDR                            (BN0_WF_AGG_TOP_BASE + 0xbc) // 20BC
+#define BN0_WF_AGG_TOP_TWTE4TB_ADDR                            (BN0_WF_AGG_TOP_BASE + 0xc0) // 20C0
+#define BN0_WF_AGG_TOP_TWTE5TB_ADDR                            (BN0_WF_AGG_TOP_BASE + 0xc4) // 20C4
+#define BN0_WF_AGG_TOP_TWTE6TB_ADDR                            (BN0_WF_AGG_TOP_BASE + 0xc8) // 20C8
+#define BN0_WF_AGG_TOP_TWTE7TB_ADDR                            (BN0_WF_AGG_TOP_BASE + 0xcc) // 20CC
+#define BN0_WF_AGG_TOP_TWTE8TB_ADDR                            (BN0_WF_AGG_TOP_BASE + 0xd0) // 20D0
+#define BN0_WF_AGG_TOP_TWTE9TB_ADDR                            (BN0_WF_AGG_TOP_BASE + 0xd4) // 20D4
+#define BN0_WF_AGG_TOP_TWTEATB_ADDR                            (BN0_WF_AGG_TOP_BASE + 0xd8) // 20D8
+#define BN0_WF_AGG_TOP_TWTEBTB_ADDR                            (BN0_WF_AGG_TOP_BASE + 0xdc) // 20DC
+#define BN0_WF_AGG_TOP_TWTECTB_ADDR                            (BN0_WF_AGG_TOP_BASE + 0xe0) // 20E0
+#define BN0_WF_AGG_TOP_TWTEDTB_ADDR                            (BN0_WF_AGG_TOP_BASE + 0xe4) // 20E4
+#define BN0_WF_AGG_TOP_TWTEETB_ADDR                            (BN0_WF_AGG_TOP_BASE + 0xe8) // 20E8
+#define BN0_WF_AGG_TOP_TWTEFTB_ADDR                            (BN0_WF_AGG_TOP_BASE + 0xec) // 20EC
+#define BN0_WF_AGG_TOP_ATCR0_ADDR                              (BN0_WF_AGG_TOP_BASE + 0x108) // 2108
+#define BN0_WF_AGG_TOP_ATCR1_ADDR                              (BN0_WF_AGG_TOP_BASE + 0x10c) // 210C
+#define BN0_WF_AGG_TOP_TCCR_ADDR                               (BN0_WF_AGG_TOP_BASE + 0x110) // 2110
+#define BN0_WF_AGG_TOP_TFCR_ADDR                               (BN0_WF_AGG_TOP_BASE + 0x114) // 2114
+#define BN0_WF_AGG_TOP_MUCR0_ADDR                              (BN0_WF_AGG_TOP_BASE + 0x118) // 2118
+#define BN0_WF_AGG_TOP_MUCR1_ADDR                              (BN0_WF_AGG_TOP_BASE + 0x11c) // 211C
+#define BN0_WF_AGG_TOP_AALCR2_ADDR                             (BN0_WF_AGG_TOP_BASE + __DBG_OFFS(AGG_AALCR2))
+#define BN0_WF_AGG_TOP_AALCR3_ADDR                             (BN0_WF_AGG_TOP_BASE + __DBG_OFFS(AGG_AALCR3))
+#define BN0_WF_AGG_TOP_AALCR4_ADDR                             (BN0_WF_AGG_TOP_BASE + __DBG_OFFS(AGG_AALCR4))
+#define BN0_WF_AGG_TOP_AALCR5_ADDR                             (BN0_WF_AGG_TOP_BASE + __DBG_OFFS(AGG_AALCR5))
+#define BN0_WF_AGG_TOP_AALCR6_ADDR                             (BN0_WF_AGG_TOP_BASE + __DBG_OFFS(AGG_AALCR6))
+#define BN0_WF_AGG_TOP_AALCR7_ADDR                             (BN0_WF_AGG_TOP_BASE + __DBG_OFFS(AGG_AALCR7))
+#define BN0_WF_AGG_TOP_CSDCR0_ADDR                             (BN0_WF_AGG_TOP_BASE + 0x150) // 2150
+#define BN0_WF_AGG_TOP_CSDCR1_ADDR                             (BN0_WF_AGG_TOP_BASE + 0x154) // 2154
+#define BN0_WF_AGG_TOP_CSDCR2_ADDR                             (BN0_WF_AGG_TOP_BASE + 0x158) // 2158
+#define BN0_WF_AGG_TOP_CSDCR3_ADDR                             (BN0_WF_AGG_TOP_BASE + 0x15c) // 215C
+#define BN0_WF_AGG_TOP_CSDCR4_ADDR                             (BN0_WF_AGG_TOP_BASE + 0x160) // 2160
+#define BN0_WF_AGG_TOP_DYNSCR_ADDR                             (BN0_WF_AGG_TOP_BASE + 0x178) // 2178
+#define BN0_WF_AGG_TOP_DYNSSCR_ADDR                            (BN0_WF_AGG_TOP_BASE + 0x198) // 2198
+#define BN0_WF_AGG_TOP_TCDCNT0_ADDR                            (BN0_WF_AGG_TOP_BASE + 0x2c8) // 22C8
+#define BN0_WF_AGG_TOP_TCDCNT1_ADDR                            (BN0_WF_AGG_TOP_BASE + 0x2cc) // 22CC
+#define BN0_WF_AGG_TOP_TCSR0_ADDR                              (BN0_WF_AGG_TOP_BASE + 0x2d0) // 22D0
+#define BN0_WF_AGG_TOP_TCSR1_ADDR                              (BN0_WF_AGG_TOP_BASE + 0x2d4) // 22D4
+#define BN0_WF_AGG_TOP_TCSR2_ADDR                              (BN0_WF_AGG_TOP_BASE + 0x2d8) // 22D8
+#define BN0_WF_AGG_TOP_DCR_ADDR                                (BN0_WF_AGG_TOP_BASE + 0x2e4) // 22E4
+#define BN0_WF_AGG_TOP_SMDCR_ADDR                              (BN0_WF_AGG_TOP_BASE + 0x2e8) // 22E8
+#define BN0_WF_AGG_TOP_TXCMDSMCR_ADDR                          (BN0_WF_AGG_TOP_BASE + 0x2ec) // 22EC
+#define BN0_WF_AGG_TOP_SMCR0_ADDR                              (BN0_WF_AGG_TOP_BASE + 0x2f0) // 22F0
+#define BN0_WF_AGG_TOP_SMCR1_ADDR                              (BN0_WF_AGG_TOP_BASE + 0x2f4) // 22F4
+#define BN0_WF_AGG_TOP_SMCR2_ADDR                              (BN0_WF_AGG_TOP_BASE + 0x2f8) // 22F8
+#define BN0_WF_AGG_TOP_SMCR3_ADDR                              (BN0_WF_AGG_TOP_BASE + 0x2fc) // 22FC
+
+#define BN0_WF_AGG_TOP_AALCR0_AC01_AGG_LIMIT_ADDR              BN0_WF_AGG_TOP_AALCR0_ADDR
+#define BN0_WF_AGG_TOP_AALCR0_AC01_AGG_LIMIT_MASK              0x03FF0000                // AC01_AGG_LIMIT[25..16]
+#define BN0_WF_AGG_TOP_AALCR0_AC01_AGG_LIMIT_SHFT              16
+#define BN0_WF_AGG_TOP_AALCR0_AC00_AGG_LIMIT_ADDR              BN0_WF_AGG_TOP_AALCR0_ADDR
+#define BN0_WF_AGG_TOP_AALCR0_AC00_AGG_LIMIT_MASK              0x000003FF                // AC00_AGG_LIMIT[9..0]
+#define BN0_WF_AGG_TOP_AALCR0_AC00_AGG_LIMIT_SHFT              0
+
+#define BN0_WF_AGG_TOP_AALCR1_AC03_AGG_LIMIT_ADDR              BN0_WF_AGG_TOP_AALCR1_ADDR
+#define BN0_WF_AGG_TOP_AALCR1_AC03_AGG_LIMIT_MASK              0x03FF0000                // AC03_AGG_LIMIT[25..16]
+#define BN0_WF_AGG_TOP_AALCR1_AC03_AGG_LIMIT_SHFT              16
+#define BN0_WF_AGG_TOP_AALCR1_AC02_AGG_LIMIT_ADDR              BN0_WF_AGG_TOP_AALCR1_ADDR
+#define BN0_WF_AGG_TOP_AALCR1_AC02_AGG_LIMIT_MASK              0x000003FF                // AC02_AGG_LIMIT[9..0]
+#define BN0_WF_AGG_TOP_AALCR1_AC02_AGG_LIMIT_SHFT              0
+
+#define BN0_WF_AGG_TOP_AALCR2_AC11_AGG_LIMIT_ADDR              BN0_WF_AGG_TOP_AALCR2_ADDR
+#define BN0_WF_AGG_TOP_AALCR2_AC11_AGG_LIMIT_MASK              0x03FF0000                // AC11_AGG_LIMIT[25..16]
+#define BN0_WF_AGG_TOP_AALCR2_AC11_AGG_LIMIT_SHFT              16
+#define BN0_WF_AGG_TOP_AALCR2_AC10_AGG_LIMIT_ADDR              BN0_WF_AGG_TOP_AALCR2_ADDR
+#define BN0_WF_AGG_TOP_AALCR2_AC10_AGG_LIMIT_MASK              0x000003FF                // AC10_AGG_LIMIT[9..0]
+#define BN0_WF_AGG_TOP_AALCR2_AC10_AGG_LIMIT_SHFT              0
+
+#define BN0_WF_AGG_TOP_AALCR3_AC13_AGG_LIMIT_ADDR              BN0_WF_AGG_TOP_AALCR3_ADDR
+#define BN0_WF_AGG_TOP_AALCR3_AC13_AGG_LIMIT_MASK              0x03FF0000                // AC13_AGG_LIMIT[25..16]
+#define BN0_WF_AGG_TOP_AALCR3_AC13_AGG_LIMIT_SHFT              16
+#define BN0_WF_AGG_TOP_AALCR3_AC12_AGG_LIMIT_ADDR              BN0_WF_AGG_TOP_AALCR3_ADDR
+#define BN0_WF_AGG_TOP_AALCR3_AC12_AGG_LIMIT_MASK              0x000003FF                // AC12_AGG_LIMIT[9..0]
+#define BN0_WF_AGG_TOP_AALCR3_AC12_AGG_LIMIT_SHFT              0
+
+#define BN0_WF_AGG_TOP_AALCR4_AC21_AGG_LIMIT_ADDR              BN0_WF_AGG_TOP_AALCR4_ADDR
+#define BN0_WF_AGG_TOP_AALCR4_AC21_AGG_LIMIT_MASK              0x03FF0000                // AC21_AGG_LIMIT[25..16]
+#define BN0_WF_AGG_TOP_AALCR4_AC21_AGG_LIMIT_SHFT              16
+#define BN0_WF_AGG_TOP_AALCR4_AC20_AGG_LIMIT_ADDR              BN0_WF_AGG_TOP_AALCR4_ADDR
+#define BN0_WF_AGG_TOP_AALCR4_AC20_AGG_LIMIT_MASK              0x000003FF                // AC20_AGG_LIMIT[9..0]
+#define BN0_WF_AGG_TOP_AALCR4_AC20_AGG_LIMIT_SHFT              0
+
+#define BN0_WF_AGG_TOP_AALCR5_AC23_AGG_LIMIT_ADDR              BN0_WF_AGG_TOP_AALCR5_ADDR
+#define BN0_WF_AGG_TOP_AALCR5_AC23_AGG_LIMIT_MASK              0x03FF0000                // AC23_AGG_LIMIT[25..16]
+#define BN0_WF_AGG_TOP_AALCR5_AC23_AGG_LIMIT_SHFT              16
+#define BN0_WF_AGG_TOP_AALCR5_AC22_AGG_LIMIT_ADDR              BN0_WF_AGG_TOP_AALCR5_ADDR
+#define BN0_WF_AGG_TOP_AALCR5_AC22_AGG_LIMIT_MASK              0x000003FF                // AC22_AGG_LIMIT[9..0]
+#define BN0_WF_AGG_TOP_AALCR5_AC22_AGG_LIMIT_SHFT              0
+
+#define BN0_WF_AGG_TOP_AALCR6_AC31_AGG_LIMIT_ADDR              BN0_WF_AGG_TOP_AALCR6_ADDR
+#define BN0_WF_AGG_TOP_AALCR6_AC31_AGG_LIMIT_MASK              0x03FF0000                // AC31_AGG_LIMIT[25..16]
+#define BN0_WF_AGG_TOP_AALCR6_AC31_AGG_LIMIT_SHFT              16
+#define BN0_WF_AGG_TOP_AALCR6_AC30_AGG_LIMIT_ADDR              BN0_WF_AGG_TOP_AALCR6_ADDR
+#define BN0_WF_AGG_TOP_AALCR6_AC30_AGG_LIMIT_MASK              0x000003FF                // AC30_AGG_LIMIT[9..0]
+#define BN0_WF_AGG_TOP_AALCR6_AC30_AGG_LIMIT_SHFT              0
+#define BN0_WF_AGG_TOP_AALCR7_AC33_AGG_LIMIT_ADDR              BN0_WF_AGG_TOP_AALCR7_ADDR
+#define BN0_WF_AGG_TOP_AALCR7_AC33_AGG_LIMIT_MASK              0x03FF0000                // AC33_AGG_LIMIT[25..16]
+#define BN0_WF_AGG_TOP_AALCR7_AC33_AGG_LIMIT_SHFT              16
+#define BN0_WF_AGG_TOP_AALCR7_AC32_AGG_LIMIT_ADDR              BN0_WF_AGG_TOP_AALCR7_ADDR
+#define BN0_WF_AGG_TOP_AALCR7_AC32_AGG_LIMIT_MASK              0x000003FF                // AC32_AGG_LIMIT[9..0]
+#define BN0_WF_AGG_TOP_AALCR7_AC32_AGG_LIMIT_SHFT              0
+
+/* DMA */
+struct queue_desc {
+	u32 hw_desc_base;
+	u16 ring_size;
+	char *const ring_info;
+};
+
+// HOST DMA
+#define WF_WFDMA_HOST_DMA0_BASE                                0xd4000
+
+#define WF_WFDMA_HOST_DMA0_HOST_INT_STA_ADDR                                   \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x200) /* 4200 */
+#define WF_WFDMA_HOST_DMA0_HOST_INT_ENA_ADDR                                   \
+	(WF_WFDMA_HOST_DMA0_BASE + 0X204) /* 4204 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_ADDR                                  \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x208) /* 4208 */
+
+#define WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_RX_DMA_BUSY_ADDR                      \
+	WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_ADDR
+#define WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_RX_DMA_BUSY_MASK                      \
+	0x00000008 /* RX_DMA_BUSY[3] */
+#define WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_RX_DMA_BUSY_SHFT 3
+#define WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_RX_DMA_EN_ADDR                        \
+	WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_ADDR
+#define WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_RX_DMA_EN_MASK                        \
+	0x00000004 /* RX_DMA_EN[2] */
+#define WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_RX_DMA_EN_SHFT 2
+#define WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_TX_DMA_BUSY_ADDR                      \
+	WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_ADDR
+#define WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_TX_DMA_BUSY_MASK                      \
+	0x00000002 /* TX_DMA_BUSY[1] */
+#define WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_TX_DMA_BUSY_SHFT 1
+#define WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_TX_DMA_EN_ADDR                        \
+	WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_ADDR
+#define WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_TX_DMA_EN_MASK                        \
+	0x00000001 /* TX_DMA_EN[0] */
+#define WF_WFDMA_HOST_DMA0_WPDMA_GLO_CFG_TX_DMA_EN_SHFT 0
+
+
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING0_CTRL0_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x300) /* 4300 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING0_CTRL1_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x304) /* 4304 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING0_CTRL2_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x308) /* 4308 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING0_CTRL3_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x30c) /* 430C */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING1_CTRL0_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x310) /* 4310 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING1_CTRL1_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x314) /* 4314 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING1_CTRL2_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x318) /* 4318 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING1_CTRL3_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x31c) /* 431C */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING2_CTRL0_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x320) /* 4320 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING2_CTRL1_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x324) /* 4324 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING2_CTRL2_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x328) /* 4328 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING2_CTRL3_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x32c) /* 432C */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING3_CTRL0_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x330) /* 4330 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING3_CTRL1_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x334) /* 4334 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING3_CTRL2_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x338) /* 4338 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING3_CTRL3_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x33c) /* 433C */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING4_CTRL0_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x340) /* 4340 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING4_CTRL1_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x344) /* 4344 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING4_CTRL2_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x348) /* 4348 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING4_CTRL3_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x34c) /* 434C */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING5_CTRL0_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x350) /* 4350 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING5_CTRL1_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x354) /* 4354 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING5_CTRL2_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x358) /* 4358 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING5_CTRL3_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x35c) /* 435C */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING6_CTRL0_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x360) /* 4360 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING6_CTRL1_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x364) /* 4364 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING6_CTRL2_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x368) /* 4368 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING6_CTRL3_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x36c) /* 436C */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING16_CTRL0_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x400) /* 4400 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING16_CTRL1_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x404) /* 4404 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING16_CTRL2_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x408) /* 4408 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING16_CTRL3_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x40c) /* 440C */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING17_CTRL0_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x410) /* 4410 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING17_CTRL1_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x414) /* 4414 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING17_CTRL2_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x418) /* 4418 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING17_CTRL3_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x41c) /* 441C */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING18_CTRL0_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x420) /* 4420 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING18_CTRL1_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x424) /* 4424 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING18_CTRL2_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x428) /* 4428 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING18_CTRL3_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x42c) /* 442C */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING19_CTRL0_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x430) /* 4430 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING19_CTRL1_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x434) /* 4434 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING19_CTRL2_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x438) /* 4438 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING19_CTRL3_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x43c) /* 443C */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING20_CTRL0_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x440) /* 4440 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING20_CTRL1_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x444) /* 4444 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING20_CTRL2_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x448) /* 4448 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING20_CTRL3_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x44c) /* 444C */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING21_CTRL0_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x450) /* 4450 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING21_CTRL1_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x454) /* 4454 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING21_CTRL2_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x458) /* 4458 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING21_CTRL3_ADDR                          \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x45c) /* 445c */
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING22_CTRL0_ADDR          (WF_WFDMA_HOST_DMA0_BASE + 0x460) // 4460
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING22_CTRL1_ADDR          (WF_WFDMA_HOST_DMA0_BASE + 0x464) // 4464
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING22_CTRL2_ADDR          (WF_WFDMA_HOST_DMA0_BASE + 0x468) // 4468
+#define WF_WFDMA_HOST_DMA0_WPDMA_TX_RING22_CTRL3_ADDR          (WF_WFDMA_HOST_DMA0_BASE + 0x46c) // 446C
+
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING0_CTRL0_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x500) /* 4500 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING0_CTRL1_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x504) /* 4504 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING0_CTRL2_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x508) /* 4508 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING0_CTRL3_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x50c) /* 450C */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING1_CTRL0_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x510) /* 4510 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING1_CTRL1_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x514) /* 4514 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING1_CTRL2_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x518) /* 4518 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING1_CTRL3_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x51c) /* 451C */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING2_CTRL0_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x520) /* 4520 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING2_CTRL1_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x524) /* 4524 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING2_CTRL2_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x528) /* 4528 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING2_CTRL3_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x52C) /* 452C */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING3_CTRL0_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x530) /* 4530 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING3_CTRL1_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x534) /* 4534 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING3_CTRL2_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x538) /* 4538 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING3_CTRL3_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x53C) /* 453C */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING4_CTRL0_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x540) /* 4540 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING4_CTRL1_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x544) /* 4544 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING4_CTRL2_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x548) /* 4548 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING4_CTRL3_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x54c) /* 454C */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING5_CTRL0_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x550) /* 4550 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING5_CTRL1_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x554) /* 4554 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING5_CTRL2_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x558) /* 4558 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING5_CTRL3_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x55c) /* 455C */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING6_CTRL0_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x560) /* 4560 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING6_CTRL1_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x564) /* 4564 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING6_CTRL2_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x568) /* 4568 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING6_CTRL3_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x56c) /* 456C */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING7_CTRL0_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x570) /* 4570 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING7_CTRL1_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x574) /* 4574 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING7_CTRL2_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x578) /* 4578 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING7_CTRL3_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x57c) /* 457C */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING8_CTRL0_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x580) /* 4580 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING8_CTRL1_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x584) /* 4584 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING8_CTRL2_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x588) /* 4588 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING8_CTRL3_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x58c) /* 458C */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING9_CTRL0_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x590) /* 4590 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING9_CTRL1_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x594) /* 4594 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING9_CTRL2_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x598) /* 4598 */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING9_CTRL3_ADDR                           \
+	(WF_WFDMA_HOST_DMA0_BASE + 0x59c) /* 459C */
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING10_CTRL0_ADDR          (WF_WFDMA_HOST_DMA0_BASE + 0x5a0) // 45A0
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING10_CTRL1_ADDR          (WF_WFDMA_HOST_DMA0_BASE + 0x5a4) // 45A4
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING10_CTRL2_ADDR          (WF_WFDMA_HOST_DMA0_BASE + 0x5a8) // 45A8
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING10_CTRL3_ADDR          (WF_WFDMA_HOST_DMA0_BASE + 0x5ac) // 45AC
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING11_CTRL0_ADDR          (WF_WFDMA_HOST_DMA0_BASE + 0x5b0) // 45B0
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING11_CTRL1_ADDR          (WF_WFDMA_HOST_DMA0_BASE + 0x5b4) // 45B4
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING11_CTRL2_ADDR          (WF_WFDMA_HOST_DMA0_BASE + 0x5b8) // 45B8
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING11_CTRL3_ADDR          (WF_WFDMA_HOST_DMA0_BASE + 0x5bc) // 45BC
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING12_CTRL0_ADDR          (WF_WFDMA_HOST_DMA0_BASE + 0x5C0) // 45C0
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING12_CTRL1_ADDR          (WF_WFDMA_HOST_DMA0_BASE + 0x5C4) // 45C4
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING12_CTRL2_ADDR          (WF_WFDMA_HOST_DMA0_BASE + 0x5C8) // 45C8
+#define WF_WFDMA_HOST_DMA0_WPDMA_RX_RING12_CTRL3_ADDR          (WF_WFDMA_HOST_DMA0_BASE + 0x5CC) // 45CC
+
+// HOST PCIE1 DMA
+#define WF_WFDMA_HOST_DMA0_PCIE1_BASE				0xd8000
+
+#define WF_WFDMA_HOST_DMA0_PCIE1_HOST_INT_STA_ADDR		(WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x200) // 8200
+#define WF_WFDMA_HOST_DMA0_PCIE1_HOST_INT_ENA_ADDR		(WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0X204) // 8204
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_GLO_CFG_ADDR		(WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x208) // 8208
+
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_GLO_CFG_PDMA_BT_SIZE_SHFT	4
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_GLO_CFG_RX_DMA_BUSY_MASK		0x00000008
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_GLO_CFG_RX_DMA_BUSY_SHFT		3
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_GLO_CFG_RX_DMA_EN_MASK		0x00000004
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_GLO_CFG_RX_DMA_EN_SHFT		2
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_GLO_CFG_TX_DMA_BUSY_MASK		0x00000002
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_GLO_CFG_TX_DMA_BUSY_SHFT		1
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_GLO_CFG_TX_DMA_EN_MASK		0x00000001
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_GLO_CFG_TX_DMA_EN_SHFT		0
+
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_TX_RING21_CTRL0_ADDR    (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x450) // 8450
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_TX_RING21_CTRL1_ADDR    (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x454) // 8454
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_TX_RING21_CTRL2_ADDR    (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x458) // 8458
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_TX_RING21_CTRL3_ADDR    (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x45c) // 845C
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_TX_RING22_CTRL0_ADDR    (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x460) // 8460
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_TX_RING22_CTRL1_ADDR    (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x464) // 8464
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_TX_RING22_CTRL2_ADDR    (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x468) // 8468
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_TX_RING22_CTRL3_ADDR    (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x46c) // 846C
+
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING3_CTRL0_ADDR     (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x530) // 8530
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING3_CTRL1_ADDR     (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x534) // 8534
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING3_CTRL2_ADDR     (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x538) // 8538
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING3_CTRL3_ADDR     (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x53C) // 853C
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING5_CTRL0_ADDR     (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x550) // 8550
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING5_CTRL1_ADDR     (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x554) // 8554
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING5_CTRL2_ADDR     (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x558) // 8558
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING5_CTRL3_ADDR     (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x55c) // 855C
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING6_CTRL0_ADDR     (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x560) // 8560
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING6_CTRL1_ADDR     (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x564) // 8564
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING6_CTRL2_ADDR     (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x568) // 8568
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING6_CTRL3_ADDR     (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x56c) // 856C
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING7_CTRL0_ADDR     (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x570) // 8570
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING7_CTRL1_ADDR     (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x574) // 8574
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING7_CTRL2_ADDR     (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x578) // 8578
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING7_CTRL3_ADDR     (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x57c) // 857C
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING9_CTRL0_ADDR     (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x590) // 8590
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING9_CTRL1_ADDR     (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x594) // 8594
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING9_CTRL2_ADDR     (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x598) // 8598
+#define WF_WFDMA_HOST_DMA0_PCIE1_WPDMA_RX_RING9_CTRL3_ADDR     (WF_WFDMA_HOST_DMA0_PCIE1_BASE + 0x59c) // 859C
+
+//MCU DMA
+//#define WF_WFDMA_MCU_DMA0_BASE                                 0x02000
+#define WF_WFDMA_MCU_DMA0_BASE                                 0x54000000
+
+#define WF_WFDMA_MCU_DMA0_HOST_INT_STA_ADDR                    (WF_WFDMA_MCU_DMA0_BASE + 0x200) // 0200
+#define WF_WFDMA_MCU_DMA0_HOST_INT_ENA_ADDR                    (WF_WFDMA_MCU_DMA0_BASE + 0X204) // 0204
+#define WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_ADDR                   (WF_WFDMA_MCU_DMA0_BASE + 0x208) // 0208
+
+#define WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_RX_DMA_BUSY_ADDR       WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_ADDR
+#define WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_RX_DMA_BUSY_MASK       0x00000008                // RX_DMA_BUSY[3]
+#define WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_RX_DMA_BUSY_SHFT       3
+#define WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_RX_DMA_EN_ADDR         WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_ADDR
+#define WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_RX_DMA_EN_MASK         0x00000004                // RX_DMA_EN[2]
+#define WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_RX_DMA_EN_SHFT         2
+#define WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_TX_DMA_BUSY_ADDR       WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_ADDR
+#define WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_TX_DMA_BUSY_MASK       0x00000002                // TX_DMA_BUSY[1]
+#define WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_TX_DMA_BUSY_SHFT       1
+#define WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_TX_DMA_EN_ADDR         WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_ADDR
+#define WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_TX_DMA_EN_MASK         0x00000001                // TX_DMA_EN[0]
+#define WF_WFDMA_MCU_DMA0_WPDMA_GLO_CFG_TX_DMA_EN_SHFT         0
+
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING0_CTRL0_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x300) // 0300
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING0_CTRL1_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x304) // 0304
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING0_CTRL2_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x308) // 0308
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING0_CTRL3_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x30c) // 030C
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING1_CTRL0_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x310) // 0310
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING1_CTRL1_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x314) // 0314
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING1_CTRL2_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x318) // 0318
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING1_CTRL3_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x31c) // 031C
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING2_CTRL0_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x320) // 0320
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING2_CTRL1_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x324) // 0324
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING2_CTRL2_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x328) // 0328
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING2_CTRL3_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x32c) // 032C
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING3_CTRL0_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x330) // 0330
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING3_CTRL1_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x334) // 0334
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING3_CTRL2_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x338) // 0338
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING3_CTRL3_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x33c) // 033C
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING4_CTRL0_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x340) // 0340
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING4_CTRL1_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x344) // 0344
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING4_CTRL2_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x348) // 0348
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING4_CTRL3_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x34c) // 034C
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING5_CTRL0_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x350) // 0350
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING5_CTRL1_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x354) // 0354
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING5_CTRL2_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x358) // 0358
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING5_CTRL3_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x35c) // 035C
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING6_CTRL0_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x360) // 0360
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING6_CTRL1_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x364) // 0364
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING6_CTRL2_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x368) // 0368
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING6_CTRL3_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x36c) // 036C
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING7_CTRL0_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x370) // 0370
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING7_CTRL1_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x374) // 0374
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING7_CTRL2_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x378) // 0378
+#define WF_WFDMA_MCU_DMA0_WPDMA_TX_RING7_CTRL3_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x37c) // 037C
+
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING0_CTRL0_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x500) // 0500
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING0_CTRL1_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x504) // 0504
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING0_CTRL2_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x508) // 0508
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING0_CTRL3_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x50c) // 050C
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING1_CTRL0_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x510) // 0510
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING1_CTRL1_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x514) // 0514
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING1_CTRL2_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x518) // 0518
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING1_CTRL3_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x51c) // 051C
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING2_CTRL0_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x520) // 0520
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING2_CTRL1_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x524) // 0524
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING2_CTRL2_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x528) // 0528
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING2_CTRL3_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x52C) // 052C
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING3_CTRL0_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x530) // 0530
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING3_CTRL1_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x534) // 0534
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING3_CTRL2_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x538) // 0538
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING3_CTRL3_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x53C) // 053C
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING4_CTRL0_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x540) // 0540
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING4_CTRL1_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x544) // 0544
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING4_CTRL2_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x548) // 0548
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING4_CTRL3_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x54C) // 054C
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING5_CTRL0_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x550) // 0550
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING5_CTRL1_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x554) // 0554
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING5_CTRL2_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x558) // 0558
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING5_CTRL3_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x55C) // 055C
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING6_CTRL0_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x560) // 0560
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING6_CTRL1_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x564) // 0564
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING6_CTRL2_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x568) // 0568
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING6_CTRL3_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x56c) // 056C
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING7_CTRL0_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x570) // 0570
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING7_CTRL1_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x574) // 0574
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING7_CTRL2_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x578) // 0578
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING7_CTRL3_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x57c) // 057C
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING8_CTRL0_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x580) // 0580
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING8_CTRL1_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x584) // 0584
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING8_CTRL2_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x588) // 0588
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING8_CTRL3_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x58c) // 058C
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING9_CTRL0_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x590) // 0590
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING9_CTRL1_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x594) // 0594
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING9_CTRL2_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x598) // 0598
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING9_CTRL3_ADDR            (WF_WFDMA_MCU_DMA0_BASE + 0x59c) // 059C
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING10_CTRL0_ADDR           (WF_WFDMA_MCU_DMA0_BASE + 0x5A0) // 05A0
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING10_CTRL1_ADDR           (WF_WFDMA_MCU_DMA0_BASE + 0x5A4) // 05A4
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING10_CTRL2_ADDR           (WF_WFDMA_MCU_DMA0_BASE + 0x5A8) // 05A8
+#define WF_WFDMA_MCU_DMA0_WPDMA_RX_RING10_CTRL3_ADDR           (WF_WFDMA_MCU_DMA0_BASE + 0x5Ac) // 05AC
+
+// MEM DMA
+#define WF_WFDMA_MEM_DMA_BASE                                  0x58000000
+
+#define WF_WFDMA_MEM_DMA_HOST_INT_STA_ADDR                     (WF_WFDMA_MEM_DMA_BASE + 0x200) // 0200
+#define WF_WFDMA_MEM_DMA_HOST_INT_ENA_ADDR                     (WF_WFDMA_MEM_DMA_BASE + 0X204) // 0204
+#define WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_ADDR                    (WF_WFDMA_MEM_DMA_BASE + 0x208) // 0208
+
+#define WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_RX_DMA_BUSY_ADDR        WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_ADDR
+#define WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_RX_DMA_BUSY_MASK        0x00000008                // RX_DMA_BUSY[3]
+#define WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_RX_DMA_BUSY_SHFT        3
+#define WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_RX_DMA_EN_ADDR          WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_ADDR
+#define WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_RX_DMA_EN_MASK          0x00000004                // RX_DMA_EN[2]
+#define WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_RX_DMA_EN_SHFT          2
+#define WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_TX_DMA_BUSY_ADDR        WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_ADDR
+#define WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_TX_DMA_BUSY_MASK        0x00000002                // TX_DMA_BUSY[1]
+#define WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_TX_DMA_BUSY_SHFT        1
+#define WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_TX_DMA_EN_ADDR          WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_ADDR
+#define WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_TX_DMA_EN_MASK          0x00000001                // TX_DMA_EN[0]
+#define WF_WFDMA_MEM_DMA_WPDMA_GLO_CFG_TX_DMA_EN_SHFT          0
+
+#define WF_WFDMA_MEM_DMA_WPDMA_TX_RING0_CTRL0_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x300) // 0300
+#define WF_WFDMA_MEM_DMA_WPDMA_TX_RING0_CTRL1_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x304) // 0304
+#define WF_WFDMA_MEM_DMA_WPDMA_TX_RING0_CTRL2_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x308) // 0308
+#define WF_WFDMA_MEM_DMA_WPDMA_TX_RING0_CTRL3_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x30c) // 030C
+#define WF_WFDMA_MEM_DMA_WPDMA_TX_RING1_CTRL0_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x310) // 0310
+#define WF_WFDMA_MEM_DMA_WPDMA_TX_RING1_CTRL1_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x314) // 0314
+#define WF_WFDMA_MEM_DMA_WPDMA_TX_RING1_CTRL2_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x318) // 0318
+#define WF_WFDMA_MEM_DMA_WPDMA_TX_RING1_CTRL3_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x31c) // 031C
+#define WF_WFDMA_MEM_DMA_WPDMA_TX_RING2_CTRL0_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x320) // 0320
+#define WF_WFDMA_MEM_DMA_WPDMA_TX_RING2_CTRL1_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x324) // 0324
+#define WF_WFDMA_MEM_DMA_WPDMA_TX_RING2_CTRL2_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x328) // 0328
+#define WF_WFDMA_MEM_DMA_WPDMA_TX_RING2_CTRL3_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x32c) // 032C
+
+#define WF_WFDMA_MEM_DMA_WPDMA_RX_RING0_CTRL0_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x500) // 0500
+#define WF_WFDMA_MEM_DMA_WPDMA_RX_RING0_CTRL1_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x504) // 0504
+#define WF_WFDMA_MEM_DMA_WPDMA_RX_RING0_CTRL2_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x508) // 0508
+#define WF_WFDMA_MEM_DMA_WPDMA_RX_RING0_CTRL3_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x50c) // 050C
+#define WF_WFDMA_MEM_DMA_WPDMA_RX_RING1_CTRL0_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x510) // 0510
+#define WF_WFDMA_MEM_DMA_WPDMA_RX_RING1_CTRL1_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x514) // 0514
+#define WF_WFDMA_MEM_DMA_WPDMA_RX_RING1_CTRL2_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x518) // 0518
+#define WF_WFDMA_MEM_DMA_WPDMA_RX_RING1_CTRL3_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x51c) // 051C
+#define WF_WFDMA_MEM_DMA_WPDMA_RX_RING2_CTRL0_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x520) // 0520
+#define WF_WFDMA_MEM_DMA_WPDMA_RX_RING2_CTRL1_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x524) // 0524
+#define WF_WFDMA_MEM_DMA_WPDMA_RX_RING2_CTRL2_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x528) // 0528
+#define WF_WFDMA_MEM_DMA_WPDMA_RX_RING2_CTRL3_ADDR             (WF_WFDMA_MEM_DMA_BASE + 0x52C) // 052C
+
+/* MIB */
+#define WF_UMIB_TOP_BASE                                       0x820cd000
+#define BN0_WF_MIB_TOP_BASE                                    0x820ed000
+#define BN1_WF_MIB_TOP_BASE                                    0x820fd000
+#define IP1_BN0_WF_MIB_TOP_BASE                                0x830ed000
+
+#define WF_UMIB_TOP_B0BROCR_ADDR                               (WF_UMIB_TOP_BASE + 0x484) // D484
+#define WF_UMIB_TOP_B0BRBCR_ADDR                               (WF_UMIB_TOP_BASE + 0x4D4) // D4D4
+#define WF_UMIB_TOP_B0BRDCR_ADDR                               (WF_UMIB_TOP_BASE + 0x524) // D524
+#define WF_UMIB_TOP_B1BROCR_ADDR                               (WF_UMIB_TOP_BASE + 0x5E8) // D5E8
+#define WF_UMIB_TOP_B2BROCR_ADDR                               (WF_UMIB_TOP_BASE + 0x74C) // D74C
+
+#define BN0_WF_MIB_TOP_M0SCR0_ADDR                             (BN0_WF_MIB_TOP_BASE + 0x000) // D000
+#define BN0_WF_MIB_TOP_M0SDR6_ADDR                             (BN0_WF_MIB_TOP_BASE + 0x020) // D020
+#define BN0_WF_MIB_TOP_M0SDR9_ADDR                             (BN0_WF_MIB_TOP_BASE + 0x024) // D024
+#define BN0_WF_MIB_TOP_M0SDR18_ADDR                            (BN0_WF_MIB_TOP_BASE + 0x030) // D030
+#define BN0_WF_MIB_TOP_BTOCR_ADDR                              (BN0_WF_MIB_TOP_BASE + 0x400) // D400
+#define BN0_WF_MIB_TOP_BTBCR_ADDR                              (BN0_WF_MIB_TOP_BASE + 0x450) // D450
+#define BN0_WF_MIB_TOP_BTDCR_ADDR                              (BN0_WF_MIB_TOP_BASE + 0x590) // D590
+#define BN0_WF_MIB_TOP_BTCR_ADDR                               (BN0_WF_MIB_TOP_BASE + 0x5A0) // D5A0
+#define BN0_WF_MIB_TOP_RVSR0_ADDR                              (BN0_WF_MIB_TOP_BASE + __OFFS(MIB_RVSR0))
+
+#define BN0_WF_MIB_TOP_TSCR8_ADDR                              (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TSCR8))
+
+#define BN0_WF_MIB_TOP_TBCR0_ADDR                              (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TBCR0))
+#define BN0_WF_MIB_TOP_TBCR1_ADDR                              (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TBCR1))
+#define BN0_WF_MIB_TOP_TBCR2_ADDR                              (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TBCR2))
+#define BN0_WF_MIB_TOP_TBCR3_ADDR                              (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TBCR3))
+#define BN0_WF_MIB_TOP_TBCR4_ADDR                              (BN0_WF_MIB_TOP_BASE + 0x6FC) // D6FC, only for 7996
+
+#define BN0_WF_MIB_TOP_TDRCR0_ADDR                             (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TDRCR0))
+#define BN0_WF_MIB_TOP_TDRCR1_ADDR                             (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TDRCR1))
+#define BN0_WF_MIB_TOP_TDRCR2_ADDR                             (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TDRCR2))
+#define BN0_WF_MIB_TOP_TDRCR3_ADDR                             (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TDRCR3))
+#define BN0_WF_MIB_TOP_TDRCR4_ADDR                             (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TDRCR4))
+
+#define BN0_WF_MIB_TOP_BTSCR0_ADDR                             (BN0_WF_MIB_TOP_BASE + 0x5E0) // D5E0
+#define BN0_WF_MIB_TOP_BTSCR1_ADDR                             (BN0_WF_MIB_TOP_BASE + 0x5F0) // D5F0
+#define BN0_WF_MIB_TOP_BTSCR2_ADDR                             (BN0_WF_MIB_TOP_BASE + 0x600) // D600
+#define BN0_WF_MIB_TOP_BTSCR3_ADDR                             (BN0_WF_MIB_TOP_BASE + 0x610) // D610
+#define BN0_WF_MIB_TOP_BTSCR4_ADDR                             (BN0_WF_MIB_TOP_BASE + 0x620) // D620
+#define BN0_WF_MIB_TOP_BTSCR5_ADDR                             (BN0_WF_MIB_TOP_BASE + __OFFS(MIB_BTSCR5))
+#define BN0_WF_MIB_TOP_BTSCR6_ADDR                             (BN0_WF_MIB_TOP_BASE + __OFFS(MIB_BTSCR6))
+
+#define BN0_WF_MIB_TOP_RSCR1_ADDR                              (BN0_WF_MIB_TOP_BASE + __OFFS(MIB_RSCR1))
+#define BN0_WF_MIB_TOP_BSCR2_ADDR                              (BN0_WF_MIB_TOP_BASE + __OFFS(MIB_BSCR2))
+#define BN0_WF_MIB_TOP_TSCR18_ADDR                             (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TSCR18))
+
+#define BN0_WF_MIB_TOP_MSR0_ADDR                               (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_MSR0))
+#define BN0_WF_MIB_TOP_MSR1_ADDR                               (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_MSR1))
+#define BN0_WF_MIB_TOP_MSR2_ADDR                               (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_MSR2))
+#define BN0_WF_MIB_TOP_MCTR5_ADDR                              (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_MCTR5))
+#define BN0_WF_MIB_TOP_MCTR6_ADDR                              (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_MCTR6))
+
+#define BN0_WF_MIB_TOP_RSCR26_ADDR                             (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_RSCR26))
+#define BN0_WF_MIB_TOP_RSCR27_ADDR                             (BN0_WF_MIB_TOP_BASE + __OFFS(MIB_RSCR27))
+#define BN0_WF_MIB_TOP_RSCR28_ADDR                             (BN0_WF_MIB_TOP_BASE + __OFFS(MIB_RSCR28))
+#define BN0_WF_MIB_TOP_RSCR31_ADDR                             (BN0_WF_MIB_TOP_BASE + __OFFS(MIB_RSCR31))
+#define BN0_WF_MIB_TOP_RSCR33_ADDR                             (BN0_WF_MIB_TOP_BASE + __OFFS(MIB_RSCR33))
+#define BN0_WF_MIB_TOP_RSCR35_ADDR                             (BN0_WF_MIB_TOP_BASE + __OFFS(MIB_RSCR35))
+#define BN0_WF_MIB_TOP_RSCR36_ADDR                             (BN0_WF_MIB_TOP_BASE + __OFFS(MIB_RSCR36))
+
+#define BN0_WF_MIB_TOP_TSCR3_AMPDU_MPDU_COUNT_MASK             0xFFFFFFFF                // AMPDU_MPDU_COUNT[31..0]
+#define BN0_WF_MIB_TOP_TSCR4_AMPDU_ACKED_COUNT_MASK            0xFFFFFFFF                // AMPDU_ACKED_COUNT[31..0]
+#define BN0_WF_MIB_TOP_M0SDR6_CHANNEL_IDLE_COUNT_MASK          0x0000FFFF                // CHANNEL_IDLE_COUNT[15..0]
+#define BN0_WF_MIB_TOP_M0SDR9_CCA_NAV_TX_TIME_MASK             0x00FFFFFF                // CCA_NAV_TX_TIME[23..0]
+#define BN0_WF_MIB_TOP_RSCR26_RX_MDRDY_COUNT_MASK              0xFFFFFFFF                // RX_MDRDY_COUNT[31..0]
+#define BN0_WF_MIB_TOP_MSR0_CCK_MDRDY_TIME_MASK                0xFFFFFFFF                // CCK_MDRDY_TIME[31..0]
+#define BN0_WF_MIB_TOP_MSR1_OFDM_LG_MIXED_VHT_MDRDY_TIME_MASK  0xFFFFFFFF                // OFDM_LG_MIXED_VHT_MDRDY_TIME[31..0]
+#define BN0_WF_MIB_TOP_MSR2_OFDM_GREEN_MDRDY_TIME_MASK         0xFFFFFFFF                // OFDM_GREEN_MDRDY_TIME[31..0]
+#define BN0_WF_MIB_TOP_MCTR5_P_CCA_TIME_MASK                   0xFFFFFFFF                // P_CCA_TIME[31..0]
+#define BN0_WF_MIB_TOP_MCTR6_S_CCA_TIME_MASK                   0xFFFFFFFF                // S_CCA_TIME[31..0]
+#define BN0_WF_MIB_TOP_M0SDR18_P_ED_TIME_MASK                  0x00FFFFFF                // P_ED_TIME[23..0]
+#define BN0_WF_MIB_TOP_TSCR18_BEACONTXCOUNT_MASK               0xFFFFFFFF                // BEACONTXCOUNT[31..0]
+#define BN0_WF_MIB_TOP_TBCR0_TX_20MHZ_CNT_MASK                 0xFFFFFFFF                // TX_20MHZ_CNT[31..0]
+#define BN0_WF_MIB_TOP_TBCR1_TX_40MHZ_CNT_MASK                 0xFFFFFFFF                // TX_40MHZ_CNT[31..0]
+#define BN0_WF_MIB_TOP_TBCR2_TX_80MHZ_CNT_MASK                 0xFFFFFFFF                // TX_80MHZ_CNT[31..0]
+#define BN0_WF_MIB_TOP_TBCR3_TX_160MHZ_CNT_MASK                0xFFFFFFFF                // TX_160MHZ_CNT[31..0]
+#define BN0_WF_MIB_TOP_TBCR4_TX_320MHZ_CNT_MASK                0xFFFFFFFF                // TX_320MHZ_CNT[31..0]
+#define BN0_WF_MIB_TOP_BSCR2_MUBF_TX_COUNT_MASK                0xFFFFFFFF                // MUBF_TX_COUNT[31..0]
+#define BN0_WF_MIB_TOP_RVSR0_VEC_MISS_COUNT_MASK               0xFFFFFFFF                // VEC_MISS_COUNT[31..0]
+#define BN0_WF_MIB_TOP_RSCR35_DELIMITER_FAIL_COUNT_MASK        0xFFFFFFFF                // DELIMITER_FAIL_COUNT[31..0]
+#define BN0_WF_MIB_TOP_RSCR1_RX_FCS_ERROR_COUNT_MASK           0xFFFFFFFF                // RX_FCS_ERROR_COUNT[31..0]
+#define BN0_WF_MIB_TOP_RSCR33_RX_FIFO_FULL_COUNT_MASK          0xFFFFFFFF                // RX_FIFO_FULL_COUNT[31..0]
+#define BN0_WF_MIB_TOP_RSCR36_RX_LEN_MISMATCH_MASK             0xFFFFFFFF                // RX_LEN_MISMATCH[31..0]
+#define BN0_WF_MIB_TOP_RSCR31_RX_MPDU_COUNT_MASK               0xFFFFFFFF                // RX_MPDU_COUNT[31..0]
+#define BN0_WF_MIB_TOP_BTSCR5_RTSTXCOUNTn_MASK                 0xFFFFFFFF                // RTSTXCOUNTn[31..0]
+#define BN0_WF_MIB_TOP_BTSCR6_RTSRETRYCOUNTn_MASK              0xFFFFFFFF                // RTSRETRYCOUNTn[31..0]
+#define BN0_WF_MIB_TOP_BTSCR0_BAMISSCOUNTn_MASK                0xFFFFFFFF                // BAMISSCOUNTn[31..0]
+#define BN0_WF_MIB_TOP_BTSCR1_ACKFAILCOUNTn_MASK               0xFFFFFFFF                // ACKFAILCOUNTn[31..0]
+#define BN0_WF_MIB_TOP_BTSCR2_FRAMERETRYCOUNTn_MASK            0xFFFFFFFF                // FRAMERETRYCOUNTn[31..0]
+#define BN0_WF_MIB_TOP_BTSCR3_FRAMERETRY2COUNTn_MASK           0xFFFFFFFF                // FRAMERETRY2COUNTn[31..0]
+#define BN0_WF_MIB_TOP_BTSCR4_FRAMERETRY3COUNTn_MASK           0xFFFFFFFF                // FRAMERETRY3COUNTn[31..0]
+#define BN0_WF_MIB_TOP_TRARC0_ADDR                             (BN0_WF_MIB_TOP_BASE + 0x0B0) // D0B0
+#define BN0_WF_MIB_TOP_TRARC1_ADDR                             (BN0_WF_MIB_TOP_BASE + 0x0B4) // D0B4
+#define BN0_WF_MIB_TOP_TRARC2_ADDR                             (BN0_WF_MIB_TOP_BASE + 0x0B8) // D0B8
+#define BN0_WF_MIB_TOP_TRARC3_ADDR                             (BN0_WF_MIB_TOP_BASE + 0x0BC) // D0BC
+#define BN0_WF_MIB_TOP_TRARC4_ADDR                             (BN0_WF_MIB_TOP_BASE + 0x0C0) // D0C0
+#define BN0_WF_MIB_TOP_TRARC5_ADDR                             (BN0_WF_MIB_TOP_BASE + 0x0C4) // D0C4
+#define BN0_WF_MIB_TOP_TRARC6_ADDR                             (BN0_WF_MIB_TOP_BASE + 0x0C8) // D0C8
+#define BN0_WF_MIB_TOP_TRARC7_ADDR                             (BN0_WF_MIB_TOP_BASE + 0x0CC) // D0CC
+
+#define BN0_WF_MIB_TOP_TRDR0_ADDR                              (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TRDR0))
+#define BN0_WF_MIB_TOP_TRDR1_ADDR                              (BN0_WF_MIB_TOP_BASE + __OFFS(MIB_TRDR1))
+#define BN0_WF_MIB_TOP_TRDR2_ADDR                              (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TRDR2))
+#define BN0_WF_MIB_TOP_TRDR3_ADDR                              (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TRDR3))
+#define BN0_WF_MIB_TOP_TRDR4_ADDR                              (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TRDR4))
+#define BN0_WF_MIB_TOP_TRDR5_ADDR                              (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TRDR5))
+#define BN0_WF_MIB_TOP_TRDR6_ADDR                              (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TRDR6))
+#define BN0_WF_MIB_TOP_TRDR7_ADDR                              (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TRDR7))
+#define BN0_WF_MIB_TOP_TRDR8_ADDR                              (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TRDR8))
+#define BN0_WF_MIB_TOP_TRDR9_ADDR                              (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TRDR9))
+#define BN0_WF_MIB_TOP_TRDR10_ADDR                             (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TRDR10))
+#define BN0_WF_MIB_TOP_TRDR11_ADDR                             (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TRDR11))
+#define BN0_WF_MIB_TOP_TRDR12_ADDR                             (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TRDR12))
+#define BN0_WF_MIB_TOP_TRDR13_ADDR                             (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TRDR13))
+#define BN0_WF_MIB_TOP_TRDR14_ADDR                             (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TRDR14))
+#define BN0_WF_MIB_TOP_TRDR15_ADDR                             (BN0_WF_MIB_TOP_BASE + __DBG_OFFS(MIB_TRDR15))
+
+#define BN0_WF_MIB_TOP_TRARC0_AGG_RANG_SEL_1_ADDR              BN0_WF_MIB_TOP_TRARC0_ADDR
+#define BN0_WF_MIB_TOP_TRARC0_AGG_RANG_SEL_1_MASK              0x03FF0000                // AGG_RANG_SEL_1[25..16]
+#define BN0_WF_MIB_TOP_TRARC0_AGG_RANG_SEL_1_SHFT              16
+#define BN0_WF_MIB_TOP_TRARC0_AGG_RANG_SEL_0_ADDR              BN0_WF_MIB_TOP_TRARC0_ADDR
+#define BN0_WF_MIB_TOP_TRARC0_AGG_RANG_SEL_0_MASK              0x000003FF                // AGG_RANG_SEL_0[9..0]
+#define BN0_WF_MIB_TOP_TRARC0_AGG_RANG_SEL_0_SHFT              0
+
+#define BN0_WF_MIB_TOP_TRARC1_AGG_RANG_SEL_3_ADDR              BN0_WF_MIB_TOP_TRARC1_ADDR
+#define BN0_WF_MIB_TOP_TRARC1_AGG_RANG_SEL_3_MASK              0x03FF0000                // AGG_RANG_SEL_3[25..16]
+#define BN0_WF_MIB_TOP_TRARC1_AGG_RANG_SEL_3_SHFT              16
+#define BN0_WF_MIB_TOP_TRARC1_AGG_RANG_SEL_2_ADDR              BN0_WF_MIB_TOP_TRARC1_ADDR
+#define BN0_WF_MIB_TOP_TRARC1_AGG_RANG_SEL_2_MASK              0x000003FF                // AGG_RANG_SEL_2[9..0]
+#define BN0_WF_MIB_TOP_TRARC1_AGG_RANG_SEL_2_SHFT              0
+
+#define BN0_WF_MIB_TOP_TRARC2_AGG_RANG_SEL_5_ADDR              BN0_WF_MIB_TOP_TRARC2_ADDR
+#define BN0_WF_MIB_TOP_TRARC2_AGG_RANG_SEL_5_MASK              0x03FF0000                // AGG_RANG_SEL_5[25..16]
+#define BN0_WF_MIB_TOP_TRARC2_AGG_RANG_SEL_5_SHFT              16
+#define BN0_WF_MIB_TOP_TRARC2_AGG_RANG_SEL_4_ADDR              BN0_WF_MIB_TOP_TRARC2_ADDR
+#define BN0_WF_MIB_TOP_TRARC2_AGG_RANG_SEL_4_MASK              0x000003FF                // AGG_RANG_SEL_4[9..0]
+#define BN0_WF_MIB_TOP_TRARC2_AGG_RANG_SEL_4_SHFT              0
+
+#define BN0_WF_MIB_TOP_TRARC3_AGG_RANG_SEL_7_ADDR              BN0_WF_MIB_TOP_TRARC3_ADDR
+#define BN0_WF_MIB_TOP_TRARC3_AGG_RANG_SEL_7_MASK              0x03FF0000                // AGG_RANG_SEL_7[25..16]
+#define BN0_WF_MIB_TOP_TRARC3_AGG_RANG_SEL_7_SHFT              16
+#define BN0_WF_MIB_TOP_TRARC3_AGG_RANG_SEL_6_ADDR              BN0_WF_MIB_TOP_TRARC3_ADDR
+#define BN0_WF_MIB_TOP_TRARC3_AGG_RANG_SEL_6_MASK              0x000003FF                // AGG_RANG_SEL_6[9..0]
+#define BN0_WF_MIB_TOP_TRARC3_AGG_RANG_SEL_6_SHFT              0
+
+#define BN0_WF_MIB_TOP_TRARC4_AGG_RANG_SEL_9_ADDR              BN0_WF_MIB_TOP_TRARC4_ADDR
+#define BN0_WF_MIB_TOP_TRARC4_AGG_RANG_SEL_9_MASK              0x03FF0000                // AGG_RANG_SEL_9[25..16]
+#define BN0_WF_MIB_TOP_TRARC4_AGG_RANG_SEL_9_SHFT              16
+#define BN0_WF_MIB_TOP_TRARC4_AGG_RANG_SEL_8_ADDR              BN0_WF_MIB_TOP_TRARC4_ADDR
+#define BN0_WF_MIB_TOP_TRARC4_AGG_RANG_SEL_8_MASK              0x000003FF                // AGG_RANG_SEL_8[9..0]
+#define BN0_WF_MIB_TOP_TRARC4_AGG_RANG_SEL_8_SHFT              0
+
+#define BN0_WF_MIB_TOP_TRARC5_AGG_RANG_SEL_11_ADDR             BN0_WF_MIB_TOP_TRARC5_ADDR
+#define BN0_WF_MIB_TOP_TRARC5_AGG_RANG_SEL_11_MASK             0x03FF0000                // AGG_RANG_SEL_11[25..16]
+#define BN0_WF_MIB_TOP_TRARC5_AGG_RANG_SEL_11_SHFT             16
+#define BN0_WF_MIB_TOP_TRARC5_AGG_RANG_SEL_10_ADDR             BN0_WF_MIB_TOP_TRARC5_ADDR
+#define BN0_WF_MIB_TOP_TRARC5_AGG_RANG_SEL_10_MASK             0x000003FF                // AGG_RANG_SEL_10[9..0]
+#define BN0_WF_MIB_TOP_TRARC5_AGG_RANG_SEL_10_SHFT             0
+
+#define BN0_WF_MIB_TOP_TRARC6_AGG_RANG_SEL_13_ADDR             BN0_WF_MIB_TOP_TRARC6_ADDR
+#define BN0_WF_MIB_TOP_TRARC6_AGG_RANG_SEL_13_MASK             0x03FF0000                // AGG_RANG_SEL_13[25..16]
+#define BN0_WF_MIB_TOP_TRARC6_AGG_RANG_SEL_13_SHFT             16
+#define BN0_WF_MIB_TOP_TRARC6_AGG_RANG_SEL_12_ADDR             BN0_WF_MIB_TOP_TRARC6_ADDR
+#define BN0_WF_MIB_TOP_TRARC6_AGG_RANG_SEL_12_MASK             0x000003FF                // AGG_RANG_SEL_12[9..0]
+#define BN0_WF_MIB_TOP_TRARC6_AGG_RANG_SEL_12_SHFT             0
+
+#define BN0_WF_MIB_TOP_TRARC7_AGG_RANG_SEL_14_ADDR             BN0_WF_MIB_TOP_TRARC7_ADDR
+#define BN0_WF_MIB_TOP_TRARC7_AGG_RANG_SEL_14_MASK             0x000003FF                // AGG_RANG_SEL_14[9..0]
+#define BN0_WF_MIB_TOP_TRARC7_AGG_RANG_SEL_14_SHFT             0
+
+/* RRO TOP */
+#define WF_RRO_TOP_BASE                                        0xA000 /*0x820C2000 */
+#define WF_RRO_TOP_IND_CMD_0_CTRL0_ADDR                        (WF_RRO_TOP_BASE + 0x40) // 2040
+#define WF_RRO_TOP_RX_RING_AP_0_CTRL0_ADDR                     (WF_RRO_TOP_BASE + 0x650) // 2650
+
+/* WTBL */
+enum mt7996_wtbl_type {
+	WTBL_TYPE_LMAC, 	/* WTBL in LMAC */
+	WTBL_TYPE_UMAC, 	/* WTBL in UMAC */
+	WTBL_TYPE_KEY,		/* Key Table */
+	MAX_NUM_WTBL_TYPE
+};
+
+struct berse_wtbl_parse {
+	u8 *name;
+	u32 mask;
+	u32 shift;
+	u8 new_line;
+};
+
+enum muar_idx {
+	MUAR_INDEX_OWN_MAC_ADDR_0 = 0,
+	MUAR_INDEX_OWN_MAC_ADDR_1,
+	MUAR_INDEX_OWN_MAC_ADDR_2,
+	MUAR_INDEX_OWN_MAC_ADDR_3,
+	MUAR_INDEX_OWN_MAC_ADDR_4,
+	MUAR_INDEX_OWN_MAC_ADDR_BC_MC = 0xE,
+	MUAR_INDEX_UNMATCHED = 0xF,
+	MUAR_INDEX_OWN_MAC_ADDR_11 = 0x11,
+	MUAR_INDEX_OWN_MAC_ADDR_12,
+	MUAR_INDEX_OWN_MAC_ADDR_13,
+	MUAR_INDEX_OWN_MAC_ADDR_14,
+	MUAR_INDEX_OWN_MAC_ADDR_15,
+	MUAR_INDEX_OWN_MAC_ADDR_16,
+	MUAR_INDEX_OWN_MAC_ADDR_17,
+	MUAR_INDEX_OWN_MAC_ADDR_18,
+	MUAR_INDEX_OWN_MAC_ADDR_19,
+	MUAR_INDEX_OWN_MAC_ADDR_1A,
+	MUAR_INDEX_OWN_MAC_ADDR_1B,
+	MUAR_INDEX_OWN_MAC_ADDR_1C,
+	MUAR_INDEX_OWN_MAC_ADDR_1D,
+	MUAR_INDEX_OWN_MAC_ADDR_1E,
+	MUAR_INDEX_OWN_MAC_ADDR_1F,
+	MUAR_INDEX_OWN_MAC_ADDR_20,
+	MUAR_INDEX_OWN_MAC_ADDR_21,
+	MUAR_INDEX_OWN_MAC_ADDR_22,
+	MUAR_INDEX_OWN_MAC_ADDR_23,
+	MUAR_INDEX_OWN_MAC_ADDR_24,
+	MUAR_INDEX_OWN_MAC_ADDR_25,
+	MUAR_INDEX_OWN_MAC_ADDR_26,
+	MUAR_INDEX_OWN_MAC_ADDR_27,
+	MUAR_INDEX_OWN_MAC_ADDR_28,
+	MUAR_INDEX_OWN_MAC_ADDR_29,
+	MUAR_INDEX_OWN_MAC_ADDR_2A,
+	MUAR_INDEX_OWN_MAC_ADDR_2B,
+	MUAR_INDEX_OWN_MAC_ADDR_2C,
+	MUAR_INDEX_OWN_MAC_ADDR_2D,
+	MUAR_INDEX_OWN_MAC_ADDR_2E,
+	MUAR_INDEX_OWN_MAC_ADDR_2F
+};
+
+enum cipher_suit {
+	IGTK_CIPHER_SUIT_NONE = 0,
+	IGTK_CIPHER_SUIT_BIP,
+	IGTK_CIPHER_SUIT_BIP_256
+};
+
+#define LWTBL_LEN_IN_DW			36
+#define UWTBL_LEN_IN_DW			16
+
+#define MT_DBG_WTBL_BASE		0x820D8000
+
+#define MT_DBG_UWTBL_TOP_BASE		0x820c4000
+#define MT_DBG_UWTBL_TOP_WDUCR_ADDR	(MT_DBG_UWTBL_TOP_BASE + 0x0104) // 4104
+#define MT_DBG_UWTBL_TOP_WDUCR_GROUP	GENMASK(5, 0)
+#define MT_DBG_UWTBL_TOP_WDUCR_TARGET	BIT(31)
+/* for 7990 */
+#define MT_DBG_UWTBL_TOP_KDUCR_ADDR	(MT_DBG_UWTBL_TOP_BASE + 0x010c) // 410c
+#define MT_DBG_UWTBL_TOP_KDUCR_GROUP	GENMASK(6, 0)
+
+#define LWTBL_IDX2BASE_ID		GENMASK(14, 8)
+#define LWTBL_IDX2BASE_DW		GENMASK(7, 2)
+#define LWTBL_IDX2BASE(_id, _dw)	(MT_DBG_WTBL_BASE | \
+					FIELD_PREP(LWTBL_IDX2BASE_ID, _id) | \
+					FIELD_PREP(LWTBL_IDX2BASE_DW, _dw))
+
+#define UWTBL_IDX2BASE_ID		GENMASK(12, 6)
+#define UWTBL_IDX2BASE_DW		GENMASK(5, 2)
+#define UWTBL_IDX2BASE(_id, _dw)	(MT_DBG_UWTBL_TOP_BASE | 0x2000 | \
+					FIELD_PREP(UWTBL_IDX2BASE_ID, _id) | \
+					FIELD_PREP(UWTBL_IDX2BASE_DW, _dw))
+
+#define KEYTBL_IDX2BASE_KEY		GENMASK(12, 6)
+#define KEYTBL_IDX2BASE_DW		GENMASK(5, 2)
+#define KEYTBL_IDX2BASE(_key, _dw)	(MT_DBG_UWTBL_TOP_BASE | 0x2000 | \
+					FIELD_PREP(KEYTBL_IDX2BASE_KEY, _key) | \
+					FIELD_PREP(KEYTBL_IDX2BASE_DW, _dw))
+#define KEYTBL_IDX2BASE_KEY_7990	GENMASK(11, 6)
+#define KEYTBL_IDX2BASE_7990(_key, _dw)	(MT_DBG_UWTBL_TOP_BASE | 0x1000 | \
+					FIELD_PREP(KEYTBL_IDX2BASE_KEY_7990, _key) | \
+					FIELD_PREP(KEYTBL_IDX2BASE_DW, _dw))
+
+// UMAC WTBL
+// DW0
+#define WF_UWTBL_PEER_MLD_ADDRESS_47_32__DW                         0
+#define WF_UWTBL_PEER_MLD_ADDRESS_47_32__ADDR                       0
+#define WF_UWTBL_PEER_MLD_ADDRESS_47_32__MASK                       0x0000ffff // 15- 0
+#define WF_UWTBL_PEER_MLD_ADDRESS_47_32__SHIFT                      0
+#define WF_UWTBL_OWN_MLD_ID_DW                                      0
+#define WF_UWTBL_OWN_MLD_ID_ADDR                                    0
+#define WF_UWTBL_OWN_MLD_ID_MASK                                    0x003f0000 // 21-16
+#define WF_UWTBL_OWN_MLD_ID_SHIFT                                   16
+// DW1
+#define WF_UWTBL_PEER_MLD_ADDRESS_31_0__DW                          1
+#define WF_UWTBL_PEER_MLD_ADDRESS_31_0__ADDR                        4
+#define WF_UWTBL_PEER_MLD_ADDRESS_31_0__MASK                        0xffffffff // 31- 0
+#define WF_UWTBL_PEER_MLD_ADDRESS_31_0__SHIFT                       0
+// DW2
+#define WF_UWTBL_PN_31_0__DW                                        2
+#define WF_UWTBL_PN_31_0__ADDR                                      8
+#define WF_UWTBL_PN_31_0__MASK                                      0xffffffff // 31- 0
+#define WF_UWTBL_PN_31_0__SHIFT                                     0
+// DW3
+#define WF_UWTBL_PN_47_32__DW                                       3
+#define WF_UWTBL_PN_47_32__ADDR                                     12
+#define WF_UWTBL_PN_47_32__MASK                                     0x0000ffff // 15- 0
+#define WF_UWTBL_PN_47_32__SHIFT                                    0
+#define WF_UWTBL_COM_SN_DW                                          3
+#define WF_UWTBL_COM_SN_ADDR                                        12
+#define WF_UWTBL_COM_SN_MASK                                        0x0fff0000 // 27-16
+#define WF_UWTBL_COM_SN_SHIFT                                       16
+// DW4
+#define WF_UWTBL_TID0_SN_DW                                         4
+#define WF_UWTBL_TID0_SN_ADDR                                       16
+#define WF_UWTBL_TID0_SN_MASK                                       0x00000fff // 11- 0
+#define WF_UWTBL_TID0_SN_SHIFT                                      0
+#define WF_UWTBL_RX_BIPN_31_0__DW                                   4
+#define WF_UWTBL_RX_BIPN_31_0__ADDR                                 16
+#define WF_UWTBL_RX_BIPN_31_0__MASK                                 0xffffffff // 31- 0
+#define WF_UWTBL_RX_BIPN_31_0__SHIFT                                0
+#define WF_UWTBL_TID1_SN_DW                                         4
+#define WF_UWTBL_TID1_SN_ADDR                                       16
+#define WF_UWTBL_TID1_SN_MASK                                       0x00fff000 // 23-12
+#define WF_UWTBL_TID1_SN_SHIFT                                      12
+#define WF_UWTBL_TID2_SN_7_0__DW                                    4
+#define WF_UWTBL_TID2_SN_7_0__ADDR                                  16
+#define WF_UWTBL_TID2_SN_7_0__MASK                                  0xff000000 // 31-24
+#define WF_UWTBL_TID2_SN_7_0__SHIFT                                 24
+// DW5
+#define WF_UWTBL_TID2_SN_11_8__DW                                   5
+#define WF_UWTBL_TID2_SN_11_8__ADDR                                 20
+#define WF_UWTBL_TID2_SN_11_8__MASK                                 0x0000000f //  3- 0
+#define WF_UWTBL_TID2_SN_11_8__SHIFT                                0
+#define WF_UWTBL_RX_BIPN_47_32__DW                                  5
+#define WF_UWTBL_RX_BIPN_47_32__ADDR                                20
+#define WF_UWTBL_RX_BIPN_47_32__MASK                                0x0000ffff // 15- 0
+#define WF_UWTBL_RX_BIPN_47_32__SHIFT                               0
+#define WF_UWTBL_TID3_SN_DW                                         5
+#define WF_UWTBL_TID3_SN_ADDR                                       20
+#define WF_UWTBL_TID3_SN_MASK                                       0x0000fff0 // 15- 4
+#define WF_UWTBL_TID3_SN_SHIFT                                      4
+#define WF_UWTBL_TID4_SN_DW                                         5
+#define WF_UWTBL_TID4_SN_ADDR                                       20
+#define WF_UWTBL_TID4_SN_MASK                                       0x0fff0000 // 27-16
+#define WF_UWTBL_TID4_SN_SHIFT                                      16
+#define WF_UWTBL_TID5_SN_3_0__DW                                    5
+#define WF_UWTBL_TID5_SN_3_0__ADDR                                  20
+#define WF_UWTBL_TID5_SN_3_0__MASK                                  0xf0000000 // 31-28
+#define WF_UWTBL_TID5_SN_3_0__SHIFT                                 28
+// DW6
+#define WF_UWTBL_TID5_SN_11_4__DW                                   6
+#define WF_UWTBL_TID5_SN_11_4__ADDR                                 24
+#define WF_UWTBL_TID5_SN_11_4__MASK                                 0x000000ff //  7- 0
+#define WF_UWTBL_TID5_SN_11_4__SHIFT                                0
+#define WF_UWTBL_KEY_LOC2_DW                                        6
+#define WF_UWTBL_KEY_LOC2_ADDR                                      24
+#define WF_UWTBL_KEY_LOC2_MASK                                      0x00001fff // 12- 0
+#define WF_UWTBL_KEY_LOC2_SHIFT                                     0
+#define WF_UWTBL_TID6_SN_DW                                         6
+#define WF_UWTBL_TID6_SN_ADDR                                       24
+#define WF_UWTBL_TID6_SN_MASK                                       0x000fff00 // 19- 8
+#define WF_UWTBL_TID6_SN_SHIFT                                      8
+#define WF_UWTBL_TID7_SN_DW                                         6
+#define WF_UWTBL_TID7_SN_ADDR                                       24
+#define WF_UWTBL_TID7_SN_MASK                                       0xfff00000 // 31-20
+#define WF_UWTBL_TID7_SN_SHIFT                                      20
+// DW7
+#define WF_UWTBL_KEY_LOC0_DW                                        7
+#define WF_UWTBL_KEY_LOC0_ADDR                                      28
+#define WF_UWTBL_KEY_LOC0_MASK                                      0x00001fff // 12- 0
+#define WF_UWTBL_KEY_LOC0_SHIFT                                     0
+#define WF_UWTBL_KEY_LOC1_DW                                        7
+#define WF_UWTBL_KEY_LOC1_ADDR                                      28
+#define WF_UWTBL_KEY_LOC1_MASK                                      0x1fff0000 // 28-16
+#define WF_UWTBL_KEY_LOC1_SHIFT                                     16
+// DW8
+#define WF_UWTBL_AMSDU_CFG_DW                                       8
+#define WF_UWTBL_AMSDU_CFG_ADDR                                     32
+#define WF_UWTBL_AMSDU_CFG_MASK                                     0x00000fff // 11- 0
+#define WF_UWTBL_AMSDU_CFG_SHIFT                                    0
+#define WF_UWTBL_SEC_ADDR_MODE_DW                                   8
+#define WF_UWTBL_SEC_ADDR_MODE_ADDR                                 32
+#define WF_UWTBL_SEC_ADDR_MODE_MASK                                 0x00300000 // 21-20
+#define WF_UWTBL_SEC_ADDR_MODE_SHIFT                                20
+#define WF_UWTBL_AAD_OM_DW                                          8
+#define WF_UWTBL_AAD_OM_ADDR                                        32
+#define WF_UWTBL_AAD_OM_MASK                                        0x01000000 // 24-24
+#define WF_UWTBL_AAD_OM_SHIFT                                       24
+#define WF_UWTBL_WMM_Q_DW                                           8
+#define WF_UWTBL_WMM_Q_ADDR                                         32
+#define WF_UWTBL_WMM_Q_MASK                                         0x06000000 // 26-25
+#define WF_UWTBL_WMM_Q_SHIFT                                        25
+#define WF_UWTBL_QOS_DW                                             8
+#define WF_UWTBL_QOS_ADDR                                           32
+#define WF_UWTBL_QOS_MASK                                           0x08000000 // 27-27
+#define WF_UWTBL_QOS_SHIFT                                          27
+#define WF_UWTBL_HT_DW                                              8
+#define WF_UWTBL_HT_ADDR                                            32
+#define WF_UWTBL_HT_MASK                                            0x10000000 // 28-28
+#define WF_UWTBL_HT_SHIFT                                           28
+#define WF_UWTBL_HDRT_MODE_DW                                       8
+#define WF_UWTBL_HDRT_MODE_ADDR                                     32
+#define WF_UWTBL_HDRT_MODE_MASK                                     0x20000000 // 29-29
+#define WF_UWTBL_HDRT_MODE_SHIFT                                    29
+// DW9
+#define WF_UWTBL_RELATED_IDX0_DW                                    9
+#define WF_UWTBL_RELATED_IDX0_ADDR                                  36
+#define WF_UWTBL_RELATED_IDX0_MASK                                  0x00000fff // 11- 0
+#define WF_UWTBL_RELATED_IDX0_SHIFT                                 0
+#define WF_UWTBL_RELATED_BAND0_DW                                   9
+#define WF_UWTBL_RELATED_BAND0_ADDR                                 36
+#define WF_UWTBL_RELATED_BAND0_MASK                                 0x00003000 // 13-12
+#define WF_UWTBL_RELATED_BAND0_SHIFT                                12
+#define WF_UWTBL_PRIMARY_MLD_BAND_DW                                9
+#define WF_UWTBL_PRIMARY_MLD_BAND_ADDR                              36
+#define WF_UWTBL_PRIMARY_MLD_BAND_MASK                              0x0000c000 // 15-14
+#define WF_UWTBL_PRIMARY_MLD_BAND_SHIFT                             14
+#define WF_UWTBL_RELATED_IDX1_DW                                    9
+#define WF_UWTBL_RELATED_IDX1_ADDR                                  36
+#define WF_UWTBL_RELATED_IDX1_MASK                                  0x0fff0000 // 27-16
+#define WF_UWTBL_RELATED_IDX1_SHIFT                                 16
+#define WF_UWTBL_RELATED_BAND1_DW                                   9
+#define WF_UWTBL_RELATED_BAND1_ADDR                                 36
+#define WF_UWTBL_RELATED_BAND1_MASK                                 0x30000000 // 29-28
+#define WF_UWTBL_RELATED_BAND1_SHIFT                                28
+#define WF_UWTBL_SECONDARY_MLD_BAND_DW                              9
+#define WF_UWTBL_SECONDARY_MLD_BAND_ADDR                            36
+#define WF_UWTBL_SECONDARY_MLD_BAND_MASK                            0xc0000000 // 31-30
+#define WF_UWTBL_SECONDARY_MLD_BAND_SHIFT                           30
+
+/* LMAC WTBL */
+// DW0
+#define WF_LWTBL_PEER_LINK_ADDRESS_47_32__DW                        0
+#define WF_LWTBL_PEER_LINK_ADDRESS_47_32__ADDR                      0
+#define WF_LWTBL_PEER_LINK_ADDRESS_47_32__MASK \
+	0x0000ffff // 15- 0
+#define WF_LWTBL_PEER_LINK_ADDRESS_47_32__SHIFT                     0
+#define WF_LWTBL_MUAR_DW                                            0
+#define WF_LWTBL_MUAR_ADDR                                          0
+#define WF_LWTBL_MUAR_MASK \
+	0x003f0000 // 21-16
+#define WF_LWTBL_MUAR_SHIFT                                         16
+#define WF_LWTBL_RCA1_DW                                            0
+#define WF_LWTBL_RCA1_ADDR                                          0
+#define WF_LWTBL_RCA1_MASK \
+	0x00400000 // 22-22
+#define WF_LWTBL_RCA1_SHIFT                                         22
+#define WF_LWTBL_KID_DW                                             0
+#define WF_LWTBL_KID_ADDR                                           0
+#define WF_LWTBL_KID_MASK \
+	0x01800000 // 24-23
+#define WF_LWTBL_KID_SHIFT                                          23
+#define WF_LWTBL_RCID_DW                                            0
+#define WF_LWTBL_RCID_ADDR                                          0
+#define WF_LWTBL_RCID_MASK \
+	0x02000000 // 25-25
+#define WF_LWTBL_RCID_SHIFT                                         25
+#define WF_LWTBL_BAND_DW                                            0
+#define WF_LWTBL_BAND_ADDR                                          0
+#define WF_LWTBL_BAND_MASK \
+	0x0c000000 // 27-26
+#define WF_LWTBL_BAND_SHIFT                                         26
+#define WF_LWTBL_RV_DW                                              0
+#define WF_LWTBL_RV_ADDR                                            0
+#define WF_LWTBL_RV_MASK \
+	0x10000000 // 28-28
+#define WF_LWTBL_RV_SHIFT                                           28
+#define WF_LWTBL_RCA2_DW                                            0
+#define WF_LWTBL_RCA2_ADDR                                          0
+#define WF_LWTBL_RCA2_MASK \
+	0x20000000 // 29-29
+#define WF_LWTBL_RCA2_SHIFT                                         29
+#define WF_LWTBL_WPI_FLAG_DW                                        0
+#define WF_LWTBL_WPI_FLAG_ADDR                                      0
+#define WF_LWTBL_WPI_FLAG_MASK \
+	0x40000000 // 30-30
+#define WF_LWTBL_WPI_FLAG_SHIFT                                     30
+// DW1
+#define WF_LWTBL_PEER_LINK_ADDRESS_31_0__DW                         1
+#define WF_LWTBL_PEER_LINK_ADDRESS_31_0__ADDR                       4
+#define WF_LWTBL_PEER_LINK_ADDRESS_31_0__MASK \
+	0xffffffff // 31- 0
+#define WF_LWTBL_PEER_LINK_ADDRESS_31_0__SHIFT                      0
+// DW2
+#define WF_LWTBL_AID_DW                                             2
+#define WF_LWTBL_AID_ADDR                                           8
+#define WF_LWTBL_AID_MASK \
+	0x00000fff // 11- 0
+#define WF_LWTBL_AID_SHIFT                                          0
+#define WF_LWTBL_GID_SU_DW                                          2
+#define WF_LWTBL_GID_SU_ADDR                                        8
+#define WF_LWTBL_GID_SU_MASK \
+	0x00001000 // 12-12
+#define WF_LWTBL_GID_SU_SHIFT                                       12
+#define WF_LWTBL_SPP_EN_DW                                          2
+#define WF_LWTBL_SPP_EN_ADDR                                        8
+#define WF_LWTBL_SPP_EN_MASK \
+	0x00002000 // 13-13
+#define WF_LWTBL_SPP_EN_SHIFT                                       13
+#define WF_LWTBL_WPI_EVEN_DW                                        2
+#define WF_LWTBL_WPI_EVEN_ADDR                                      8
+#define WF_LWTBL_WPI_EVEN_MASK \
+	0x00004000 // 14-14
+#define WF_LWTBL_WPI_EVEN_SHIFT                                     14
+#define WF_LWTBL_AAD_OM_DW                                          2
+#define WF_LWTBL_AAD_OM_ADDR                                        8
+#define WF_LWTBL_AAD_OM_MASK \
+	0x00008000 // 15-15
+#define WF_LWTBL_AAD_OM_SHIFT                                       15
+/* kite DW2 field bit 13-14 */
+#define WF_LWTBL_DUAL_PTEC_EN_DW                                    2
+#define WF_LWTBL_DUAL_PTEC_EN_ADDR                                  8
+#define WF_LWTBL_DUAL_PTEC_EN_MASK \
+	0x00002000 // 13-13
+#define WF_LWTBL_DUAL_PTEC_EN_SHIFT                                 13
+#define WF_LWTBL_DUAL_CTS_CAP_DW                                    2
+#define WF_LWTBL_DUAL_CTS_CAP_ADDR                                  8
+#define WF_LWTBL_DUAL_CTS_CAP_MASK \
+	0x00004000 // 14-14
+#define WF_LWTBL_DUAL_CTS_CAP_SHIFT                                 14
+#define WF_LWTBL_CIPHER_SUIT_PGTK_DW                                2
+#define WF_LWTBL_CIPHER_SUIT_PGTK_ADDR                              8
+#define WF_LWTBL_CIPHER_SUIT_PGTK_MASK \
+	0x001f0000 // 20-16
+#define WF_LWTBL_CIPHER_SUIT_PGTK_SHIFT                             16
+#define WF_LWTBL_FD_DW                                              2
+#define WF_LWTBL_FD_ADDR                                            8
+#define WF_LWTBL_FD_MASK \
+	0x00200000 // 21-21
+#define WF_LWTBL_FD_SHIFT                                           21
+#define WF_LWTBL_TD_DW                                              2
+#define WF_LWTBL_TD_ADDR                                            8
+#define WF_LWTBL_TD_MASK \
+	0x00400000 // 22-22
+#define WF_LWTBL_TD_SHIFT                                           22
+#define WF_LWTBL_SW_DW                                              2
+#define WF_LWTBL_SW_ADDR                                            8
+#define WF_LWTBL_SW_MASK \
+	0x00800000 // 23-23
+#define WF_LWTBL_SW_SHIFT                                           23
+#define WF_LWTBL_UL_DW                                              2
+#define WF_LWTBL_UL_ADDR                                            8
+#define WF_LWTBL_UL_MASK \
+	0x01000000 // 24-24
+#define WF_LWTBL_UL_SHIFT                                           24
+#define WF_LWTBL_TX_PS_DW                                           2
+#define WF_LWTBL_TX_PS_ADDR                                         8
+#define WF_LWTBL_TX_PS_MASK \
+	0x02000000 // 25-25
+#define WF_LWTBL_TX_PS_SHIFT                                        25
+#define WF_LWTBL_QOS_DW                                             2
+#define WF_LWTBL_QOS_ADDR                                           8
+#define WF_LWTBL_QOS_MASK \
+	0x04000000 // 26-26
+#define WF_LWTBL_QOS_SHIFT                                          26
+#define WF_LWTBL_HT_DW                                              2
+#define WF_LWTBL_HT_ADDR                                            8
+#define WF_LWTBL_HT_MASK \
+	0x08000000 // 27-27
+#define WF_LWTBL_HT_SHIFT                                           27
+#define WF_LWTBL_VHT_DW                                             2
+#define WF_LWTBL_VHT_ADDR                                           8
+#define WF_LWTBL_VHT_MASK \
+	0x10000000 // 28-28
+#define WF_LWTBL_VHT_SHIFT                                          28
+#define WF_LWTBL_HE_DW                                              2
+#define WF_LWTBL_HE_ADDR                                            8
+#define WF_LWTBL_HE_MASK \
+	0x20000000 // 29-29
+#define WF_LWTBL_HE_SHIFT                                           29
+#define WF_LWTBL_EHT_DW                                             2
+#define WF_LWTBL_EHT_ADDR                                           8
+#define WF_LWTBL_EHT_MASK \
+	0x40000000 // 30-30
+#define WF_LWTBL_EHT_SHIFT                                          30
+#define WF_LWTBL_MESH_DW                                            2
+#define WF_LWTBL_MESH_ADDR                                          8
+#define WF_LWTBL_MESH_MASK \
+	0x80000000 // 31-31
+#define WF_LWTBL_MESH_SHIFT                                         31
+// DW3
+#define WF_LWTBL_WMM_Q_DW                                           3
+#define WF_LWTBL_WMM_Q_ADDR                                         12
+#define WF_LWTBL_WMM_Q_MASK \
+	0x00000003 // 1- 0
+#define WF_LWTBL_WMM_Q_SHIFT                                        0
+#define WF_LWTBL_EHT_SIG_MCS_DW                                     3
+#define WF_LWTBL_EHT_SIG_MCS_ADDR                                   12
+#define WF_LWTBL_EHT_SIG_MCS_MASK \
+	0x0000000c // 3- 2
+#define WF_LWTBL_EHT_SIG_MCS_SHIFT                                  2
+#define WF_LWTBL_HDRT_MODE_DW                                       3
+#define WF_LWTBL_HDRT_MODE_ADDR                                     12
+#define WF_LWTBL_HDRT_MODE_MASK \
+	0x00000010 // 4- 4
+#define WF_LWTBL_HDRT_MODE_SHIFT                                    4
+#define WF_LWTBL_BEAM_CHG_DW                                        3
+#define WF_LWTBL_BEAM_CHG_ADDR                                      12
+#define WF_LWTBL_BEAM_CHG_MASK \
+	0x00000020 // 5- 5
+#define WF_LWTBL_BEAM_CHG_SHIFT                                     5
+#define WF_LWTBL_EHT_LTF_SYM_NUM_OPT_DW                             3
+#define WF_LWTBL_EHT_LTF_SYM_NUM_OPT_ADDR                           12
+#define WF_LWTBL_EHT_LTF_SYM_NUM_OPT_MASK \
+	0x000000c0 // 7- 6
+#define WF_LWTBL_EHT_LTF_SYM_NUM_OPT_SHIFT                          6
+#define WF_LWTBL_PFMU_IDX_DW                                        3
+#define WF_LWTBL_PFMU_IDX_ADDR                                      12
+#define WF_LWTBL_PFMU_IDX_MASK \
+	0x0000ff00 // 15- 8
+#define WF_LWTBL_PFMU_IDX_SHIFT                                     8
+#define WF_LWTBL_ULPF_IDX_DW                                        3
+#define WF_LWTBL_ULPF_IDX_ADDR                                      12
+#define WF_LWTBL_ULPF_IDX_MASK \
+	0x00ff0000 // 23-16
+#define WF_LWTBL_ULPF_IDX_SHIFT                                     16
+#define WF_LWTBL_RIBF_DW                                            3
+#define WF_LWTBL_RIBF_ADDR                                          12
+#define WF_LWTBL_RIBF_MASK \
+	0x01000000 // 24-24
+#define WF_LWTBL_RIBF_SHIFT                                         24
+#define WF_LWTBL_ULPF_DW                                            3
+#define WF_LWTBL_ULPF_ADDR                                          12
+#define WF_LWTBL_ULPF_MASK \
+	0x02000000 // 25-25
+#define WF_LWTBL_ULPF_SHIFT                                         25
+#define WF_LWTBL_BYPASS_TXSMM_DW                                    3
+#define WF_LWTBL_BYPASS_TXSMM_ADDR                                  12
+#define WF_LWTBL_BYPASS_TXSMM_MASK \
+	0x04000000 // 26-26
+#define WF_LWTBL_BYPASS_TXSMM_SHIFT                                 26
+#define WF_LWTBL_TBF_HT_DW                                          3
+#define WF_LWTBL_TBF_HT_ADDR                                        12
+#define WF_LWTBL_TBF_HT_MASK \
+	0x08000000 // 27-27
+#define WF_LWTBL_TBF_HT_SHIFT                                       27
+#define WF_LWTBL_TBF_VHT_DW                                         3
+#define WF_LWTBL_TBF_VHT_ADDR                                       12
+#define WF_LWTBL_TBF_VHT_MASK \
+	0x10000000 // 28-28
+#define WF_LWTBL_TBF_VHT_SHIFT                                      28
+#define WF_LWTBL_TBF_HE_DW                                          3
+#define WF_LWTBL_TBF_HE_ADDR                                        12
+#define WF_LWTBL_TBF_HE_MASK \
+	0x20000000 // 29-29
+#define WF_LWTBL_TBF_HE_SHIFT                                       29
+#define WF_LWTBL_TBF_EHT_DW                                         3
+#define WF_LWTBL_TBF_EHT_ADDR                                       12
+#define WF_LWTBL_TBF_EHT_MASK \
+	0x40000000 // 30-30
+#define WF_LWTBL_TBF_EHT_SHIFT                                      30
+#define WF_LWTBL_IGN_FBK_DW                                         3
+#define WF_LWTBL_IGN_FBK_ADDR                                       12
+#define WF_LWTBL_IGN_FBK_MASK \
+	0x80000000 // 31-31
+#define WF_LWTBL_IGN_FBK_SHIFT                                      31
+// DW4
+#define WF_LWTBL_NEGOTIATED_WINSIZE0_DW                             4
+#define WF_LWTBL_NEGOTIATED_WINSIZE0_ADDR                           16
+#define WF_LWTBL_NEGOTIATED_WINSIZE0_MASK \
+	0x00000007 // 2- 0
+#define WF_LWTBL_NEGOTIATED_WINSIZE0_SHIFT                          0
+#define WF_LWTBL_NEGOTIATED_WINSIZE1_DW                             4
+#define WF_LWTBL_NEGOTIATED_WINSIZE1_ADDR                           16
+#define WF_LWTBL_NEGOTIATED_WINSIZE1_MASK \
+	0x00000038 // 5- 3
+#define WF_LWTBL_NEGOTIATED_WINSIZE1_SHIFT                          3
+#define WF_LWTBL_NEGOTIATED_WINSIZE2_DW                             4
+#define WF_LWTBL_NEGOTIATED_WINSIZE2_ADDR                           16
+#define WF_LWTBL_NEGOTIATED_WINSIZE2_MASK \
+	0x000001c0 // 8- 6
+#define WF_LWTBL_NEGOTIATED_WINSIZE2_SHIFT                          6
+#define WF_LWTBL_NEGOTIATED_WINSIZE3_DW                             4
+#define WF_LWTBL_NEGOTIATED_WINSIZE3_ADDR                           16
+#define WF_LWTBL_NEGOTIATED_WINSIZE3_MASK \
+	0x00000e00 // 11- 9
+#define WF_LWTBL_NEGOTIATED_WINSIZE3_SHIFT                          9
+#define WF_LWTBL_NEGOTIATED_WINSIZE4_DW                             4
+#define WF_LWTBL_NEGOTIATED_WINSIZE4_ADDR                           16
+#define WF_LWTBL_NEGOTIATED_WINSIZE4_MASK \
+	0x00007000 // 14-12
+#define WF_LWTBL_NEGOTIATED_WINSIZE4_SHIFT                          12
+#define WF_LWTBL_NEGOTIATED_WINSIZE5_DW                             4
+#define WF_LWTBL_NEGOTIATED_WINSIZE5_ADDR                           16
+#define WF_LWTBL_NEGOTIATED_WINSIZE5_MASK \
+	0x00038000 // 17-15
+#define WF_LWTBL_NEGOTIATED_WINSIZE5_SHIFT                          15
+#define WF_LWTBL_NEGOTIATED_WINSIZE6_DW                             4
+#define WF_LWTBL_NEGOTIATED_WINSIZE6_ADDR                           16
+#define WF_LWTBL_NEGOTIATED_WINSIZE6_MASK \
+	0x001c0000 // 20-18
+#define WF_LWTBL_NEGOTIATED_WINSIZE6_SHIFT                          18
+#define WF_LWTBL_NEGOTIATED_WINSIZE7_DW                             4
+#define WF_LWTBL_NEGOTIATED_WINSIZE7_ADDR                           16
+#define WF_LWTBL_NEGOTIATED_WINSIZE7_MASK \
+	0x00e00000 // 23-21
+#define WF_LWTBL_NEGOTIATED_WINSIZE7_SHIFT                          21
+#define WF_LWTBL_PE_DW                                              4
+#define WF_LWTBL_PE_ADDR                                            16
+#define WF_LWTBL_PE_MASK \
+	0x03000000 // 25-24
+#define WF_LWTBL_PE_SHIFT                                           24
+#define WF_LWTBL_DIS_RHTR_DW                                        4
+#define WF_LWTBL_DIS_RHTR_ADDR                                      16
+#define WF_LWTBL_DIS_RHTR_MASK \
+	0x04000000 // 26-26
+#define WF_LWTBL_DIS_RHTR_SHIFT                                     26
+#define WF_LWTBL_LDPC_HT_DW                                         4
+#define WF_LWTBL_LDPC_HT_ADDR                                       16
+#define WF_LWTBL_LDPC_HT_MASK \
+	0x08000000 // 27-27
+#define WF_LWTBL_LDPC_HT_SHIFT                                      27
+#define WF_LWTBL_LDPC_VHT_DW                                        4
+#define WF_LWTBL_LDPC_VHT_ADDR                                      16
+#define WF_LWTBL_LDPC_VHT_MASK \
+	0x10000000 // 28-28
+#define WF_LWTBL_LDPC_VHT_SHIFT                                     28
+#define WF_LWTBL_LDPC_HE_DW                                         4
+#define WF_LWTBL_LDPC_HE_ADDR                                       16
+#define WF_LWTBL_LDPC_HE_MASK \
+	0x20000000 // 29-29
+#define WF_LWTBL_LDPC_HE_SHIFT                                      29
+#define WF_LWTBL_LDPC_EHT_DW                                        4
+#define WF_LWTBL_LDPC_EHT_ADDR                                      16
+#define WF_LWTBL_LDPC_EHT_MASK \
+	0x40000000 // 30-30
+#define WF_LWTBL_LDPC_EHT_SHIFT                                     30
+#define WF_LWTBL_BA_MODE_DW                                         4
+#define WF_LWTBL_BA_MODE_ADDR                                       16
+#define WF_LWTBL_BA_MODE_MASK \
+	0x80000000 // 31-31
+#define WF_LWTBL_BA_MODE_SHIFT                                      31
+// DW5
+#define WF_LWTBL_AF_DW                                              5
+#define WF_LWTBL_AF_ADDR                                            20
+#define WF_LWTBL_AF_MASK \
+	0x00000007 // 2- 0
+#define WF_LWTBL_AF_MASK_7992 \
+	0x0000000f // 3- 0
+#define WF_LWTBL_AF_SHIFT                                           0
+#define WF_LWTBL_AF_HE_DW                                           5
+#define WF_LWTBL_AF_HE_ADDR                                         20
+#define WF_LWTBL_AF_HE_MASK \
+	0x00000018 // 4- 3
+#define WF_LWTBL_AF_HE_SHIFT                                        3
+#define WF_LWTBL_RTS_DW                                             5
+#define WF_LWTBL_RTS_ADDR                                           20
+#define WF_LWTBL_RTS_MASK \
+	0x00000020 // 5- 5
+#define WF_LWTBL_RTS_SHIFT                                          5
+#define WF_LWTBL_SMPS_DW                                            5
+#define WF_LWTBL_SMPS_ADDR                                          20
+#define WF_LWTBL_SMPS_MASK \
+	0x00000040 // 6- 6
+#define WF_LWTBL_SMPS_SHIFT                                         6
+#define WF_LWTBL_DYN_BW_DW                                          5
+#define WF_LWTBL_DYN_BW_ADDR                                        20
+#define WF_LWTBL_DYN_BW_MASK \
+	0x00000080 // 7- 7
+#define WF_LWTBL_DYN_BW_SHIFT                                       7
+#define WF_LWTBL_MMSS_DW                                            5
+#define WF_LWTBL_MMSS_ADDR                                          20
+#define WF_LWTBL_MMSS_MASK \
+	0x00000700 // 10- 8
+#define WF_LWTBL_MMSS_SHIFT                                         8
+#define WF_LWTBL_USR_DW                                             5
+#define WF_LWTBL_USR_ADDR                                           20
+#define WF_LWTBL_USR_MASK \
+	0x00000800 // 11-11
+#define WF_LWTBL_USR_SHIFT                                          11
+#define WF_LWTBL_SR_R_DW                                            5
+#define WF_LWTBL_SR_R_ADDR                                          20
+#define WF_LWTBL_SR_R_MASK \
+	0x00007000 // 14-12
+#define WF_LWTBL_SR_R_SHIFT                                         12
+#define WF_LWTBL_SR_ABORT_DW                                        5
+#define WF_LWTBL_SR_ABORT_ADDR                                      20
+#define WF_LWTBL_SR_ABORT_MASK \
+	0x00008000 // 15-15
+#define WF_LWTBL_SR_ABORT_SHIFT                                     15
+#define WF_LWTBL_TX_POWER_OFFSET_DW                                 5
+#define WF_LWTBL_TX_POWER_OFFSET_ADDR                               20
+#define WF_LWTBL_TX_POWER_OFFSET_MASK \
+	0x003f0000 // 21-16
+#define WF_LWTBL_TX_POWER_OFFSET_SHIFT                              16
+#define WF_LWTBL_LTF_EHT_DW                                         5
+#define WF_LWTBL_LTF_EHT_ADDR                                       20
+#define WF_LWTBL_LTF_EHT_MASK \
+	0x00c00000 // 23-22
+#define WF_LWTBL_LTF_EHT_SHIFT                                      22
+#define WF_LWTBL_GI_EHT_DW                                          5
+#define WF_LWTBL_GI_EHT_ADDR                                        20
+#define WF_LWTBL_GI_EHT_MASK \
+	0x03000000 // 25-24
+#define WF_LWTBL_GI_EHT_SHIFT                                       24
+#define WF_LWTBL_DOPPL_DW                                           5
+#define WF_LWTBL_DOPPL_ADDR                                         20
+#define WF_LWTBL_DOPPL_MASK \
+	0x04000000 // 26-26
+#define WF_LWTBL_DOPPL_SHIFT                                        26
+#define WF_LWTBL_TXOP_PS_CAP_DW                                     5
+#define WF_LWTBL_TXOP_PS_CAP_ADDR                                   20
+#define WF_LWTBL_TXOP_PS_CAP_MASK \
+	0x08000000 // 27-27
+#define WF_LWTBL_TXOP_PS_CAP_SHIFT                                  27
+#define WF_LWTBL_DU_I_PSM_DW                                        5
+#define WF_LWTBL_DU_I_PSM_ADDR                                      20
+#define WF_LWTBL_DU_I_PSM_MASK \
+	0x10000000 // 28-28
+#define WF_LWTBL_DU_I_PSM_SHIFT                                     28
+#define WF_LWTBL_I_PSM_DW                                           5
+#define WF_LWTBL_I_PSM_ADDR                                         20
+#define WF_LWTBL_I_PSM_MASK \
+	0x20000000 // 29-29
+#define WF_LWTBL_I_PSM_SHIFT                                        29
+#define WF_LWTBL_PSM_DW                                             5
+#define WF_LWTBL_PSM_ADDR                                           20
+#define WF_LWTBL_PSM_MASK \
+	0x40000000 // 30-30
+#define WF_LWTBL_PSM_SHIFT                                          30
+#define WF_LWTBL_SKIP_TX_DW                                         5
+#define WF_LWTBL_SKIP_TX_ADDR                                       20
+#define WF_LWTBL_SKIP_TX_MASK \
+	0x80000000 // 31-31
+#define WF_LWTBL_SKIP_TX_SHIFT                                      31
+// DW6
+#define WF_LWTBL_CBRN_DW                                            6
+#define WF_LWTBL_CBRN_ADDR                                          24
+#define WF_LWTBL_CBRN_MASK \
+	0x00000007 // 2- 0
+#define WF_LWTBL_CBRN_SHIFT                                         0
+#define WF_LWTBL_DBNSS_EN_DW                                        6
+#define WF_LWTBL_DBNSS_EN_ADDR                                      24
+#define WF_LWTBL_DBNSS_EN_MASK \
+	0x00000008 // 3- 3
+#define WF_LWTBL_DBNSS_EN_SHIFT                                     3
+#define WF_LWTBL_BAF_EN_DW                                          6
+#define WF_LWTBL_BAF_EN_ADDR                                        24
+#define WF_LWTBL_BAF_EN_MASK \
+	0x00000010 // 4- 4
+#define WF_LWTBL_BAF_EN_SHIFT                                       4
+#define WF_LWTBL_RDGBA_DW                                           6
+#define WF_LWTBL_RDGBA_ADDR                                         24
+#define WF_LWTBL_RDGBA_MASK \
+	0x00000020 // 5- 5
+#define WF_LWTBL_RDGBA_SHIFT                                        5
+#define WF_LWTBL_R_DW                                               6
+#define WF_LWTBL_R_ADDR                                             24
+#define WF_LWTBL_R_MASK \
+	0x00000040 // 6- 6
+#define WF_LWTBL_R_SHIFT                                            6
+#define WF_LWTBL_SPE_IDX_DW                                         6
+#define WF_LWTBL_SPE_IDX_ADDR                                       24
+#define WF_LWTBL_SPE_IDX_MASK \
+	0x00000f80 // 11- 7
+#define WF_LWTBL_SPE_IDX_SHIFT                                      7
+#define WF_LWTBL_G2_DW                                              6
+#define WF_LWTBL_G2_ADDR                                            24
+#define WF_LWTBL_G2_MASK \
+	0x00001000 // 12-12
+#define WF_LWTBL_G2_SHIFT                                           12
+#define WF_LWTBL_G4_DW                                              6
+#define WF_LWTBL_G4_ADDR                                            24
+#define WF_LWTBL_G4_MASK \
+	0x00002000 // 13-13
+#define WF_LWTBL_G4_SHIFT                                           13
+#define WF_LWTBL_G8_DW                                              6
+#define WF_LWTBL_G8_ADDR                                            24
+#define WF_LWTBL_G8_MASK \
+	0x00004000 // 14-14
+#define WF_LWTBL_G8_SHIFT                                           14
+#define WF_LWTBL_G16_DW                                             6
+#define WF_LWTBL_G16_ADDR                                           24
+#define WF_LWTBL_G16_MASK \
+	0x00008000 // 15-15
+#define WF_LWTBL_G16_SHIFT                                          15
+#define WF_LWTBL_G2_LTF_DW                                          6
+#define WF_LWTBL_G2_LTF_ADDR                                        24
+#define WF_LWTBL_G2_LTF_MASK \
+	0x00030000 // 17-16
+#define WF_LWTBL_G2_LTF_SHIFT                                       16
+#define WF_LWTBL_G4_LTF_DW                                          6
+#define WF_LWTBL_G4_LTF_ADDR                                        24
+#define WF_LWTBL_G4_LTF_MASK \
+	0x000c0000 // 19-18
+#define WF_LWTBL_G4_LTF_SHIFT                                       18
+#define WF_LWTBL_G8_LTF_DW                                          6
+#define WF_LWTBL_G8_LTF_ADDR                                        24
+#define WF_LWTBL_G8_LTF_MASK \
+	0x00300000 // 21-20
+#define WF_LWTBL_G8_LTF_SHIFT                                       20
+#define WF_LWTBL_G16_LTF_DW                                         6
+#define WF_LWTBL_G16_LTF_ADDR                                       24
+#define WF_LWTBL_G16_LTF_MASK \
+	0x00c00000 // 23-22
+#define WF_LWTBL_G16_LTF_SHIFT                                      22
+#define WF_LWTBL_G2_HE_DW                                           6
+#define WF_LWTBL_G2_HE_ADDR                                         24
+#define WF_LWTBL_G2_HE_MASK \
+	0x03000000 // 25-24
+#define WF_LWTBL_G2_HE_SHIFT                                        24
+#define WF_LWTBL_G4_HE_DW                                           6
+#define WF_LWTBL_G4_HE_ADDR                                         24
+#define WF_LWTBL_G4_HE_MASK \
+	0x0c000000 // 27-26
+#define WF_LWTBL_G4_HE_SHIFT                                        26
+#define WF_LWTBL_G8_HE_DW                                           6
+#define WF_LWTBL_G8_HE_ADDR                                         24
+#define WF_LWTBL_G8_HE_MASK \
+	0x30000000 // 29-28
+#define WF_LWTBL_G8_HE_SHIFT                                        28
+#define WF_LWTBL_G16_HE_DW                                          6
+#define WF_LWTBL_G16_HE_ADDR                                        24
+#define WF_LWTBL_G16_HE_MASK \
+	0xc0000000 // 31-30
+#define WF_LWTBL_G16_HE_SHIFT                                       30
+// DW7
+#define WF_LWTBL_BA_WIN_SIZE0_DW                                    7
+#define WF_LWTBL_BA_WIN_SIZE0_ADDR                                  28
+#define WF_LWTBL_BA_WIN_SIZE0_MASK \
+	0x0000000f // 3- 0
+#define WF_LWTBL_BA_WIN_SIZE0_SHIFT                                 0
+#define WF_LWTBL_BA_WIN_SIZE1_DW                                    7
+#define WF_LWTBL_BA_WIN_SIZE1_ADDR                                  28
+#define WF_LWTBL_BA_WIN_SIZE1_MASK \
+	0x000000f0 // 7- 4
+#define WF_LWTBL_BA_WIN_SIZE1_SHIFT                                 4
+#define WF_LWTBL_BA_WIN_SIZE2_DW                                    7
+#define WF_LWTBL_BA_WIN_SIZE2_ADDR                                  28
+#define WF_LWTBL_BA_WIN_SIZE2_MASK \
+	0x00000f00 // 11- 8
+#define WF_LWTBL_BA_WIN_SIZE2_SHIFT                                 8
+#define WF_LWTBL_BA_WIN_SIZE3_DW                                    7
+#define WF_LWTBL_BA_WIN_SIZE3_ADDR                                  28
+#define WF_LWTBL_BA_WIN_SIZE3_MASK \
+	0x0000f000 // 15-12
+#define WF_LWTBL_BA_WIN_SIZE3_SHIFT                                 12
+#define WF_LWTBL_BA_WIN_SIZE4_DW                                    7
+#define WF_LWTBL_BA_WIN_SIZE4_ADDR                                  28
+#define WF_LWTBL_BA_WIN_SIZE4_MASK \
+	0x000f0000 // 19-16
+#define WF_LWTBL_BA_WIN_SIZE4_SHIFT                                 16
+#define WF_LWTBL_BA_WIN_SIZE5_DW                                    7
+#define WF_LWTBL_BA_WIN_SIZE5_ADDR                                  28
+#define WF_LWTBL_BA_WIN_SIZE5_MASK \
+	0x00f00000 // 23-20
+#define WF_LWTBL_BA_WIN_SIZE5_SHIFT                                 20
+#define WF_LWTBL_BA_WIN_SIZE6_DW                                    7
+#define WF_LWTBL_BA_WIN_SIZE6_ADDR                                  28
+#define WF_LWTBL_BA_WIN_SIZE6_MASK \
+	0x0f000000 // 27-24
+#define WF_LWTBL_BA_WIN_SIZE6_SHIFT                                 24
+#define WF_LWTBL_BA_WIN_SIZE7_DW                                    7
+#define WF_LWTBL_BA_WIN_SIZE7_ADDR                                  28
+#define WF_LWTBL_BA_WIN_SIZE7_MASK \
+	0xf0000000 // 31-28
+#define WF_LWTBL_BA_WIN_SIZE7_SHIFT                                 28
+// DW8
+#define WF_LWTBL_AC0_RTS_FAIL_CNT_DW                                8
+#define WF_LWTBL_AC0_RTS_FAIL_CNT_ADDR                              32
+#define WF_LWTBL_AC0_RTS_FAIL_CNT_MASK \
+	0x0000001f // 4- 0
+#define WF_LWTBL_AC0_RTS_FAIL_CNT_SHIFT                             0
+#define WF_LWTBL_AC1_RTS_FAIL_CNT_DW                                8
+#define WF_LWTBL_AC1_RTS_FAIL_CNT_ADDR                              32
+#define WF_LWTBL_AC1_RTS_FAIL_CNT_MASK \
+	0x000003e0 // 9- 5
+#define WF_LWTBL_AC1_RTS_FAIL_CNT_SHIFT                             5
+#define WF_LWTBL_AC2_RTS_FAIL_CNT_DW                                8
+#define WF_LWTBL_AC2_RTS_FAIL_CNT_ADDR                              32
+#define WF_LWTBL_AC2_RTS_FAIL_CNT_MASK \
+	0x00007c00 // 14-10
+#define WF_LWTBL_AC2_RTS_FAIL_CNT_SHIFT                             10
+#define WF_LWTBL_AC3_RTS_FAIL_CNT_DW                                8
+#define WF_LWTBL_AC3_RTS_FAIL_CNT_ADDR                              32
+#define WF_LWTBL_AC3_RTS_FAIL_CNT_MASK \
+	0x000f8000 // 19-15
+#define WF_LWTBL_AC3_RTS_FAIL_CNT_SHIFT                             15
+#define WF_LWTBL_PARTIAL_AID_DW                                     8
+#define WF_LWTBL_PARTIAL_AID_ADDR                                   32
+#define WF_LWTBL_PARTIAL_AID_MASK \
+	0x1ff00000 // 28-20
+#define WF_LWTBL_PARTIAL_AID_SHIFT                                  20
+#define WF_LWTBL_CHK_PER_DW                                         8
+#define WF_LWTBL_CHK_PER_ADDR                                       32
+#define WF_LWTBL_CHK_PER_MASK \
+	0x80000000 // 31-31
+#define WF_LWTBL_CHK_PER_SHIFT                                      31
+// DW9
+#define WF_LWTBL_RX_AVG_MPDU_SIZE_DW                                9
+#define WF_LWTBL_RX_AVG_MPDU_SIZE_ADDR                              36
+#define WF_LWTBL_RX_AVG_MPDU_SIZE_MASK \
+	0x00003fff // 13- 0
+#define WF_LWTBL_RX_AVG_MPDU_SIZE_SHIFT                             0
+#define WF_LWTBL_PRITX_SW_MODE_DW                                   9
+#define WF_LWTBL_PRITX_SW_MODE_ADDR                                 36
+#define WF_LWTBL_PRITX_SW_MODE_MASK \
+	0x00008000 // 15-15
+#define WF_LWTBL_PRITX_SW_MODE_SHIFT                                15
+#define WF_LWTBL_PRITX_SW_MODE_MASK_7992 \
+	0x00004000 // 14-14
+#define WF_LWTBL_PRITX_SW_MODE_SHIFT_7992                           14
+#define WF_LWTBL_PRITX_ERSU_DW                                      9
+#define WF_LWTBL_PRITX_ERSU_ADDR                                    36
+#define WF_LWTBL_PRITX_ERSU_MASK \
+	0x00010000 // 16-16
+#define WF_LWTBL_PRITX_ERSU_SHIFT                                   16
+#define WF_LWTBL_PRITX_ERSU_MASK_7992 \
+	0x00008000 // 15-15
+#define WF_LWTBL_PRITX_ERSU_SHIFT_7992                              15
+#define WF_LWTBL_PRITX_PLR_DW                                       9
+#define WF_LWTBL_PRITX_PLR_ADDR                                     36
+#define WF_LWTBL_PRITX_PLR_MASK \
+	0x00020000 // 17-17
+#define WF_LWTBL_PRITX_PLR_SHIFT                                    17
+#define WF_LWTBL_PRITX_PLR_MASK_7992 \
+	0x00030000 // 17-16
+#define WF_LWTBL_PRITX_PLR_SHIFT_7992                               16
+#define WF_LWTBL_PRITX_DCM_DW                                       9
+#define WF_LWTBL_PRITX_DCM_ADDR                                     36
+#define WF_LWTBL_PRITX_DCM_MASK \
+	0x00040000 // 18-18
+#define WF_LWTBL_PRITX_DCM_SHIFT                                    18
+#define WF_LWTBL_PRITX_ER106T_DW                                    9
+#define WF_LWTBL_PRITX_ER106T_ADDR                                  36
+#define WF_LWTBL_PRITX_ER106T_MASK \
+	0x00080000 // 19-19
+#define WF_LWTBL_PRITX_ER106T_SHIFT                                 19
+#define WF_LWTBL_FCAP_DW                                            9
+#define WF_LWTBL_FCAP_ADDR                                          36
+#define WF_LWTBL_FCAP_MASK \
+	0x00700000 // 22-20
+#define WF_LWTBL_FCAP_SHIFT                                         20
+#define WF_LWTBL_MPDU_FAIL_CNT_DW                                   9
+#define WF_LWTBL_MPDU_FAIL_CNT_ADDR                                 36
+#define WF_LWTBL_MPDU_FAIL_CNT_MASK \
+	0x03800000 // 25-23
+#define WF_LWTBL_MPDU_FAIL_CNT_SHIFT                                23
+#define WF_LWTBL_MPDU_OK_CNT_DW                                     9
+#define WF_LWTBL_MPDU_OK_CNT_ADDR                                   36
+#define WF_LWTBL_MPDU_OK_CNT_MASK \
+	0x1c000000 // 28-26
+#define WF_LWTBL_MPDU_OK_CNT_SHIFT                                  26
+#define WF_LWTBL_RATE_IDX_DW                                        9
+#define WF_LWTBL_RATE_IDX_ADDR                                      36
+#define WF_LWTBL_RATE_IDX_MASK \
+	0xe0000000 // 31-29
+#define WF_LWTBL_RATE_IDX_SHIFT                                     29
+// DW10
+#define WF_LWTBL_RATE1_DW                                           10
+#define WF_LWTBL_RATE1_ADDR                                         40
+#define WF_LWTBL_RATE1_MASK \
+	0x00007fff // 14- 0
+#define WF_LWTBL_RATE1_SHIFT                                        0
+#define WF_LWTBL_RATE2_DW                                           10
+#define WF_LWTBL_RATE2_ADDR                                         40
+#define WF_LWTBL_RATE2_MASK \
+	0x7fff0000 // 30-16
+#define WF_LWTBL_RATE2_SHIFT                                        16
+// DW11
+#define WF_LWTBL_RATE3_DW                                           11
+#define WF_LWTBL_RATE3_ADDR                                         44
+#define WF_LWTBL_RATE3_MASK \
+	0x00007fff // 14- 0
+#define WF_LWTBL_RATE3_SHIFT                                        0
+#define WF_LWTBL_RATE4_DW                                           11
+#define WF_LWTBL_RATE4_ADDR                                         44
+#define WF_LWTBL_RATE4_MASK \
+	0x7fff0000 // 30-16
+#define WF_LWTBL_RATE4_SHIFT                                        16
+// DW12
+#define WF_LWTBL_RATE5_DW                                           12
+#define WF_LWTBL_RATE5_ADDR                                         48
+#define WF_LWTBL_RATE5_MASK \
+	0x00007fff // 14- 0
+#define WF_LWTBL_RATE5_SHIFT                                        0
+#define WF_LWTBL_RATE6_DW                                           12
+#define WF_LWTBL_RATE6_ADDR                                         48
+#define WF_LWTBL_RATE6_MASK \
+	0x7fff0000 // 30-16
+#define WF_LWTBL_RATE6_SHIFT                                        16
+// DW13
+#define WF_LWTBL_RATE7_DW                                           13
+#define WF_LWTBL_RATE7_ADDR                                         52
+#define WF_LWTBL_RATE7_MASK \
+	0x00007fff // 14- 0
+#define WF_LWTBL_RATE7_SHIFT                                        0
+#define WF_LWTBL_RATE8_DW                                           13
+#define WF_LWTBL_RATE8_ADDR                                         52
+#define WF_LWTBL_RATE8_MASK \
+	0x7fff0000 // 30-16
+#define WF_LWTBL_RATE8_SHIFT                                        16
+// DW14
+#define WF_LWTBL_RATE1_TX_CNT_DW                                    14
+#define WF_LWTBL_RATE1_TX_CNT_ADDR                                  56
+#define WF_LWTBL_RATE1_TX_CNT_MASK \
+	0x0000ffff // 15- 0
+#define WF_LWTBL_RATE1_TX_CNT_SHIFT                                 0
+#define WF_LWTBL_CIPHER_SUIT_IGTK_DW                                14
+#define WF_LWTBL_CIPHER_SUIT_IGTK_ADDR                              56
+#define WF_LWTBL_CIPHER_SUIT_IGTK_MASK \
+	0x00003000 // 13-12
+#define WF_LWTBL_CIPHER_SUIT_IGTK_SHIFT                             12
+#define WF_LWTBL_CIPHER_SUIT_BIGTK_DW                               14
+#define WF_LWTBL_CIPHER_SUIT_BIGTK_ADDR                             56
+#define WF_LWTBL_CIPHER_SUIT_BIGTK_MASK \
+	0x0000c000 // 15-14
+#define WF_LWTBL_CIPHER_SUIT_BIGTK_SHIFT                            14
+#define WF_LWTBL_RATE1_FAIL_CNT_DW                                  14
+#define WF_LWTBL_RATE1_FAIL_CNT_ADDR                                56
+#define WF_LWTBL_RATE1_FAIL_CNT_MASK \
+	0xffff0000 // 31-16
+#define WF_LWTBL_RATE1_FAIL_CNT_SHIFT                               16
+// DW15
+#define WF_LWTBL_RATE2_OK_CNT_DW                                    15
+#define WF_LWTBL_RATE2_OK_CNT_ADDR                                  60
+#define WF_LWTBL_RATE2_OK_CNT_MASK \
+	0x0000ffff // 15- 0
+#define WF_LWTBL_RATE2_OK_CNT_SHIFT                                 0
+#define WF_LWTBL_RATE3_OK_CNT_DW                                    15
+#define WF_LWTBL_RATE3_OK_CNT_ADDR                                  60
+#define WF_LWTBL_RATE3_OK_CNT_MASK \
+	0xffff0000 // 31-16
+#define WF_LWTBL_RATE3_OK_CNT_SHIFT                                 16
+// DW16
+#define WF_LWTBL_CURRENT_BW_TX_CNT_DW                               16
+#define WF_LWTBL_CURRENT_BW_TX_CNT_ADDR                             64
+#define WF_LWTBL_CURRENT_BW_TX_CNT_MASK \
+	0x0000ffff // 15- 0
+#define WF_LWTBL_CURRENT_BW_TX_CNT_SHIFT                            0
+#define WF_LWTBL_CURRENT_BW_FAIL_CNT_DW                             16
+#define WF_LWTBL_CURRENT_BW_FAIL_CNT_ADDR                           64
+#define WF_LWTBL_CURRENT_BW_FAIL_CNT_MASK \
+	0xffff0000 // 31-16
+#define WF_LWTBL_CURRENT_BW_FAIL_CNT_SHIFT                          16
+// DW17
+#define WF_LWTBL_OTHER_BW_TX_CNT_DW                                 17
+#define WF_LWTBL_OTHER_BW_TX_CNT_ADDR                               68
+#define WF_LWTBL_OTHER_BW_TX_CNT_MASK \
+	0x0000ffff // 15- 0
+#define WF_LWTBL_OTHER_BW_TX_CNT_SHIFT                              0
+#define WF_LWTBL_OTHER_BW_FAIL_CNT_DW                               17
+#define WF_LWTBL_OTHER_BW_FAIL_CNT_ADDR                             68
+#define WF_LWTBL_OTHER_BW_FAIL_CNT_MASK \
+	0xffff0000 // 31-16
+#define WF_LWTBL_OTHER_BW_FAIL_CNT_SHIFT                            16
+// DW18
+#define WF_LWTBL_RTS_OK_CNT_DW                                      18
+#define WF_LWTBL_RTS_OK_CNT_ADDR                                    72
+#define WF_LWTBL_RTS_OK_CNT_MASK \
+	0x0000ffff // 15- 0
+#define WF_LWTBL_RTS_OK_CNT_SHIFT                                   0
+#define WF_LWTBL_RTS_FAIL_CNT_DW                                    18
+#define WF_LWTBL_RTS_FAIL_CNT_ADDR                                  72
+#define WF_LWTBL_RTS_FAIL_CNT_MASK \
+	0xffff0000 // 31-16
+#define WF_LWTBL_RTS_FAIL_CNT_SHIFT                                 16
+// DW19
+#define WF_LWTBL_DATA_RETRY_CNT_DW                                  19
+#define WF_LWTBL_DATA_RETRY_CNT_ADDR                                76
+#define WF_LWTBL_DATA_RETRY_CNT_MASK \
+	0x0000ffff // 15- 0
+#define WF_LWTBL_DATA_RETRY_CNT_SHIFT                               0
+#define WF_LWTBL_MGNT_RETRY_CNT_DW                                  19
+#define WF_LWTBL_MGNT_RETRY_CNT_ADDR                                76
+#define WF_LWTBL_MGNT_RETRY_CNT_MASK \
+	0xffff0000 // 31-16
+#define WF_LWTBL_MGNT_RETRY_CNT_SHIFT                               16
+// DW20
+#define WF_LWTBL_AC0_CTT_CDT_CRB_DW                                 20
+#define WF_LWTBL_AC0_CTT_CDT_CRB_ADDR                               80
+#define WF_LWTBL_AC0_CTT_CDT_CRB_MASK \
+	0xffffffff // 31- 0
+#define WF_LWTBL_AC0_CTT_CDT_CRB_SHIFT                              0
+// DW21
+// DO NOT process repeat field(adm[0])
+// DW22
+#define WF_LWTBL_AC1_CTT_CDT_CRB_DW                                 22
+#define WF_LWTBL_AC1_CTT_CDT_CRB_ADDR                               88
+#define WF_LWTBL_AC1_CTT_CDT_CRB_MASK \
+	0xffffffff // 31- 0
+#define WF_LWTBL_AC1_CTT_CDT_CRB_SHIFT                              0
+// DW23
+// DO NOT process repeat field(adm[1])
+// DW24
+#define WF_LWTBL_AC2_CTT_CDT_CRB_DW                                 24
+#define WF_LWTBL_AC2_CTT_CDT_CRB_ADDR                               96
+#define WF_LWTBL_AC2_CTT_CDT_CRB_MASK \
+	0xffffffff // 31- 0
+#define WF_LWTBL_AC2_CTT_CDT_CRB_SHIFT                              0
+// DW25
+// DO NOT process repeat field(adm[2])
+// DW26
+#define WF_LWTBL_AC3_CTT_CDT_CRB_DW                                 26
+#define WF_LWTBL_AC3_CTT_CDT_CRB_ADDR                               104
+#define WF_LWTBL_AC3_CTT_CDT_CRB_MASK \
+	0xffffffff // 31- 0
+#define WF_LWTBL_AC3_CTT_CDT_CRB_SHIFT                              0
+// DW27
+// DO NOT process repeat field(adm[3])
+// DW28
+#define WF_LWTBL_RELATED_IDX0_DW                                    28
+#define WF_LWTBL_RELATED_IDX0_ADDR                                  112
+#define WF_LWTBL_RELATED_IDX0_MASK \
+	0x00000fff // 11- 0
+#define WF_LWTBL_RELATED_IDX0_SHIFT                                 0
+#define WF_LWTBL_RELATED_BAND0_DW                                   28
+#define WF_LWTBL_RELATED_BAND0_ADDR                                 112
+#define WF_LWTBL_RELATED_BAND0_MASK \
+	0x00003000 // 13-12
+#define WF_LWTBL_RELATED_BAND0_SHIFT                                12
+#define WF_LWTBL_PRIMARY_MLD_BAND_DW                                28
+#define WF_LWTBL_PRIMARY_MLD_BAND_ADDR                              112
+#define WF_LWTBL_PRIMARY_MLD_BAND_MASK \
+	0x0000c000 // 15-14
+#define WF_LWTBL_PRIMARY_MLD_BAND_SHIFT                             14
+#define WF_LWTBL_RELATED_IDX1_DW                                    28
+#define WF_LWTBL_RELATED_IDX1_ADDR                                  112
+#define WF_LWTBL_RELATED_IDX1_MASK \
+	0x0fff0000 // 27-16
+#define WF_LWTBL_RELATED_IDX1_SHIFT                                 16
+#define WF_LWTBL_RELATED_BAND1_DW                                   28
+#define WF_LWTBL_RELATED_BAND1_ADDR                                 112
+#define WF_LWTBL_RELATED_BAND1_MASK \
+	0x30000000 // 29-28
+#define WF_LWTBL_RELATED_BAND1_SHIFT                                28
+#define WF_LWTBL_SECONDARY_MLD_BAND_DW                              28
+#define WF_LWTBL_SECONDARY_MLD_BAND_ADDR                            112
+#define WF_LWTBL_SECONDARY_MLD_BAND_MASK \
+	0xc0000000 // 31-30
+#define WF_LWTBL_SECONDARY_MLD_BAND_SHIFT                           30
+// DW29
+#define WF_LWTBL_DISPATCH_POLICY0_DW                                29
+#define WF_LWTBL_DISPATCH_POLICY0_ADDR                              116
+#define WF_LWTBL_DISPATCH_POLICY0_MASK \
+	0x00000003 // 1- 0
+#define WF_LWTBL_DISPATCH_POLICY0_SHIFT                             0
+#define WF_LWTBL_DISPATCH_POLICY1_DW                                29
+#define WF_LWTBL_DISPATCH_POLICY1_ADDR                              116
+#define WF_LWTBL_DISPATCH_POLICY1_MASK \
+	0x0000000c // 3- 2
+#define WF_LWTBL_DISPATCH_POLICY1_SHIFT                             2
+#define WF_LWTBL_DISPATCH_POLICY2_DW                                29
+#define WF_LWTBL_DISPATCH_POLICY2_ADDR                              116
+#define WF_LWTBL_DISPATCH_POLICY2_MASK \
+	0x00000030 // 5- 4
+#define WF_LWTBL_DISPATCH_POLICY2_SHIFT                             4
+#define WF_LWTBL_DISPATCH_POLICY3_DW                                29
+#define WF_LWTBL_DISPATCH_POLICY3_ADDR                              116
+#define WF_LWTBL_DISPATCH_POLICY3_MASK \
+	0x000000c0 // 7- 6
+#define WF_LWTBL_DISPATCH_POLICY3_SHIFT                             6
+#define WF_LWTBL_DISPATCH_POLICY4_DW                                29
+#define WF_LWTBL_DISPATCH_POLICY4_ADDR                              116
+#define WF_LWTBL_DISPATCH_POLICY4_MASK \
+	0x00000300 // 9- 8
+#define WF_LWTBL_DISPATCH_POLICY4_SHIFT                             8
+#define WF_LWTBL_DISPATCH_POLICY5_DW                                29
+#define WF_LWTBL_DISPATCH_POLICY5_ADDR                              116
+#define WF_LWTBL_DISPATCH_POLICY5_MASK \
+	0x00000c00 // 11-10
+#define WF_LWTBL_DISPATCH_POLICY5_SHIFT                             10
+#define WF_LWTBL_DISPATCH_POLICY6_DW                                29
+#define WF_LWTBL_DISPATCH_POLICY6_ADDR                              116
+#define WF_LWTBL_DISPATCH_POLICY6_MASK \
+	0x00003000 // 13-12
+#define WF_LWTBL_DISPATCH_POLICY6_SHIFT                             12
+#define WF_LWTBL_DISPATCH_POLICY7_DW                                29
+#define WF_LWTBL_DISPATCH_POLICY7_ADDR                              116
+#define WF_LWTBL_DISPATCH_POLICY7_MASK \
+	0x0000c000 // 15-14
+#define WF_LWTBL_DISPATCH_POLICY7_SHIFT                             14
+#define WF_LWTBL_OWN_MLD_ID_DW                                      29
+#define WF_LWTBL_OWN_MLD_ID_ADDR                                    116
+#define WF_LWTBL_OWN_MLD_ID_MASK \
+	0x003f0000 // 21-16
+#define WF_LWTBL_OWN_MLD_ID_SHIFT                                   16
+#define WF_LWTBL_EMLSR0_DW                                          29
+#define WF_LWTBL_EMLSR0_ADDR                                        116
+#define WF_LWTBL_EMLSR0_MASK \
+	0x00400000 // 22-22
+#define WF_LWTBL_EMLSR0_SHIFT                                       22
+#define WF_LWTBL_EMLMR0_DW                                          29
+#define WF_LWTBL_EMLMR0_ADDR                                        116
+#define WF_LWTBL_EMLMR0_MASK \
+	0x00800000 // 23-23
+#define WF_LWTBL_EMLMR0_SHIFT                                       23
+#define WF_LWTBL_EMLSR1_DW                                          29
+#define WF_LWTBL_EMLSR1_ADDR                                        116
+#define WF_LWTBL_EMLSR1_MASK \
+	0x01000000 // 24-24
+#define WF_LWTBL_EMLSR1_SHIFT                                       24
+#define WF_LWTBL_EMLMR1_DW                                          29
+#define WF_LWTBL_EMLMR1_ADDR                                        116
+#define WF_LWTBL_EMLMR1_MASK \
+	0x02000000 // 25-25
+#define WF_LWTBL_EMLMR1_SHIFT                                       25
+#define WF_LWTBL_EMLSR2_DW                                          29
+#define WF_LWTBL_EMLSR2_ADDR                                        116
+#define WF_LWTBL_EMLSR2_MASK \
+	0x04000000 // 26-26
+#define WF_LWTBL_EMLSR2_SHIFT                                       26
+#define WF_LWTBL_EMLMR2_DW                                          29
+#define WF_LWTBL_EMLMR2_ADDR                                        116
+#define WF_LWTBL_EMLMR2_MASK \
+	0x08000000 // 27-27
+#define WF_LWTBL_EMLMR2_SHIFT                                       27
+#define WF_LWTBL_STR_BITMAP_DW                                      29
+#define WF_LWTBL_STR_BITMAP_ADDR                                    116
+#define WF_LWTBL_STR_BITMAP_MASK \
+	0xe0000000 // 31-29
+#define WF_LWTBL_STR_BITMAP_SHIFT                                   29
+// DW30
+#define WF_LWTBL_DISPATCH_ORDER_DW                                  30
+#define WF_LWTBL_DISPATCH_ORDER_ADDR                                120
+#define WF_LWTBL_DISPATCH_ORDER_MASK \
+	0x0000007f // 6- 0
+#define WF_LWTBL_DISPATCH_ORDER_SHIFT                               0
+#define WF_LWTBL_DISPATCH_RATIO_DW                                  30
+#define WF_LWTBL_DISPATCH_RATIO_ADDR                                120
+#define WF_LWTBL_DISPATCH_RATIO_MASK \
+	0x00003f80 // 13- 7
+#define WF_LWTBL_DISPATCH_RATIO_SHIFT                               7
+#define WF_LWTBL_LINK_MGF_DW                                        30
+#define WF_LWTBL_LINK_MGF_ADDR                                      120
+#define WF_LWTBL_LINK_MGF_MASK \
+	0xffff0000 // 31-16
+#define WF_LWTBL_LINK_MGF_SHIFT                                     16
+// DW31
+#define WF_LWTBL_BFTX_TB_DW                                         31
+#define WF_LWTBL_BFTX_TB_ADDR                                       124
+#define WF_LWTBL_BFTX_TB_MASK \
+	0x00800000 // 23-23
+#define WF_LWTBL_DROP_DW                                            31
+#define WF_LWTBL_DROP_ADDR                                          124
+#define WF_LWTBL_DROP_MASK \
+	0x01000000 // 24-24
+#define WF_LWTBL_DROP_SHIFT                                         24
+#define WF_LWTBL_CASCAD_DW                                          31
+#define WF_LWTBL_CASCAD_ADDR                                        124
+#define WF_LWTBL_CASCAD_MASK \
+	0x02000000 // 25-25
+#define WF_LWTBL_CASCAD_SHIFT                                       25
+#define WF_LWTBL_ALL_ACK_DW                                         31
+#define WF_LWTBL_ALL_ACK_ADDR                                       124
+#define WF_LWTBL_ALL_ACK_MASK \
+	0x04000000 // 26-26
+#define WF_LWTBL_ALL_ACK_SHIFT                                      26
+#define WF_LWTBL_MPDU_SIZE_DW                                       31
+#define WF_LWTBL_MPDU_SIZE_ADDR                                     124
+#define WF_LWTBL_MPDU_SIZE_MASK \
+	0x18000000 // 28-27
+#define WF_LWTBL_MPDU_SIZE_SHIFT                                    27
+#define WF_LWTBL_RXD_DUP_MODE_DW                                    31
+#define WF_LWTBL_RXD_DUP_MODE_ADDR                                  124
+#define WF_LWTBL_RXD_DUP_MODE_MASK \
+	0x60000000 // 30-29
+#define WF_LWTBL_RXD_DUP_MODE_SHIFT                                 29
+#define WF_LWTBL_ACK_EN_DW                                          31
+#define WF_LWTBL_ACK_EN_ADDR                                        128
+#define WF_LWTBL_ACK_EN_MASK \
+	0x80000000 // 31-31
+#define WF_LWTBL_ACK_EN_SHIFT                                       31
+// DW32
+#define WF_LWTBL_OM_INFO_DW                                         32
+#define WF_LWTBL_OM_INFO_ADDR                                       128
+#define WF_LWTBL_OM_INFO_MASK \
+	0x00000fff // 11- 0
+#define WF_LWTBL_OM_INFO_SHIFT                                      0
+#define WF_LWTBL_OM_INFO_EHT_DW                                     32
+#define WF_LWTBL_OM_INFO_EHT_ADDR                                   128
+#define WF_LWTBL_OM_INFO_EHT_MASK \
+	0x0000f000 // 15-12
+#define WF_LWTBL_OM_INFO_EHT_SHIFT                                  12
+#define WF_LWTBL_RXD_DUP_FOR_OM_CHG_DW                              32
+#define WF_LWTBL_RXD_DUP_FOR_OM_CHG_ADDR                            128
+#define WF_LWTBL_RXD_DUP_FOR_OM_CHG_MASK \
+	0x00010000 // 16-16
+#define WF_LWTBL_RXD_DUP_FOR_OM_CHG_SHIFT                           16
+#define WF_LWTBL_RXD_DUP_WHITE_LIST_DW                              32
+#define WF_LWTBL_RXD_DUP_WHITE_LIST_ADDR                            128
+#define WF_LWTBL_RXD_DUP_WHITE_LIST_MASK \
+	0x1ffe0000 // 28-17
+#define WF_LWTBL_RXD_DUP_WHITE_LIST_SHIFT                           17
+// DW33
+#define WF_LWTBL_USER_RSSI_DW                                       33
+#define WF_LWTBL_USER_RSSI_ADDR                                     132
+#define WF_LWTBL_USER_RSSI_MASK \
+	0x000001ff // 8- 0
+#define WF_LWTBL_USER_RSSI_SHIFT                                    0
+#define WF_LWTBL_USER_SNR_DW                                        33
+#define WF_LWTBL_USER_SNR_ADDR                                      132
+#define WF_LWTBL_USER_SNR_MASK \
+	0x00007e00 // 14- 9
+#define WF_LWTBL_USER_SNR_SHIFT                                     9
+#define WF_LWTBL_RAPID_REACTION_RATE_DW                             33
+#define WF_LWTBL_RAPID_REACTION_RATE_ADDR                           132
+#define WF_LWTBL_RAPID_REACTION_RATE_MASK \
+	0x0fff0000 // 27-16
+#define WF_LWTBL_RAPID_REACTION_RATE_SHIFT                          16
+#define WF_LWTBL_HT_AMSDU_DW                                        33
+#define WF_LWTBL_HT_AMSDU_ADDR                                      132
+#define WF_LWTBL_HT_AMSDU_MASK \
+	0x40000000 // 30-30
+#define WF_LWTBL_HT_AMSDU_SHIFT                                     30
+#define WF_LWTBL_AMSDU_CROSS_LG_DW                                  33
+#define WF_LWTBL_AMSDU_CROSS_LG_ADDR                                132
+#define WF_LWTBL_AMSDU_CROSS_LG_MASK \
+	0x80000000 // 31-31
+#define WF_LWTBL_AMSDU_CROSS_LG_SHIFT                               31
+// DW34
+#define WF_LWTBL_RESP_RCPI0_DW                                      34
+#define WF_LWTBL_RESP_RCPI0_ADDR                                    136
+#define WF_LWTBL_RESP_RCPI0_MASK \
+	0x000000ff // 7- 0
+#define WF_LWTBL_RESP_RCPI0_SHIFT                                   0
+#define WF_LWTBL_RESP_RCPI1_DW                                      34
+#define WF_LWTBL_RESP_RCPI1_ADDR                                    136
+#define WF_LWTBL_RESP_RCPI1_MASK \
+	0x0000ff00 // 15- 8
+#define WF_LWTBL_RESP_RCPI1_SHIFT                                   8
+#define WF_LWTBL_RESP_RCPI2_DW                                      34
+#define WF_LWTBL_RESP_RCPI2_ADDR                                    136
+#define WF_LWTBL_RESP_RCPI2_MASK \
+	0x00ff0000 // 23-16
+#define WF_LWTBL_RESP_RCPI2_SHIFT                                   16
+#define WF_LWTBL_RESP_RCPI3_DW                                      34
+#define WF_LWTBL_RESP_RCPI3_ADDR                                    136
+#define WF_LWTBL_RESP_RCPI3_MASK \
+	0xff000000 // 31-24
+#define WF_LWTBL_RESP_RCPI3_SHIFT                                   24
+// DW35
+#define WF_LWTBL_SNR_RX0_DW                                         35
+#define WF_LWTBL_SNR_RX0_ADDR                                       140
+#define WF_LWTBL_SNR_RX0_MASK \
+	0x0000003f // 5- 0
+#define WF_LWTBL_SNR_RX0_SHIFT                                      0
+#define WF_LWTBL_SNR_RX1_DW                                         35
+#define WF_LWTBL_SNR_RX1_ADDR                                       140
+#define WF_LWTBL_SNR_RX1_MASK \
+	0x00000fc0 // 11- 6
+#define WF_LWTBL_SNR_RX1_SHIFT                                      6
+#define WF_LWTBL_SNR_RX2_DW                                         35
+#define WF_LWTBL_SNR_RX2_ADDR                                       140
+#define WF_LWTBL_SNR_RX2_MASK \
+	0x0003f000 // 17-12
+#define WF_LWTBL_SNR_RX2_SHIFT                                      12
+#define WF_LWTBL_SNR_RX3_DW                                         35
+#define WF_LWTBL_SNR_RX3_ADDR                                       140
+#define WF_LWTBL_SNR_RX3_MASK \
+	0x00fc0000 // 23-18
+#define WF_LWTBL_SNR_RX3_SHIFT                                      18
+
+/* for 7992 & 7990 */
+#define WF_LWTBL_SNR_RX0_MASK_7992  \
+	0x000000ff //  7- 0
+#define WF_LWTBL_SNR_RX0_SHIFT_7992                                 0
+#define WF_LWTBL_SNR_RX1_MASK_7992 \
+	0x0000ff00 // 15- 8
+#define WF_LWTBL_SNR_RX1_SHIFT_7992                                 8
+#define WF_LWTBL_SNR_RX2_MASK_7992 \
+	0x00ff0000 // 23-16
+#define WF_LWTBL_SNR_RX2_SHIFT_7992                                 16
+#define WF_LWTBL_SNR_RX3_MASK_7992 \
+	0xff000000 // 31-24
+#define WF_LWTBL_SNR_RX3_SHIFT_7992                                 24
+
+/* WTBL Group - Packet Number */
+/* DW 2 */
+#define WTBL_PN0_MASK                   BITS(0, 7)
+#define WTBL_PN0_OFFSET                 0
+#define WTBL_PN1_MASK                   BITS(8, 15)
+#define WTBL_PN1_OFFSET                 8
+#define WTBL_PN2_MASK                   BITS(16, 23)
+#define WTBL_PN2_OFFSET                 16
+#define WTBL_PN3_MASK                   BITS(24, 31)
+#define WTBL_PN3_OFFSET                 24
+
+/* DW 3 */
+#define WTBL_PN4_MASK                   BITS(0, 7)
+#define WTBL_PN4_OFFSET                 0
+#define WTBL_PN5_MASK                   BITS(8, 15)
+#define WTBL_PN5_OFFSET                 8
+
+/* DW 4 */
+#define WTBL_BIPN0_MASK                 BITS(0, 7)
+#define WTBL_BIPN0_OFFSET               0
+#define WTBL_BIPN1_MASK                 BITS(8, 15)
+#define WTBL_BIPN1_OFFSET               8
+#define WTBL_BIPN2_MASK                 BITS(16, 23)
+#define WTBL_BIPN2_OFFSET               16
+#define WTBL_BIPN3_MASK                 BITS(24, 31)
+#define WTBL_BIPN3_OFFSET               24
+
+/* DW 5 */
+#define WTBL_BIPN4_MASK                 BITS(0, 7)
+#define WTBL_BIPN4_OFFSET               0
+#define WTBL_BIPN5_MASK                 BITS(8, 15)
+#define WTBL_BIPN5_OFFSET               8
+
+/* UWTBL DW 6 */
+#define WTBL_AMSDU_LEN_MASK             BITS(0, 5)
+#define WTBL_AMSDU_LEN_OFFSET           0
+#define WTBL_AMSDU_NUM_MASK             BITS(6, 10)
+#define WTBL_AMSDU_NUM_OFFSET           6
+#define WTBL_AMSDU_EN_MASK              BIT(11)
+#define WTBL_AMSDU_EN_OFFSET            11
+
+/* UWTBL DW 8 */
+#define WTBL_SEC_ADDR_MODE_MASK		BITS(20, 21)
+#define WTBL_SEC_ADDR_MODE_OFFSET	20
+
+/* LWTBL Rate field */
+#define WTBL_RATE_TX_RATE_MASK          BITS(0, 5)
+#define WTBL_RATE_TX_RATE_OFFSET        0
+#define WTBL_RATE_TX_MODE_MASK          BITS(6, 9)
+#define WTBL_RATE_TX_MODE_OFFSET        6
+#define WTBL_RATE_NSTS_MASK             BITS(10, 13)
+#define WTBL_RATE_NSTS_OFFSET           10
+#define WTBL_RATE_STBC_MASK             BIT(14)
+#define WTBL_RATE_STBC_OFFSET           14
+
+/***** WTBL(LMAC) DW Offset *****/
+/* LMAC WTBL Group - Peer Unique Information */
+#define WTBL_GROUP_PEER_INFO_DW_0               0
+#define WTBL_GROUP_PEER_INFO_DW_1               1
+
+/* WTBL Group - TxRx Capability/Information */
+#define WTBL_GROUP_TRX_CAP_DW_2                 2
+#define WTBL_GROUP_TRX_CAP_DW_3                 3
+#define WTBL_GROUP_TRX_CAP_DW_4                 4
+#define WTBL_GROUP_TRX_CAP_DW_5                 5
+#define WTBL_GROUP_TRX_CAP_DW_6                 6
+#define WTBL_GROUP_TRX_CAP_DW_7                 7
+#define WTBL_GROUP_TRX_CAP_DW_8                 8
+#define WTBL_GROUP_TRX_CAP_DW_9                 9
+
+/* WTBL Group - Auto Rate Table*/
+#define WTBL_GROUP_AUTO_RATE_1_2                10
+#define WTBL_GROUP_AUTO_RATE_3_4                11
+#define WTBL_GROUP_AUTO_RATE_5_6                12
+#define WTBL_GROUP_AUTO_RATE_7_8                13
+
+/* WTBL Group - Tx Counter */
+#define WTBL_GROUP_TX_CNT_LINE_1                14
+#define WTBL_GROUP_TX_CNT_LINE_2                15
+#define WTBL_GROUP_TX_CNT_LINE_3                16
+#define WTBL_GROUP_TX_CNT_LINE_4                17
+#define WTBL_GROUP_TX_CNT_LINE_5                18
+#define WTBL_GROUP_TX_CNT_LINE_6                19
+
+/* WTBL Group - Admission Control Counter */
+#define WTBL_GROUP_ADM_CNT_LINE_1               20
+#define WTBL_GROUP_ADM_CNT_LINE_2               21
+#define WTBL_GROUP_ADM_CNT_LINE_3               22
+#define WTBL_GROUP_ADM_CNT_LINE_4               23
+#define WTBL_GROUP_ADM_CNT_LINE_5               24
+#define WTBL_GROUP_ADM_CNT_LINE_6               25
+#define WTBL_GROUP_ADM_CNT_LINE_7               26
+#define WTBL_GROUP_ADM_CNT_LINE_8               27
+
+/* WTBL Group -MLO Info */
+#define WTBL_GROUP_MLO_INFO_LINE_1              28
+#define WTBL_GROUP_MLO_INFO_LINE_2              29
+#define WTBL_GROUP_MLO_INFO_LINE_3              30
+
+/* WTBL Group -RESP Info */
+#define WTBL_GROUP_RESP_INFO_DW_31              31
+
+/* WTBL Group -RX DUP Info */
+#define WTBL_GROUP_RX_DUP_INFO_DW_32            32
+
+/* WTBL Group - Rx Statistics Counter */
+#define WTBL_GROUP_RX_STAT_CNT_LINE_1           33
+#define WTBL_GROUP_RX_STAT_CNT_LINE_2           34
+#define WTBL_GROUP_RX_STAT_CNT_LINE_3           35
+
+/* UWTBL Group - HW AMSDU */
+#define UWTBL_HW_AMSDU_DW                       WF_UWTBL_AMSDU_CFG_DW
+
+/* LWTBL DW 4 */
+#define WTBL_DIS_RHTR                           WF_LWTBL_DIS_RHTR_MASK
+
+/* UWTBL DW 5 */
+#define WTBL_KEY_LINK_DW_KEY_LOC0_MASK          BITS(0, 10)
+#define WTBL_PSM				WF_LWTBL_PSM_MASK
+
+/* Need to sync with FW define */
+#define INVALID_KEY_ENTRY                       WTBL_KEY_LINK_DW_KEY_LOC0_MASK
+
+// RATE
+#define WTBL_RATE_TX_RATE_MASK          	BITS(0, 5)
+#define WTBL_RATE_TX_RATE_OFFSET        	0
+#define WTBL_RATE_TX_MODE_MASK          	BITS(6, 9)
+#define WTBL_RATE_TX_MODE_OFFSET        	6
+#define WTBL_RATE_NSTS_MASK             	BITS(10, 13)
+#define WTBL_RATE_NSTS_OFFSET           	10
+#define WTBL_RATE_STBC_MASK            	 	BIT(14)
+#define WTBL_RATE_STBC_OFFSET          	 	14
+
+struct bin_debug_hdr {
+	__le32 magic_num;
+	__le16 serial_id;
+	__le16 msg_type;
+	__le16 len;
+	__le16 des_len;	/* descriptor len for rxd */
+} __packed;
+
+enum umac_port {
+	ENUM_UMAC_HIF_PORT_0         = 0,
+	ENUM_UMAC_CPU_PORT_1         = 1,
+	ENUM_UMAC_LMAC_PORT_2        = 2,
+	ENUM_PLE_CTRL_PSE_PORT_3     = 3,
+	ENUM_UMAC_PSE_PLE_PORT_TOTAL_NUM = 4
+};
+
+/* N9 MCU QUEUE LIST */
+enum umac_cpu_port_queue_idx {
+	ENUM_UMAC_CTX_Q_0 = 0,
+	ENUM_UMAC_CTX_Q_1 = 1,
+	ENUM_UMAC_CTX_Q_2 = 2,
+	ENUM_UMAC_CTX_Q_3 = 3,
+	ENUM_UMAC_CRX     = 0,
+	ENUM_UMAC_CIF_QUEUE_TOTAL_NUM = 4
+};
+
+/* LMAC PLE For PSE Control P3 */
+enum umac_ple_ctrl_port3_queue_idx {
+	ENUM_UMAC_PLE_CTRL_P3_Q_0X1E            = 0x1e,
+	ENUM_UMAC_PLE_CTRL_P3_Q_0X1F            = 0x1f,
+	ENUM_UMAC_PLE_CTRL_P3_TOTAL_NUM         = 2
+};
+
+/* PSE PLE QUEUE */
+#define CR_NUM_OF_AC_MT7996	34
+#define CR_NUM_OF_AC_MT7992	17
+
+#define CR_NUM_OF_TWT_MT7996	34
+#define CR_NUM_OF_TWT_MT7992	17
+#define CR_NUM_OF_TWT_MT7990	18
+struct bmac_queue_info {
+	char *QueueName;
+	u32 Portid;
+	u32 Queueid;
+	u32 tgid;
+};
+
+struct bmac_queue_info_t {
+	char *QueueName;
+	u32 Portid;
+	u32 Queueid;
+};
+
+#define WF_DRR_TOP_BASE                                        0x820c8800
+#define WF_DRR_TOP_SBRR_ADDR                                   (WF_DRR_TOP_BASE + 0x00E0) // 88E0
+#define WF_DRR_TOP_TWT_STA_MAP00_ADDR                          (WF_DRR_TOP_BASE + 0x0100) // 8900
+#define WF_DRR_TOP_TWT_STA_MAP_EXT_00_ADDR                     (WF_DRR_TOP_BASE + 0x0180) // 8980
+#define WF_DRR_TOP_AC0_STATION_PAUSE00_ADDR                    (WF_DRR_TOP_BASE + 0x0200) // 8A00
+#define WF_DRR_TOP_AC0_STATION_PAUSE_EXT_00_ADDR               (WF_DRR_TOP_BASE + 0x0280) // 8A80
+#define WF_DRR_TOP_AC1_STATION_PAUSE00_ADDR                    (WF_DRR_TOP_BASE + 0x0300) // 8B00
+#define WF_DRR_TOP_AC1_STATION_PAUSE_EXT_00_ADDR               (WF_DRR_TOP_BASE + 0x0380) // 8B80
+#define WF_DRR_TOP_AC2_STATION_PAUSE00_ADDR                    (WF_DRR_TOP_BASE + 0x0400) // 8C00
+#define WF_DRR_TOP_AC2_STATION_PAUSE_EXT_00_ADDR               (WF_DRR_TOP_BASE + 0x0480) // 8C80
+#define WF_DRR_TOP_AC3_STATION_PAUSE00_ADDR                    (WF_DRR_TOP_BASE + 0x0500) // 8D00
+#define WF_DRR_TOP_AC3_STATION_PAUSE_EXT_00_ADDR               (WF_DRR_TOP_BASE + 0x0580) // 8D80
+
+#define WF_DRR_TOP_SBRR_TARGET_BAND_MASK                       0x00000003                // TARGET_BAND[1..0]
+/* PLE AMSDU */
+#define WF_PLE_TOP_BASE                                        0x820c0000
+
+#define WF_PLE_TOP_AMSDU_PACK_1_MSDU_CNT_ADDR                  (WF_PLE_TOP_BASE + 0x10e0) // 10E0
+#define WF_PLE_TOP_AMSDU_PACK_2_MSDU_CNT_ADDR                  (WF_PLE_TOP_BASE + 0x10e4) // 10E4
+#define WF_PLE_TOP_AMSDU_PACK_3_MSDU_CNT_ADDR                  (WF_PLE_TOP_BASE + 0x10e8) // 10E8
+#define WF_PLE_TOP_AMSDU_PACK_4_MSDU_CNT_ADDR                  (WF_PLE_TOP_BASE + 0x10ec) // 10EC
+#define WF_PLE_TOP_AMSDU_PACK_5_MSDU_CNT_ADDR                  (WF_PLE_TOP_BASE + 0x10f0) // 10F0
+#define WF_PLE_TOP_AMSDU_PACK_6_MSDU_CNT_ADDR                  (WF_PLE_TOP_BASE + 0x10f4) // 10F4
+#define WF_PLE_TOP_AMSDU_PACK_7_MSDU_CNT_ADDR                  (WF_PLE_TOP_BASE + 0x10f8) // 10F8
+#define WF_PLE_TOP_AMSDU_PACK_8_MSDU_CNT_ADDR                  (WF_PLE_TOP_BASE + 0x10fc) // 10FC
+#define WF_PLE_TOP_AMSDU_PACK_NUM                              8
+
+/* PLE */
+#define WF_PLE_TOP_PBUF_CTRL_ADDR                              (WF_PLE_TOP_BASE + 0x04) // 0004
+
+#define WF_PLE_TOP_PG_HIF_GROUP_ADDR                           (WF_PLE_TOP_BASE + 0x0c) // 000C
+#define WF_PLE_TOP_PG_HIF_WMTXD_GROUP_ADDR                     (WF_PLE_TOP_BASE + 0x10) // 0010
+#define WF_PLE_TOP_PG_HIF_TXCMD_GROUP_ADDR                     (WF_PLE_TOP_BASE + 0x14) // 0014
+#define WF_PLE_TOP_PG_CPU_GROUP_ADDR                           (WF_PLE_TOP_BASE + 0x18) // 0018
+#define WF_PLE_TOP_QUEUE_EMPTY_ADDR                            (WF_PLE_TOP_BASE + 0x360) // 0360
+
+#define WF_PLE_TOP_DIS_STA_MAP0_ADDR                           (WF_PLE_TOP_BASE + 0x100) // 0100
+#define WF_PLE_TOP_DIS_STA_MAP1_ADDR                           (WF_PLE_TOP_BASE + 0x104) // 0104
+#define WF_PLE_TOP_DIS_STA_MAP2_ADDR                           (WF_PLE_TOP_BASE + 0x108) // 0108
+#define WF_PLE_TOP_DIS_STA_MAP3_ADDR                           (WF_PLE_TOP_BASE + 0x10c) // 010C
+#define WF_PLE_TOP_DIS_STA_MAP4_ADDR                           (WF_PLE_TOP_BASE + 0x110) // 0110
+#define WF_PLE_TOP_DIS_STA_MAP5_ADDR                           (WF_PLE_TOP_BASE + 0x114) // 0114
+#define WF_PLE_TOP_DIS_STA_MAP6_ADDR                           (WF_PLE_TOP_BASE + 0x118) // 0118
+#define WF_PLE_TOP_DIS_STA_MAP7_ADDR                           (WF_PLE_TOP_BASE + 0x11c) // 011C
+#define WF_PLE_TOP_DIS_STA_MAP8_ADDR                           (WF_PLE_TOP_BASE + 0x120) // 0120
+
+#define WF_PLE_TOP_TXCMD_QUEUE_EMPTY_ADDR                      (WF_PLE_TOP_BASE + 0x378) // 0378
+#define WF_PLE_TOP_NATIVE_TXCMD_QUEUE_EMPTY_ADDR               (WF_PLE_TOP_BASE + 0x37c) // 037C
+#define WF_PLE_TOP_BN1_TXCMD_QUEUE_EMPTY_ADDR                  (WF_PLE_TOP_BASE + 0x388) // 0388
+#define WF_PLE_TOP_BN1_NATIVE_TXCMD_QUEUE_EMPTY_ADDR           (WF_PLE_TOP_BASE + 0x38c) // 038C
+#define WF_PLE_TOP_BN2_TXCMD_QUEUE_EMPTY_ADDR                  (WF_PLE_TOP_BASE + 0x398) // 0398
+#define WF_PLE_TOP_BN2_NATIVE_TXCMD_QUEUE_EMPTY_ADDR           (WF_PLE_TOP_BASE + 0x39c) // 039C
+
+#define WF_PLE_TOP_FREEPG_CNT_ADDR                             (WF_PLE_TOP_BASE + 0x3a0) // 03A0
+#define WF_PLE_TOP_FREEPG_HEAD_TAIL_ADDR                       (WF_PLE_TOP_BASE + 0x3a4) // 03A4
+#define WF_PLE_TOP_HIF_PG_INFO_ADDR                            (WF_PLE_TOP_BASE + 0x3a8) // 03A8
+#define WF_PLE_TOP_HIF_WMTXD_PG_INFO_ADDR                      (WF_PLE_TOP_BASE + 0x3ac) // 03AC
+#define WF_PLE_TOP_HIF_TXCMD_PG_INFO_ADDR                      (WF_PLE_TOP_BASE + 0x3b0) // 03B0
+#define WF_PLE_TOP_CPU_PG_INFO_ADDR                            (WF_PLE_TOP_BASE + 0x3b4) // 03B4
+
+#define WF_PLE_TOP_FL_QUE_CTRL_0_ADDR                          (WF_PLE_TOP_BASE + 0x3e0) // 03E0
+#define WF_PLE_TOP_FL_QUE_CTRL_1_ADDR                          (WF_PLE_TOP_BASE + 0x3e4) // 03E4
+#define WF_PLE_TOP_FL_QUE_CTRL_2_ADDR                          (WF_PLE_TOP_BASE + 0x3e8) // 03E8
+#define WF_PLE_TOP_FL_QUE_CTRL_3_ADDR                          (WF_PLE_TOP_BASE + 0x3ec) // 03EC
+
+#define WF_PLE_TOP_AC0_QUEUE_EMPTY0_ADDR                       (WF_PLE_TOP_BASE + 0x600) // 0600
+#define WF_PLE_TOP_AC0_QUEUE_EMPTY1_ADDR                       (WF_PLE_TOP_BASE + 0x604) // 0604
+#define WF_PLE_TOP_AC0_QUEUE_EMPTY2_ADDR                       (WF_PLE_TOP_BASE + 0x608) // 0608
+#define WF_PLE_TOP_AC0_QUEUE_EMPTY3_ADDR                       (WF_PLE_TOP_BASE + 0x60c) // 060C
+#define WF_PLE_TOP_AC0_QUEUE_EMPTY4_ADDR                       (WF_PLE_TOP_BASE + 0x610) // 0610
+#define WF_PLE_TOP_AC0_QUEUE_EMPTY5_ADDR                       (WF_PLE_TOP_BASE + 0x614) // 0614
+#define WF_PLE_TOP_AC0_QUEUE_EMPTY6_ADDR                       (WF_PLE_TOP_BASE + 0x618) // 0618
+#define WF_PLE_TOP_AC0_QUEUE_EMPTY7_ADDR                       (WF_PLE_TOP_BASE + 0x61c) // 061C
+#define WF_PLE_TOP_AC0_QUEUE_EMPTY8_ADDR                       (WF_PLE_TOP_BASE + 0x620) // 0620
+#define WF_PLE_TOP_AC0_QUEUE_EMPTY_EXT0_ADDR                   (WF_PLE_TOP_BASE + 0x680) // 0680
+
+#define WF_PLE_TOP_AC1_QUEUE_EMPTY0_ADDR                       (WF_PLE_TOP_BASE + 0x700) // 0700
+#define WF_PLE_TOP_AC1_QUEUE_EMPTY1_ADDR                       (WF_PLE_TOP_BASE + 0x704) // 0704
+#define WF_PLE_TOP_AC1_QUEUE_EMPTY2_ADDR                       (WF_PLE_TOP_BASE + 0x708) // 0708
+#define WF_PLE_TOP_AC1_QUEUE_EMPTY3_ADDR                       (WF_PLE_TOP_BASE + 0x70c) // 070C
+#define WF_PLE_TOP_AC1_QUEUE_EMPTY4_ADDR                       (WF_PLE_TOP_BASE + 0x710) // 0710
+#define WF_PLE_TOP_AC1_QUEUE_EMPTY5_ADDR                       (WF_PLE_TOP_BASE + 0x714) // 0714
+#define WF_PLE_TOP_AC1_QUEUE_EMPTY6_ADDR                       (WF_PLE_TOP_BASE + 0x718) // 0718
+#define WF_PLE_TOP_AC1_QUEUE_EMPTY7_ADDR                       (WF_PLE_TOP_BASE + 0x71c) // 071C
+#define WF_PLE_TOP_AC1_QUEUE_EMPTY8_ADDR                       (WF_PLE_TOP_BASE + 0x720) // 0720
+#define WF_PLE_TOP_AC1_QUEUE_EMPTY_EXT0_ADDR                   (WF_PLE_TOP_BASE + 0x780) // 0780
+
+#define WF_PLE_TOP_AC2_QUEUE_EMPTY0_ADDR                       (WF_PLE_TOP_BASE + 0x800) // 0800
+#define WF_PLE_TOP_AC2_QUEUE_EMPTY1_ADDR                       (WF_PLE_TOP_BASE + 0x804) // 0804
+#define WF_PLE_TOP_AC2_QUEUE_EMPTY2_ADDR                       (WF_PLE_TOP_BASE + 0x808) // 0808
+#define WF_PLE_TOP_AC2_QUEUE_EMPTY3_ADDR                       (WF_PLE_TOP_BASE + 0x80c) // 080C
+#define WF_PLE_TOP_AC2_QUEUE_EMPTY4_ADDR                       (WF_PLE_TOP_BASE + 0x810) // 0810
+#define WF_PLE_TOP_AC2_QUEUE_EMPTY5_ADDR                       (WF_PLE_TOP_BASE + 0x814) // 0814
+#define WF_PLE_TOP_AC2_QUEUE_EMPTY6_ADDR                       (WF_PLE_TOP_BASE + 0x818) // 0818
+#define WF_PLE_TOP_AC2_QUEUE_EMPTY7_ADDR                       (WF_PLE_TOP_BASE + 0x81c) // 081C
+#define WF_PLE_TOP_AC2_QUEUE_EMPTY8_ADDR                       (WF_PLE_TOP_BASE + 0x820) // 0820
+#define WF_PLE_TOP_AC2_QUEUE_EMPTY_EXT0_ADDR                   (WF_PLE_TOP_BASE + 0x880) // 0880
+
+#define WF_PLE_TOP_AC3_QUEUE_EMPTY0_ADDR                       (WF_PLE_TOP_BASE + 0x900) // 0900
+#define WF_PLE_TOP_AC3_QUEUE_EMPTY1_ADDR                       (WF_PLE_TOP_BASE + 0x904) // 0904
+#define WF_PLE_TOP_AC3_QUEUE_EMPTY2_ADDR                       (WF_PLE_TOP_BASE + 0x908) // 0908
+#define WF_PLE_TOP_AC3_QUEUE_EMPTY3_ADDR                       (WF_PLE_TOP_BASE + 0x90c) // 090C
+#define WF_PLE_TOP_AC3_QUEUE_EMPTY4_ADDR                       (WF_PLE_TOP_BASE + 0x910) // 0910
+#define WF_PLE_TOP_AC3_QUEUE_EMPTY5_ADDR                       (WF_PLE_TOP_BASE + 0x914) // 0914
+#define WF_PLE_TOP_AC3_QUEUE_EMPTY6_ADDR                       (WF_PLE_TOP_BASE + 0x918) // 0918
+#define WF_PLE_TOP_AC3_QUEUE_EMPTY7_ADDR                       (WF_PLE_TOP_BASE + 0x91c) // 091C
+#define WF_PLE_TOP_AC3_QUEUE_EMPTY8_ADDR                       (WF_PLE_TOP_BASE + 0x920) // 0920
+#define WF_PLE_TOP_AC3_QUEUE_EMPTY_EXT0_ADDR                   (WF_PLE_TOP_BASE + 0x980) // 0980
+
+#define WF_PLE_TOP_QUEUE_EMPTY_ALL_AC_EMPTY_ADDR               WF_PLE_TOP_QUEUE_EMPTY_ADDR
+#define WF_PLE_TOP_QUEUE_EMPTY_ALL_AC_EMPTY_MASK               0x01000000                // ALL_AC_EMPTY[24]
+#define WF_PLE_TOP_QUEUE_EMPTY_ALL_AC_EMPTY_SHFT               24
+
+#define WF_PLE_TOP_PBUF_CTRL_PAGE_SIZE_CFG_ADDR                WF_PLE_TOP_PBUF_CTRL_ADDR
+#define WF_PLE_TOP_PBUF_CTRL_PAGE_SIZE_CFG_MASK                0x80000000                // PAGE_SIZE_CFG[31]
+#define WF_PLE_TOP_PBUF_CTRL_PAGE_SIZE_CFG_SHFT                31
+#define WF_PLE_TOP_PBUF_CTRL_PBUF_OFFSET_ADDR                  WF_PLE_TOP_PBUF_CTRL_ADDR
+#define WF_PLE_TOP_PBUF_CTRL_PBUF_OFFSET_MASK                  0x07FE0000                // PBUF_OFFSET[26..17]
+#define WF_PLE_TOP_PBUF_CTRL_PBUF_OFFSET_SHFT                  17
+#define WF_PLE_TOP_PBUF_CTRL_TOTAL_PAGE_NUM_ADDR               WF_PLE_TOP_PBUF_CTRL_ADDR
+#define WF_PLE_TOP_PBUF_CTRL_TOTAL_PAGE_NUM_MASK               0x00001FFF                // TOTAL_PAGE_NUM[12..0]
+#define WF_PLE_TOP_PBUF_CTRL_TOTAL_PAGE_NUM_SHFT               0
+
+#define WF_PLE_TOP_FREEPG_CNT_FFA_CNT_ADDR                     WF_PLE_TOP_FREEPG_CNT_ADDR
+#define WF_PLE_TOP_FREEPG_CNT_FFA_CNT_MASK                     0x1FFF0000                // FFA_CNT[28..16]
+#define WF_PLE_TOP_FREEPG_CNT_FFA_CNT_SHFT                     16
+#define WF_PLE_TOP_FREEPG_CNT_FREEPG_CNT_ADDR                  WF_PLE_TOP_FREEPG_CNT_ADDR
+#define WF_PLE_TOP_FREEPG_CNT_FREEPG_CNT_MASK                  0x00001FFF                // FREEPG_CNT[12..0]
+#define WF_PLE_TOP_FREEPG_CNT_FREEPG_CNT_SHFT                  0
+
+#define WF_PLE_TOP_FREEPG_HEAD_TAIL_FREEPG_TAIL_ADDR           WF_PLE_TOP_FREEPG_HEAD_TAIL_ADDR
+#define WF_PLE_TOP_FREEPG_HEAD_TAIL_FREEPG_TAIL_MASK           0x1FFF0000                // FREEPG_TAIL[28..16]
+#define WF_PLE_TOP_FREEPG_HEAD_TAIL_FREEPG_TAIL_SHFT           16
+#define WF_PLE_TOP_FREEPG_HEAD_TAIL_FREEPG_HEAD_ADDR           WF_PLE_TOP_FREEPG_HEAD_TAIL_ADDR
+#define WF_PLE_TOP_FREEPG_HEAD_TAIL_FREEPG_HEAD_MASK           0x00001FFF                // FREEPG_HEAD[12..0]
+#define WF_PLE_TOP_FREEPG_HEAD_TAIL_FREEPG_HEAD_SHFT           0
+
+#define WF_PLE_TOP_PG_HIF_GROUP_HIF_MAX_QUOTA_ADDR             WF_PLE_TOP_PG_HIF_GROUP_ADDR
+#define WF_PLE_TOP_PG_HIF_GROUP_HIF_MAX_QUOTA_MASK             0x1FFF0000                // HIF_MAX_QUOTA[28..16]
+#define WF_PLE_TOP_PG_HIF_GROUP_HIF_MAX_QUOTA_SHFT             16
+#define WF_PLE_TOP_PG_HIF_GROUP_HIF_MIN_QUOTA_ADDR             WF_PLE_TOP_PG_HIF_GROUP_ADDR
+#define WF_PLE_TOP_PG_HIF_GROUP_HIF_MIN_QUOTA_MASK             0x00001FFF                // HIF_MIN_QUOTA[12..0]
+#define WF_PLE_TOP_PG_HIF_GROUP_HIF_MIN_QUOTA_SHFT             0
+
+#define WF_PLE_TOP_HIF_PG_INFO_HIF_SRC_CNT_ADDR                WF_PLE_TOP_HIF_PG_INFO_ADDR
+#define WF_PLE_TOP_HIF_PG_INFO_HIF_SRC_CNT_MASK                0x1FFF0000                // HIF_SRC_CNT[28..16]
+#define WF_PLE_TOP_HIF_PG_INFO_HIF_SRC_CNT_SHFT                16
+#define WF_PLE_TOP_HIF_PG_INFO_HIF_RSV_CNT_ADDR                WF_PLE_TOP_HIF_PG_INFO_ADDR
+#define WF_PLE_TOP_HIF_PG_INFO_HIF_RSV_CNT_MASK                0x00001FFF                // HIF_RSV_CNT[12..0]
+#define WF_PLE_TOP_HIF_PG_INFO_HIF_RSV_CNT_SHFT                0
+
+#define WF_PLE_TOP_PG_HIF_WMTXD_GROUP_HIF_WMTXD_MAX_QUOTA_ADDR WF_PLE_TOP_PG_HIF_WMTXD_GROUP_ADDR
+#define WF_PLE_TOP_PG_HIF_WMTXD_GROUP_HIF_WMTXD_MAX_QUOTA_MASK 0x1FFF0000                // HIF_WMTXD_MAX_QUOTA[28..16]
+#define WF_PLE_TOP_PG_HIF_WMTXD_GROUP_HIF_WMTXD_MAX_QUOTA_SHFT 16
+#define WF_PLE_TOP_PG_HIF_WMTXD_GROUP_HIF_WMTXD_MIN_QUOTA_ADDR WF_PLE_TOP_PG_HIF_WMTXD_GROUP_ADDR
+#define WF_PLE_TOP_PG_HIF_WMTXD_GROUP_HIF_WMTXD_MIN_QUOTA_MASK 0x00001FFF                // HIF_WMTXD_MIN_QUOTA[12..0]
+#define WF_PLE_TOP_PG_HIF_WMTXD_GROUP_HIF_WMTXD_MIN_QUOTA_SHFT 0
+
+#define WF_PLE_TOP_HIF_WMTXD_PG_INFO_HIF_WMTXD_SRC_CNT_ADDR    WF_PLE_TOP_HIF_WMTXD_PG_INFO_ADDR
+#define WF_PLE_TOP_HIF_WMTXD_PG_INFO_HIF_WMTXD_SRC_CNT_MASK    0x1FFF0000                // HIF_WMTXD_SRC_CNT[28..16]
+#define WF_PLE_TOP_HIF_WMTXD_PG_INFO_HIF_WMTXD_SRC_CNT_SHFT    16
+#define WF_PLE_TOP_HIF_WMTXD_PG_INFO_HIF_WMTXD_RSV_CNT_ADDR    WF_PLE_TOP_HIF_WMTXD_PG_INFO_ADDR
+#define WF_PLE_TOP_HIF_WMTXD_PG_INFO_HIF_WMTXD_RSV_CNT_MASK    0x00001FFF                // HIF_WMTXD_RSV_CNT[12..0]
+#define WF_PLE_TOP_HIF_WMTXD_PG_INFO_HIF_WMTXD_RSV_CNT_SHFT    0
+
+#define WF_PLE_TOP_PG_HIF_TXCMD_GROUP_HIF_TXCMD_MAX_QUOTA_ADDR WF_PLE_TOP_PG_HIF_TXCMD_GROUP_ADDR
+#define WF_PLE_TOP_PG_HIF_TXCMD_GROUP_HIF_TXCMD_MAX_QUOTA_MASK 0x1FFF0000                // HIF_TXCMD_MAX_QUOTA[28..16]
+#define WF_PLE_TOP_PG_HIF_TXCMD_GROUP_HIF_TXCMD_MAX_QUOTA_SHFT 16
+#define WF_PLE_TOP_PG_HIF_TXCMD_GROUP_HIF_TXCMD_MIN_QUOTA_ADDR WF_PLE_TOP_PG_HIF_TXCMD_GROUP_ADDR
+#define WF_PLE_TOP_PG_HIF_TXCMD_GROUP_HIF_TXCMD_MIN_QUOTA_MASK 0x00001FFF                // HIF_TXCMD_MIN_QUOTA[12..0]
+#define WF_PLE_TOP_PG_HIF_TXCMD_GROUP_HIF_TXCMD_MIN_QUOTA_SHFT 0
+
+#define WF_PLE_TOP_HIF_TXCMD_PG_INFO_HIF_TXCMD_SRC_CNT_ADDR    WF_PLE_TOP_HIF_TXCMD_PG_INFO_ADDR
+#define WF_PLE_TOP_HIF_TXCMD_PG_INFO_HIF_TXCMD_SRC_CNT_MASK    0x1FFF0000                // HIF_TXCMD_SRC_CNT[28..16]
+#define WF_PLE_TOP_HIF_TXCMD_PG_INFO_HIF_TXCMD_SRC_CNT_SHFT    16
+#define WF_PLE_TOP_HIF_TXCMD_PG_INFO_HIF_TXCMD_RSV_CNT_ADDR    WF_PLE_TOP_HIF_TXCMD_PG_INFO_ADDR
+#define WF_PLE_TOP_HIF_TXCMD_PG_INFO_HIF_TXCMD_RSV_CNT_MASK    0x00001FFF                // HIF_TXCMD_RSV_CNT[12..0]
+#define WF_PLE_TOP_HIF_TXCMD_PG_INFO_HIF_TXCMD_RSV_CNT_SHFT    0
+
+#define WF_PLE_TOP_PG_CPU_GROUP_CPU_MAX_QUOTA_ADDR             WF_PLE_TOP_PG_CPU_GROUP_ADDR
+#define WF_PLE_TOP_PG_CPU_GROUP_CPU_MAX_QUOTA_MASK             0x1FFF0000                // CPU_MAX_QUOTA[28..16]
+#define WF_PLE_TOP_PG_CPU_GROUP_CPU_MAX_QUOTA_SHFT             16
+#define WF_PLE_TOP_PG_CPU_GROUP_CPU_MIN_QUOTA_ADDR             WF_PLE_TOP_PG_CPU_GROUP_ADDR
+#define WF_PLE_TOP_PG_CPU_GROUP_CPU_MIN_QUOTA_MASK             0x00001FFF                // CPU_MIN_QUOTA[12..0]
+#define WF_PLE_TOP_PG_CPU_GROUP_CPU_MIN_QUOTA_SHFT             0
+
+#define WF_PLE_TOP_CPU_PG_INFO_CPU_SRC_CNT_ADDR                WF_PLE_TOP_CPU_PG_INFO_ADDR
+#define WF_PLE_TOP_CPU_PG_INFO_CPU_SRC_CNT_MASK                0x1FFF0000                // CPU_SRC_CNT[28..16]
+#define WF_PLE_TOP_CPU_PG_INFO_CPU_SRC_CNT_SHFT                16
+#define WF_PLE_TOP_CPU_PG_INFO_CPU_RSV_CNT_ADDR                WF_PLE_TOP_CPU_PG_INFO_ADDR
+#define WF_PLE_TOP_CPU_PG_INFO_CPU_RSV_CNT_MASK                0x00001FFF                // CPU_RSV_CNT[12..0]
+#define WF_PLE_TOP_CPU_PG_INFO_CPU_RSV_CNT_SHFT                0
+
+#define WF_PLE_TOP_FL_QUE_CTRL_0_EXECUTE_ADDR                  WF_PLE_TOP_FL_QUE_CTRL_0_ADDR
+#define WF_PLE_TOP_FL_QUE_CTRL_0_EXECUTE_MASK                  0x80000000                // EXECUTE[31]
+#define WF_PLE_TOP_FL_QUE_CTRL_0_EXECUTE_SHFT                  31
+#define WF_PLE_TOP_FL_QUE_CTRL_0_Q_BUF_QID_ADDR                WF_PLE_TOP_FL_QUE_CTRL_0_ADDR
+#define WF_PLE_TOP_FL_QUE_CTRL_0_Q_BUF_QID_MASK                0x7F000000                // Q_BUF_QID[30..24]
+#define WF_PLE_TOP_FL_QUE_CTRL_0_Q_BUF_QID_SHFT                24
+#define WF_PLE_TOP_FL_QUE_CTRL_0_FL_BUFFER_ADDR_ADDR           WF_PLE_TOP_FL_QUE_CTRL_0_ADDR
+#define WF_PLE_TOP_FL_QUE_CTRL_0_FL_BUFFER_ADDR_MASK           0x00FFF000                // FL_BUFFER_ADDR[23..12]
+#define WF_PLE_TOP_FL_QUE_CTRL_0_FL_BUFFER_ADDR_SHFT           12
+#define WF_PLE_TOP_FL_QUE_CTRL_0_Q_BUF_WLANID_ADDR             WF_PLE_TOP_FL_QUE_CTRL_0_ADDR
+#define WF_PLE_TOP_FL_QUE_CTRL_0_Q_BUF_WLANID_MASK             0x00000FFF                // Q_BUF_WLANID[11..0]
+#define WF_PLE_TOP_FL_QUE_CTRL_0_Q_BUF_WLANID_SHFT             0
+
+#define WF_PLE_TOP_FL_QUE_CTRL_1_Q_BUF_TGID_ADDR               WF_PLE_TOP_FL_QUE_CTRL_1_ADDR
+#define WF_PLE_TOP_FL_QUE_CTRL_1_Q_BUF_TGID_MASK               0xC0000000                // Q_BUF_TGID[31..30]
+#define WF_PLE_TOP_FL_QUE_CTRL_1_Q_BUF_TGID_SHFT               30
+#define WF_PLE_TOP_FL_QUE_CTRL_1_Q_BUF_PID_ADDR                WF_PLE_TOP_FL_QUE_CTRL_1_ADDR
+#define WF_PLE_TOP_FL_QUE_CTRL_1_Q_BUF_PID_MASK                0x30000000                // Q_BUF_PID[29..28]
+#define WF_PLE_TOP_FL_QUE_CTRL_1_Q_BUF_PID_SHFT                28
+
+#define WF_PLE_TOP_FL_QUE_CTRL_2_QUEUE_TAIL_FID_ADDR           WF_PLE_TOP_FL_QUE_CTRL_2_ADDR
+#define WF_PLE_TOP_FL_QUE_CTRL_2_QUEUE_TAIL_FID_MASK           0x1FFF0000                // QUEUE_TAIL_FID[28..16]
+#define WF_PLE_TOP_FL_QUE_CTRL_2_QUEUE_TAIL_FID_SHFT           16
+#define WF_PLE_TOP_FL_QUE_CTRL_2_QUEUE_HEAD_FID_ADDR           WF_PLE_TOP_FL_QUE_CTRL_2_ADDR
+#define WF_PLE_TOP_FL_QUE_CTRL_2_QUEUE_HEAD_FID_MASK           0x00001FFF                // QUEUE_HEAD_FID[12..0]
+#define WF_PLE_TOP_FL_QUE_CTRL_2_QUEUE_HEAD_FID_SHFT           0
+
+#define WF_PLE_TOP_FL_QUE_CTRL_3_QUEUE_PKT_NUM_ADDR            WF_PLE_TOP_FL_QUE_CTRL_3_ADDR
+#define WF_PLE_TOP_FL_QUE_CTRL_3_QUEUE_PKT_NUM_MASK            0x00001FFF                // QUEUE_PKT_NUM[12..0]
+#define WF_PLE_TOP_FL_QUE_CTRL_3_QUEUE_PKT_NUM_SHFT            0
+
+#define WF_PLE_TOP_FL_QUE_CTRL_0_Q_BUF_TGID_ADDR               WF_PLE_TOP_FL_QUE_CTRL_0_ADDR
+#define WF_PLE_TOP_FL_QUE_CTRL_0_Q_BUF_TGID_MASK               0x00300000                // Q_BUF_TGID[21..20]
+#define WF_PLE_TOP_FL_QUE_CTRL_0_Q_BUF_TGID_SHFT               20
+#define WF_PLE_TOP_FL_QUE_CTRL_0_Q_BUF_PID_ADDR                WF_PLE_TOP_FL_QUE_CTRL_0_ADDR
+#define WF_PLE_TOP_FL_QUE_CTRL_0_Q_BUF_PID_MASK                0x00030000                // Q_BUF_PID[17..16]
+#define WF_PLE_TOP_FL_QUE_CTRL_0_Q_BUF_PID_SHFT                16
+/* PSE */
+#define WF_PSE_TOP_BASE                                        0x820c8000
+
+#define WF_PSE_TOP_PBUF_CTRL_ADDR                              (WF_PSE_TOP_BASE + 0x04) // 8004
+#define WF_PSE_TOP_QUEUE_EMPTY_ADDR                            (WF_PSE_TOP_BASE + 0xB0) // 80B0
+#define WF_PSE_TOP_QUEUE_EMPTY_1_ADDR                          (WF_PSE_TOP_BASE + 0xBC) // 80BC
+#define WF_PSE_TOP_PG_HIF0_GROUP_ADDR                          (WF_PSE_TOP_BASE + 0x110) // 8110
+#define WF_PSE_TOP_PG_HIF1_GROUP_ADDR                          (WF_PSE_TOP_BASE + 0x114) // 8114
+#define WF_PSE_TOP_PG_CPU_GROUP_ADDR                           (WF_PSE_TOP_BASE + 0x118) // 8118
+#define WF_PSE_TOP_PG_PLE_GROUP_ADDR                           (WF_PSE_TOP_BASE + 0x11C) // 811C
+#define WF_PSE_TOP_PG_PLE1_GROUP_ADDR                          (WF_PSE_TOP_BASE + 0x120) // 8120
+#define WF_PSE_TOP_PG_LMAC0_GROUP_ADDR                         (WF_PSE_TOP_BASE + 0x124) // 8124
+#define WF_PSE_TOP_PG_LMAC1_GROUP_ADDR                         (WF_PSE_TOP_BASE + 0x128) // 8128
+#define WF_PSE_TOP_PG_LMAC2_GROUP_ADDR                         (WF_PSE_TOP_BASE + 0x12C) // 812C
+#define WF_PSE_TOP_PG_LMAC3_GROUP_ADDR                         (WF_PSE_TOP_BASE + 0x130) // 8130
+#define WF_PSE_TOP_PG_MDP_GROUP_ADDR                           (WF_PSE_TOP_BASE + 0x134) // 8134
+#define WF_PSE_TOP_PG_MDP2_GROUP_ADDR                          (WF_PSE_TOP_BASE + 0x13C) // 813C
+#define WF_PSE_TOP_PG_HIF2_GROUP_ADDR                          (WF_PSE_TOP_BASE + 0x140) // 8140
+#define WF_PSE_TOP_PG_MDP3_GROUP_ADDR                          (WF_PSE_TOP_BASE + 0x144) // 8144
+#define WF_PSE_TOP_HIF0_PG_INFO_ADDR                           (WF_PSE_TOP_BASE + 0x150) // 8150
+#define WF_PSE_TOP_HIF1_PG_INFO_ADDR                           (WF_PSE_TOP_BASE + 0x154) // 8154
+#define WF_PSE_TOP_CPU_PG_INFO_ADDR                            (WF_PSE_TOP_BASE + 0x158) // 8158
+#define WF_PSE_TOP_PLE_PG_INFO_ADDR                            (WF_PSE_TOP_BASE + 0x15C) // 815C
+#define WF_PSE_TOP_PLE1_PG_INFO_ADDR                           (WF_PSE_TOP_BASE + 0x160) // 8160
+#define WF_PSE_TOP_LMAC0_PG_INFO_ADDR                          (WF_PSE_TOP_BASE + 0x164) // 8164
+#define WF_PSE_TOP_LMAC1_PG_INFO_ADDR                          (WF_PSE_TOP_BASE + 0x168) // 8168
+#define WF_PSE_TOP_LMAC2_PG_INFO_ADDR                          (WF_PSE_TOP_BASE + 0x16C) // 816C
+#define WF_PSE_TOP_LMAC3_PG_INFO_ADDR                          (WF_PSE_TOP_BASE + 0x170) // 8170
+#define WF_PSE_TOP_MDP_PG_INFO_ADDR                            (WF_PSE_TOP_BASE + 0x174) // 8174
+#define WF_PSE_TOP_MDP2_PG_INFO_ADDR                           (WF_PSE_TOP_BASE + 0x17C) // 817C
+#define WF_PSE_TOP_HIF2_PG_INFO_ADDR                           (WF_PSE_TOP_BASE + 0x180) // 8180
+#define WF_PSE_TOP_MDP3_PG_INFO_ADDR                           (WF_PSE_TOP_BASE + 0x184) // 8184
+#define WF_PSE_TOP_FL_QUE_CTRL_0_ADDR                          (WF_PSE_TOP_BASE + 0x1B0) // 81B0
+#define WF_PSE_TOP_FL_QUE_CTRL_1_ADDR                          (WF_PSE_TOP_BASE + 0x1B4) // 81B4
+#define WF_PSE_TOP_FL_QUE_CTRL_2_ADDR                          (WF_PSE_TOP_BASE + 0x1B8) // 81B8
+#define WF_PSE_TOP_FL_QUE_CTRL_3_ADDR                          (WF_PSE_TOP_BASE + 0x1BC) // 81BC
+#define WF_PSE_TOP_FREEPG_CNT_ADDR                             (WF_PSE_TOP_BASE + 0x3A0) // 83A0
+#define WF_PSE_TOP_FREEPG_HEAD_TAIL_ADDR                       (WF_PSE_TOP_BASE + 0x3A4) // 83A4
+
+#define WF_PSE_TOP_PBUF_CTRL_PAGE_SIZE_CFG_ADDR                WF_PSE_TOP_PBUF_CTRL_ADDR
+#define WF_PSE_TOP_PBUF_CTRL_PAGE_SIZE_CFG_MASK                0x80000000                // PAGE_SIZE_CFG[31]
+#define WF_PSE_TOP_PBUF_CTRL_PAGE_SIZE_CFG_SHFT                31
+#define WF_PSE_TOP_PBUF_CTRL_PBUF_OFFSET_ADDR                  WF_PSE_TOP_PBUF_CTRL_ADDR
+#define WF_PSE_TOP_PBUF_CTRL_PBUF_OFFSET_MASK                  0x07FE0000                // PBUF_OFFSET[26..17]
+#define WF_PSE_TOP_PBUF_CTRL_PBUF_OFFSET_SHFT                  17
+#define WF_PSE_TOP_PBUF_CTRL_TOTAL_PAGE_NUM_ADDR               WF_PSE_TOP_PBUF_CTRL_ADDR
+#define WF_PSE_TOP_PBUF_CTRL_TOTAL_PAGE_NUM_MASK               0x00001FFF                // TOTAL_PAGE_NUM[12..0]
+#define WF_PSE_TOP_PBUF_CTRL_TOTAL_PAGE_NUM_SHFT               0
+
+#define WF_PSE_TOP_QUEUE_EMPTY_RLS_Q_EMTPY_ADDR                WF_PSE_TOP_QUEUE_EMPTY_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_RLS_Q_EMTPY_MASK                0x80000000                // RLS_Q_EMTPY[31]
+#define WF_PSE_TOP_QUEUE_EMPTY_RLS_Q_EMTPY_SHFT                31
+#define WF_PSE_TOP_QUEUE_EMPTY_CPU_Q4_EMPTY_ADDR               WF_PSE_TOP_QUEUE_EMPTY_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_CPU_Q4_EMPTY_MASK               0x10000000                // CPU_Q4_EMPTY[28]
+#define WF_PSE_TOP_QUEUE_EMPTY_CPU_Q4_EMPTY_SHFT               28
+#define WF_PSE_TOP_QUEUE_EMPTY_MDP_RXIOC1_QUEUE_EMPTY_ADDR     WF_PSE_TOP_QUEUE_EMPTY_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_MDP_RXIOC1_QUEUE_EMPTY_MASK     0x08000000                // MDP_RXIOC1_QUEUE_EMPTY[27]
+#define WF_PSE_TOP_QUEUE_EMPTY_MDP_RXIOC1_QUEUE_EMPTY_SHFT     27
+#define WF_PSE_TOP_QUEUE_EMPTY_MDP_TXIOC1_QUEUE_EMPTY_ADDR     WF_PSE_TOP_QUEUE_EMPTY_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_MDP_TXIOC1_QUEUE_EMPTY_MASK     0x04000000                // MDP_TXIOC1_QUEUE_EMPTY[26]
+#define WF_PSE_TOP_QUEUE_EMPTY_MDP_TXIOC1_QUEUE_EMPTY_SHFT     26
+#define WF_PSE_TOP_QUEUE_EMPTY_SEC_TX1_QUEUE_EMPTY_ADDR        WF_PSE_TOP_QUEUE_EMPTY_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_SEC_TX1_QUEUE_EMPTY_MASK        0x02000000                // SEC_TX1_QUEUE_EMPTY[25]
+#define WF_PSE_TOP_QUEUE_EMPTY_SEC_TX1_QUEUE_EMPTY_SHFT        25
+#define WF_PSE_TOP_QUEUE_EMPTY_MDP_TX1_QUEUE_EMPTY_ADDR        WF_PSE_TOP_QUEUE_EMPTY_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_MDP_TX1_QUEUE_EMPTY_MASK        0x01000000                // MDP_TX1_QUEUE_EMPTY[24]
+#define WF_PSE_TOP_QUEUE_EMPTY_MDP_TX1_QUEUE_EMPTY_SHFT        24
+#define WF_PSE_TOP_QUEUE_EMPTY_MDP_RXIOC_QUEUE_EMPTY_ADDR      WF_PSE_TOP_QUEUE_EMPTY_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_MDP_RXIOC_QUEUE_EMPTY_MASK      0x00800000                // MDP_RXIOC_QUEUE_EMPTY[23]
+#define WF_PSE_TOP_QUEUE_EMPTY_MDP_RXIOC_QUEUE_EMPTY_SHFT      23
+#define WF_PSE_TOP_QUEUE_EMPTY_MDP_TXIOC_QUEUE_EMPTY_ADDR      WF_PSE_TOP_QUEUE_EMPTY_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_MDP_TXIOC_QUEUE_EMPTY_MASK      0x00400000                // MDP_TXIOC_QUEUE_EMPTY[22]
+#define WF_PSE_TOP_QUEUE_EMPTY_MDP_TXIOC_QUEUE_EMPTY_SHFT      22
+#define WF_PSE_TOP_QUEUE_EMPTY_SFD_PARK_QUEUE_EMPTY_ADDR       WF_PSE_TOP_QUEUE_EMPTY_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_SFD_PARK_QUEUE_EMPTY_MASK       0x00200000                // SFD_PARK_QUEUE_EMPTY[21]
+#define WF_PSE_TOP_QUEUE_EMPTY_SFD_PARK_QUEUE_EMPTY_SHFT       21
+#define WF_PSE_TOP_QUEUE_EMPTY_SEC_RX_QUEUE_EMPTY_ADDR         WF_PSE_TOP_QUEUE_EMPTY_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_SEC_RX_QUEUE_EMPTY_MASK         0x00100000                // SEC_RX_QUEUE_EMPTY[20]
+#define WF_PSE_TOP_QUEUE_EMPTY_SEC_RX_QUEUE_EMPTY_SHFT         20
+#define WF_PSE_TOP_QUEUE_EMPTY_SEC_TX_QUEUE_EMPTY_ADDR         WF_PSE_TOP_QUEUE_EMPTY_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_SEC_TX_QUEUE_EMPTY_MASK         0x00080000                // SEC_TX_QUEUE_EMPTY[19]
+#define WF_PSE_TOP_QUEUE_EMPTY_SEC_TX_QUEUE_EMPTY_SHFT         19
+#define WF_PSE_TOP_QUEUE_EMPTY_MDP_RX_QUEUE_EMPTY_ADDR         WF_PSE_TOP_QUEUE_EMPTY_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_MDP_RX_QUEUE_EMPTY_MASK         0x00040000                // MDP_RX_QUEUE_EMPTY[18]
+#define WF_PSE_TOP_QUEUE_EMPTY_MDP_RX_QUEUE_EMPTY_SHFT         18
+#define WF_PSE_TOP_QUEUE_EMPTY_MDP_TX_QUEUE_EMPTY_ADDR         WF_PSE_TOP_QUEUE_EMPTY_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_MDP_TX_QUEUE_EMPTY_MASK         0x00020000                // MDP_TX_QUEUE_EMPTY[17]
+#define WF_PSE_TOP_QUEUE_EMPTY_MDP_TX_QUEUE_EMPTY_SHFT         17
+#define WF_PSE_TOP_QUEUE_EMPTY_LMAC_TX_QUEUE_EMPTY_ADDR        WF_PSE_TOP_QUEUE_EMPTY_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_LMAC_TX_QUEUE_EMPTY_MASK        0x00010000                // LMAC_TX_QUEUE_EMPTY[16]
+#define WF_PSE_TOP_QUEUE_EMPTY_LMAC_TX_QUEUE_EMPTY_SHFT        16
+
+#define WF_PSE_TOP_QUEUE_EMPTY_CPU_Q3_EMPTY_ADDR               WF_PSE_TOP_QUEUE_EMPTY_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_CPU_Q3_EMPTY_MASK               0x00000008                // CPU_Q3_EMPTY[3]
+#define WF_PSE_TOP_QUEUE_EMPTY_CPU_Q3_EMPTY_SHFT               3
+#define WF_PSE_TOP_QUEUE_EMPTY_CPU_Q2_EMPTY_ADDR               WF_PSE_TOP_QUEUE_EMPTY_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_CPU_Q2_EMPTY_MASK               0x00000004                // CPU_Q2_EMPTY[2]
+#define WF_PSE_TOP_QUEUE_EMPTY_CPU_Q2_EMPTY_SHFT               2
+#define WF_PSE_TOP_QUEUE_EMPTY_CPU_Q1_EMPTY_ADDR               WF_PSE_TOP_QUEUE_EMPTY_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_CPU_Q1_EMPTY_MASK               0x00000002                // CPU_Q1_EMPTY[1]
+#define WF_PSE_TOP_QUEUE_EMPTY_CPU_Q1_EMPTY_SHFT               1
+#define WF_PSE_TOP_QUEUE_EMPTY_CPU_Q0_EMPTY_ADDR               WF_PSE_TOP_QUEUE_EMPTY_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_CPU_Q0_EMPTY_MASK               0x00000001                // CPU_Q0_EMPTY[0]
+#define WF_PSE_TOP_QUEUE_EMPTY_CPU_Q0_EMPTY_SHFT               0
+
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_16_EMPTY_ADDR             WF_PSE_TOP_QUEUE_EMPTY_1_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_16_EMPTY_MASK             0x00001000
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_16_EMPTY_SHFT             12
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_15_EMPTY_ADDR             WF_PSE_TOP_QUEUE_EMPTY_1_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_15_EMPTY_MASK             0x80000000                // HIF_15_EMPTY[31]
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_15_EMPTY_SHFT             31
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_14_EMPTY_ADDR             WF_PSE_TOP_QUEUE_EMPTY_1_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_14_EMPTY_MASK             0x40000000                // HIF_14_EMPTY[30]
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_14_EMPTY_SHFT             30
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_13_EMPTY_ADDR             WF_PSE_TOP_QUEUE_EMPTY_1_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_13_EMPTY_MASK             0x20000000                // HIF_13_EMPTY[29]
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_13_EMPTY_SHFT             29
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_12_EMPTY_ADDR             WF_PSE_TOP_QUEUE_EMPTY_1_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_12_EMPTY_MASK             0x10000000                // HIF_12_EMPTY[28]
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_12_EMPTY_SHFT             28
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_11_EMPTY_ADDR             WF_PSE_TOP_QUEUE_EMPTY_1_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_11_EMPTY_MASK             0x08000000                // HIF_11_EMPTY[27]
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_11_EMPTY_SHFT             27
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_10_EMPTY_ADDR             WF_PSE_TOP_QUEUE_EMPTY_1_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_10_EMPTY_MASK             0x04000000                // HIF_10_EMPTY[26]
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_10_EMPTY_SHFT             26
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_9_EMPTY_ADDR              WF_PSE_TOP_QUEUE_EMPTY_1_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_9_EMPTY_MASK              0x02000000                // HIF_9_EMPTY[25]
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_9_EMPTY_SHFT              25
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_8_EMPTY_ADDR              WF_PSE_TOP_QUEUE_EMPTY_1_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_8_EMPTY_MASK              0x01000000                // HIF_8_EMPTY[24]
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_8_EMPTY_SHFT              24
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_7_EMPTY_ADDR              WF_PSE_TOP_QUEUE_EMPTY_1_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_7_EMPTY_MASK              0x00800000                // HIF_7_EMPTY[23]
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_7_EMPTY_SHFT              23
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_6_EMPTY_ADDR              WF_PSE_TOP_QUEUE_EMPTY_1_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_6_EMPTY_MASK              0x00400000                // HIF_6_EMPTY[22]
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_6_EMPTY_SHFT              22
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_5_EMPTY_ADDR              WF_PSE_TOP_QUEUE_EMPTY_1_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_5_EMPTY_MASK              0x00200000                // HIF_5_EMPTY[21]
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_5_EMPTY_SHFT              21
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_4_EMPTY_ADDR              WF_PSE_TOP_QUEUE_EMPTY_1_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_4_EMPTY_MASK              0x00100000                // HIF_4_EMPTY[20]
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_4_EMPTY_SHFT              20
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_3_EMPTY_ADDR              WF_PSE_TOP_QUEUE_EMPTY_1_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_3_EMPTY_MASK              0x00080000                // HIF_3_EMPTY[19]
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_3_EMPTY_SHFT              19
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_2_EMPTY_ADDR              WF_PSE_TOP_QUEUE_EMPTY_1_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_2_EMPTY_MASK              0x00040000                // HIF_2_EMPTY[18]
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_2_EMPTY_SHFT              18
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_1_EMPTY_ADDR              WF_PSE_TOP_QUEUE_EMPTY_1_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_1_EMPTY_MASK              0x00020000                // HIF_1_EMPTY[17]
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_1_EMPTY_SHFT              17
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_0_EMPTY_ADDR              WF_PSE_TOP_QUEUE_EMPTY_1_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_0_EMPTY_MASK              0x00010000                // HIF_0_EMPTY[16]
+#define WF_PSE_TOP_QUEUE_EMPTY_1_HIF_0_EMPTY_SHFT              16
+#define WF_PSE_TOP_QUEUE_EMPTY_1_MDP_RXIOC3_QUEUE_EMPTY_ADDR   WF_PSE_TOP_QUEUE_EMPTY_1_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_1_MDP_RXIOC3_QUEUE_EMPTY_MASK   0x00008000                // MDP_RXIOC3_QUEUE_EMPTY[15]
+#define WF_PSE_TOP_QUEUE_EMPTY_1_MDP_RXIOC3_QUEUE_EMPTY_SHFT   15
+#define WF_PSE_TOP_QUEUE_EMPTY_1_MDP_RXIOC2_QUEUE_EMPTY_ADDR   WF_PSE_TOP_QUEUE_EMPTY_1_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_1_MDP_RXIOC2_QUEUE_EMPTY_MASK   0x00000800                // MDP_RXIOC2_QUEUE_EMPTY[11]
+#define WF_PSE_TOP_QUEUE_EMPTY_1_MDP_RXIOC2_QUEUE_EMPTY_SHFT   11
+#define WF_PSE_TOP_QUEUE_EMPTY_1_MDP_TXIOC2_QUEUE_EMPTY_ADDR   WF_PSE_TOP_QUEUE_EMPTY_1_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_1_MDP_TXIOC2_QUEUE_EMPTY_MASK   0x00000400                // MDP_TXIOC2_QUEUE_EMPTY[10]
+#define WF_PSE_TOP_QUEUE_EMPTY_1_MDP_TXIOC2_QUEUE_EMPTY_SHFT   10
+#define WF_PSE_TOP_QUEUE_EMPTY_1_SEC_TX2_QUEUE_EMPTY_ADDR      WF_PSE_TOP_QUEUE_EMPTY_1_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_1_SEC_TX2_QUEUE_EMPTY_MASK      0x00000200                // SEC_TX2_QUEUE_EMPTY[9]
+#define WF_PSE_TOP_QUEUE_EMPTY_1_SEC_TX2_QUEUE_EMPTY_SHFT      9
+#define WF_PSE_TOP_QUEUE_EMPTY_1_MDP_TX2_QUEUE_EMPTY_ADDR      WF_PSE_TOP_QUEUE_EMPTY_1_ADDR
+#define WF_PSE_TOP_QUEUE_EMPTY_1_MDP_TX2_QUEUE_EMPTY_MASK      0x00000100                // MDP_TX2_QUEUE_EMPTY[8]
+#define WF_PSE_TOP_QUEUE_EMPTY_1_MDP_TX2_QUEUE_EMPTY_SHFT      8
+
+#define WF_PSE_TOP_PG_HIF0_GROUP_HIF0_MAX_QUOTA_ADDR           WF_PSE_TOP_PG_HIF0_GROUP_ADDR
+#define WF_PSE_TOP_PG_HIF0_GROUP_HIF0_MAX_QUOTA_MASK           0x1FFF0000                // HIF0_MAX_QUOTA[28..16]
+#define WF_PSE_TOP_PG_HIF0_GROUP_HIF0_MAX_QUOTA_SHFT           16
+#define WF_PSE_TOP_PG_HIF0_GROUP_HIF0_MIN_QUOTA_ADDR           WF_PSE_TOP_PG_HIF0_GROUP_ADDR
+#define WF_PSE_TOP_PG_HIF0_GROUP_HIF0_MIN_QUOTA_MASK           0x00001FFF                // HIF0_MIN_QUOTA[12..0]
+#define WF_PSE_TOP_PG_HIF0_GROUP_HIF0_MIN_QUOTA_SHFT           0
+
+
+#define WF_PSE_TOP_PG_HIF1_GROUP_HIF1_MAX_QUOTA_ADDR           WF_PSE_TOP_PG_HIF1_GROUP_ADDR
+#define WF_PSE_TOP_PG_HIF1_GROUP_HIF1_MAX_QUOTA_MASK           0x1FFF0000                // HIF1_MAX_QUOTA[28..16]
+#define WF_PSE_TOP_PG_HIF1_GROUP_HIF1_MAX_QUOTA_SHFT           16
+#define WF_PSE_TOP_PG_HIF1_GROUP_HIF1_MIN_QUOTA_ADDR           WF_PSE_TOP_PG_HIF1_GROUP_ADDR
+#define WF_PSE_TOP_PG_HIF1_GROUP_HIF1_MIN_QUOTA_MASK           0x00001FFF                // HIF1_MIN_QUOTA[12..0]
+#define WF_PSE_TOP_PG_HIF1_GROUP_HIF1_MIN_QUOTA_SHFT           0
+
+#define WF_PSE_TOP_PG_CPU_GROUP_CPU_MAX_QUOTA_ADDR             WF_PSE_TOP_PG_CPU_GROUP_ADDR
+#define WF_PSE_TOP_PG_CPU_GROUP_CPU_MAX_QUOTA_MASK             0x1FFF0000                // CPU_MAX_QUOTA[28..16]
+#define WF_PSE_TOP_PG_CPU_GROUP_CPU_MAX_QUOTA_SHFT             16
+#define WF_PSE_TOP_PG_CPU_GROUP_CPU_MIN_QUOTA_ADDR             WF_PSE_TOP_PG_CPU_GROUP_ADDR
+#define WF_PSE_TOP_PG_CPU_GROUP_CPU_MIN_QUOTA_MASK             0x00001FFF                // CPU_MIN_QUOTA[12..0]
+#define WF_PSE_TOP_PG_CPU_GROUP_CPU_MIN_QUOTA_SHFT             0
+
+#define WF_PSE_TOP_PG_PLE_GROUP_PLE_MAX_QUOTA_ADDR             WF_PSE_TOP_PG_PLE_GROUP_ADDR
+#define WF_PSE_TOP_PG_PLE_GROUP_PLE_MAX_QUOTA_MASK             0x1FFF0000                // PLE_MAX_QUOTA[28..16]
+#define WF_PSE_TOP_PG_PLE_GROUP_PLE_MAX_QUOTA_SHFT             16
+#define WF_PSE_TOP_PG_PLE_GROUP_PLE_MIN_QUOTA_ADDR             WF_PSE_TOP_PG_PLE_GROUP_ADDR
+#define WF_PSE_TOP_PG_PLE_GROUP_PLE_MIN_QUOTA_MASK             0x00001FFF                // PLE_MIN_QUOTA[12..0]
+#define WF_PSE_TOP_PG_PLE_GROUP_PLE_MIN_QUOTA_SHFT             0
+
+#define WF_PSE_TOP_PG_LMAC0_GROUP_LMAC0_MAX_QUOTA_ADDR         WF_PSE_TOP_PG_LMAC0_GROUP_ADDR
+#define WF_PSE_TOP_PG_LMAC0_GROUP_LMAC0_MAX_QUOTA_MASK         0x1FFF0000                // LMAC0_MAX_QUOTA[28..16]
+#define WF_PSE_TOP_PG_LMAC0_GROUP_LMAC0_MAX_QUOTA_SHFT         16
+#define WF_PSE_TOP_PG_LMAC0_GROUP_LMAC0_MIN_QUOTA_ADDR         WF_PSE_TOP_PG_LMAC0_GROUP_ADDR
+#define WF_PSE_TOP_PG_LMAC0_GROUP_LMAC0_MIN_QUOTA_MASK         0x00001FFF                // LMAC0_MIN_QUOTA[12..0]
+#define WF_PSE_TOP_PG_LMAC0_GROUP_LMAC0_MIN_QUOTA_SHFT         0
+
+#define WF_PSE_TOP_PG_LMAC1_GROUP_LMAC1_MAX_QUOTA_ADDR         WF_PSE_TOP_PG_LMAC1_GROUP_ADDR
+#define WF_PSE_TOP_PG_LMAC1_GROUP_LMAC1_MAX_QUOTA_MASK         0x1FFF0000                // LMAC1_MAX_QUOTA[28..16]
+#define WF_PSE_TOP_PG_LMAC1_GROUP_LMAC1_MAX_QUOTA_SHFT         16
+#define WF_PSE_TOP_PG_LMAC1_GROUP_LMAC1_MIN_QUOTA_ADDR         WF_PSE_TOP_PG_LMAC1_GROUP_ADDR
+#define WF_PSE_TOP_PG_LMAC1_GROUP_LMAC1_MIN_QUOTA_MASK         0x00001FFF                // LMAC1_MIN_QUOTA[12..0]
+#define WF_PSE_TOP_PG_LMAC1_GROUP_LMAC1_MIN_QUOTA_SHFT         0
+
+#define WF_PSE_TOP_PG_LMAC2_GROUP_LMAC2_MAX_QUOTA_ADDR         WF_PSE_TOP_PG_LMAC2_GROUP_ADDR
+#define WF_PSE_TOP_PG_LMAC2_GROUP_LMAC2_MAX_QUOTA_MASK         0x1FFF0000                // LMAC2_MAX_QUOTA[28..16]
+#define WF_PSE_TOP_PG_LMAC2_GROUP_LMAC2_MAX_QUOTA_SHFT         16
+#define WF_PSE_TOP_PG_LMAC2_GROUP_LMAC2_MIN_QUOTA_ADDR         WF_PSE_TOP_PG_LMAC2_GROUP_ADDR
+#define WF_PSE_TOP_PG_LMAC2_GROUP_LMAC2_MIN_QUOTA_MASK         0x00001FFF                // LMAC2_MIN_QUOTA[12..0]
+#define WF_PSE_TOP_PG_LMAC2_GROUP_LMAC2_MIN_QUOTA_SHFT         0
+
+#define WF_PSE_TOP_PG_LMAC3_GROUP_LMAC3_MAX_QUOTA_ADDR         WF_PSE_TOP_PG_LMAC3_GROUP_ADDR
+#define WF_PSE_TOP_PG_LMAC3_GROUP_LMAC3_MAX_QUOTA_MASK         0x1FFF0000                // LMAC3_MAX_QUOTA[28..16]
+#define WF_PSE_TOP_PG_LMAC3_GROUP_LMAC3_MAX_QUOTA_SHFT         16
+#define WF_PSE_TOP_PG_LMAC3_GROUP_LMAC3_MIN_QUOTA_ADDR         WF_PSE_TOP_PG_LMAC3_GROUP_ADDR
+#define WF_PSE_TOP_PG_LMAC3_GROUP_LMAC3_MIN_QUOTA_MASK         0x00001FFF                // LMAC3_MIN_QUOTA[12..0]
+#define WF_PSE_TOP_PG_LMAC3_GROUP_LMAC3_MIN_QUOTA_SHFT         0
+
+#define WF_PSE_TOP_PG_MDP_GROUP_MDP_MAX_QUOTA_ADDR             WF_PSE_TOP_PG_MDP_GROUP_ADDR
+#define WF_PSE_TOP_PG_MDP_GROUP_MDP_MAX_QUOTA_MASK             0x1FFF0000                // MDP_MAX_QUOTA[28..16]
+#define WF_PSE_TOP_PG_MDP_GROUP_MDP_MAX_QUOTA_SHFT             16
+#define WF_PSE_TOP_PG_MDP_GROUP_MDP_MIN_QUOTA_ADDR             WF_PSE_TOP_PG_MDP_GROUP_ADDR
+#define WF_PSE_TOP_PG_MDP_GROUP_MDP_MIN_QUOTA_MASK             0x00001FFF                // MDP_MIN_QUOTA[12..0]
+#define WF_PSE_TOP_PG_MDP_GROUP_MDP_MIN_QUOTA_SHFT             0
+
+#define WF_PSE_TOP_PG_MDP2_GROUP_MDP2_MAX_QUOTA_ADDR           WF_PSE_TOP_PG_MDP2_GROUP_ADDR
+#define WF_PSE_TOP_PG_MDP2_GROUP_MDP2_MAX_QUOTA_MASK           0x1FFF0000                // MDP2_MAX_QUOTA[28..16]
+#define WF_PSE_TOP_PG_MDP2_GROUP_MDP2_MAX_QUOTA_SHFT           16
+#define WF_PSE_TOP_PG_MDP2_GROUP_MDP2_MIN_QUOTA_ADDR           WF_PSE_TOP_PG_MDP2_GROUP_ADDR
+#define WF_PSE_TOP_PG_MDP2_GROUP_MDP2_MIN_QUOTA_MASK           0x00001FFF                // MDP2_MIN_QUOTA[12..0]
+#define WF_PSE_TOP_PG_MDP2_GROUP_MDP2_MIN_QUOTA_SHFT           0
+
+#define WF_PSE_TOP_PG_HIF2_GROUP_HIF2_MAX_QUOTA_ADDR           WF_PSE_TOP_PG_HIF2_GROUP_ADDR
+#define WF_PSE_TOP_PG_HIF2_GROUP_HIF2_MAX_QUOTA_MASK           0x1FFF0000                // HIF2_MAX_QUOTA[28..16]
+#define WF_PSE_TOP_PG_HIF2_GROUP_HIF2_MAX_QUOTA_SHFT           16
+#define WF_PSE_TOP_PG_HIF2_GROUP_HIF2_MIN_QUOTA_ADDR           WF_PSE_TOP_PG_HIF2_GROUP_ADDR
+#define WF_PSE_TOP_PG_HIF2_GROUP_HIF2_MIN_QUOTA_MASK           0x00001FFF                // HIF2_MIN_QUOTA[12..0]
+#define WF_PSE_TOP_PG_HIF2_GROUP_HIF2_MIN_QUOTA_SHFT           0
+
+#define WF_PSE_TOP_PG_MDP3_GROUP_MDP3_MAX_QUOTA_ADDR           WF_PSE_TOP_PG_MDP3_GROUP_ADDR
+#define WF_PSE_TOP_PG_MDP3_GROUP_MDP3_MAX_QUOTA_MASK           0x1FFF0000                // MDP3_MAX_QUOTA[28..16]
+#define WF_PSE_TOP_PG_MDP3_GROUP_MDP3_MAX_QUOTA_SHFT           16
+#define WF_PSE_TOP_PG_MDP3_GROUP_MDP3_MIN_QUOTA_ADDR           WF_PSE_TOP_PG_MDP3_GROUP_ADDR
+#define WF_PSE_TOP_PG_MDP3_GROUP_MDP3_MIN_QUOTA_MASK           0x00001FFF                // MDP3_MIN_QUOTA[12..0]
+#define WF_PSE_TOP_PG_MDP3_GROUP_MDP3_MIN_QUOTA_SHFT           0
+
+#define WF_PSE_TOP_HIF0_PG_INFO_HIF0_SRC_CNT_ADDR              WF_PSE_TOP_HIF0_PG_INFO_ADDR
+#define WF_PSE_TOP_HIF0_PG_INFO_HIF0_SRC_CNT_MASK              0x1FFF0000                // HIF0_SRC_CNT[28..16]
+#define WF_PSE_TOP_HIF0_PG_INFO_HIF0_SRC_CNT_SHFT              16
+#define WF_PSE_TOP_HIF0_PG_INFO_HIF0_RSV_CNT_ADDR              WF_PSE_TOP_HIF0_PG_INFO_ADDR
+#define WF_PSE_TOP_HIF0_PG_INFO_HIF0_RSV_CNT_MASK              0x00001FFF                // HIF0_RSV_CNT[12..0]
+#define WF_PSE_TOP_HIF0_PG_INFO_HIF0_RSV_CNT_SHFT              0
+
+#define WF_PSE_TOP_HIF1_PG_INFO_HIF1_SRC_CNT_ADDR              WF_PSE_TOP_HIF1_PG_INFO_ADDR
+#define WF_PSE_TOP_HIF1_PG_INFO_HIF1_SRC_CNT_MASK              0x1FFF0000                // HIF1_SRC_CNT[28..16]
+#define WF_PSE_TOP_HIF1_PG_INFO_HIF1_SRC_CNT_SHFT              16
+#define WF_PSE_TOP_HIF1_PG_INFO_HIF1_RSV_CNT_ADDR              WF_PSE_TOP_HIF1_PG_INFO_ADDR
+#define WF_PSE_TOP_HIF1_PG_INFO_HIF1_RSV_CNT_MASK              0x00001FFF                // HIF1_RSV_CNT[12..0]
+#define WF_PSE_TOP_HIF1_PG_INFO_HIF1_RSV_CNT_SHFT              0
+
+#define WF_PSE_TOP_CPU_PG_INFO_CPU_SRC_CNT_ADDR                WF_PSE_TOP_CPU_PG_INFO_ADDR
+#define WF_PSE_TOP_CPU_PG_INFO_CPU_SRC_CNT_MASK                0x1FFF0000                // CPU_SRC_CNT[28..16]
+#define WF_PSE_TOP_CPU_PG_INFO_CPU_SRC_CNT_SHFT                16
+#define WF_PSE_TOP_CPU_PG_INFO_CPU_RSV_CNT_ADDR                WF_PSE_TOP_CPU_PG_INFO_ADDR
+#define WF_PSE_TOP_CPU_PG_INFO_CPU_RSV_CNT_MASK                0x00001FFF                // CPU_RSV_CNT[12..0]
+#define WF_PSE_TOP_CPU_PG_INFO_CPU_RSV_CNT_SHFT                0
+
+#define WF_PSE_TOP_PLE_PG_INFO_PLE_SRC_CNT_ADDR                WF_PSE_TOP_PLE_PG_INFO_ADDR
+#define WF_PSE_TOP_PLE_PG_INFO_PLE_SRC_CNT_MASK                0x1FFF0000                // PLE_SRC_CNT[28..16]
+#define WF_PSE_TOP_PLE_PG_INFO_PLE_SRC_CNT_SHFT                16
+#define WF_PSE_TOP_PLE_PG_INFO_PLE_RSV_CNT_ADDR                WF_PSE_TOP_PLE_PG_INFO_ADDR
+#define WF_PSE_TOP_PLE_PG_INFO_PLE_RSV_CNT_MASK                0x00001FFF                // PLE_RSV_CNT[12..0]
+#define WF_PSE_TOP_PLE_PG_INFO_PLE_RSV_CNT_SHFT                0
+
+#define WF_PSE_TOP_LMAC0_PG_INFO_LMAC0_SRC_CNT_ADDR            WF_PSE_TOP_LMAC0_PG_INFO_ADDR
+#define WF_PSE_TOP_LMAC0_PG_INFO_LMAC0_SRC_CNT_MASK            0x1FFF0000                // LMAC0_SRC_CNT[28..16]
+#define WF_PSE_TOP_LMAC0_PG_INFO_LMAC0_SRC_CNT_SHFT            16
+#define WF_PSE_TOP_LMAC0_PG_INFO_LMAC0_RSV_CNT_ADDR            WF_PSE_TOP_LMAC0_PG_INFO_ADDR
+#define WF_PSE_TOP_LMAC0_PG_INFO_LMAC0_RSV_CNT_MASK            0x00001FFF                // LMAC0_RSV_CNT[12..0]
+#define WF_PSE_TOP_LMAC0_PG_INFO_LMAC0_RSV_CNT_SHFT            0
+
+#define WF_PSE_TOP_LMAC1_PG_INFO_LMAC1_SRC_CNT_ADDR            WF_PSE_TOP_LMAC1_PG_INFO_ADDR
+#define WF_PSE_TOP_LMAC1_PG_INFO_LMAC1_SRC_CNT_MASK            0x1FFF0000                // LMAC1_SRC_CNT[28..16]
+#define WF_PSE_TOP_LMAC1_PG_INFO_LMAC1_SRC_CNT_SHFT            16
+#define WF_PSE_TOP_LMAC1_PG_INFO_LMAC1_RSV_CNT_ADDR            WF_PSE_TOP_LMAC1_PG_INFO_ADDR
+#define WF_PSE_TOP_LMAC1_PG_INFO_LMAC1_RSV_CNT_MASK            0x00001FFF                // LMAC1_RSV_CNT[12..0]
+#define WF_PSE_TOP_LMAC1_PG_INFO_LMAC1_RSV_CNT_SHFT            0
+
+#define WF_PSE_TOP_LMAC2_PG_INFO_LMAC2_SRC_CNT_ADDR            WF_PSE_TOP_LMAC2_PG_INFO_ADDR
+#define WF_PSE_TOP_LMAC2_PG_INFO_LMAC2_SRC_CNT_MASK            0x1FFF0000                // LMAC2_SRC_CNT[28..16]
+#define WF_PSE_TOP_LMAC2_PG_INFO_LMAC2_SRC_CNT_SHFT            16
+#define WF_PSE_TOP_LMAC2_PG_INFO_LMAC2_RSV_CNT_ADDR            WF_PSE_TOP_LMAC2_PG_INFO_ADDR
+#define WF_PSE_TOP_LMAC2_PG_INFO_LMAC2_RSV_CNT_MASK            0x00001FFF                // LMAC2_RSV_CNT[12..0]
+#define WF_PSE_TOP_LMAC2_PG_INFO_LMAC2_RSV_CNT_SHFT            0
+
+#define WF_PSE_TOP_LMAC3_PG_INFO_LMAC3_SRC_CNT_ADDR            WF_PSE_TOP_LMAC3_PG_INFO_ADDR
+#define WF_PSE_TOP_LMAC3_PG_INFO_LMAC3_SRC_CNT_MASK            0x1FFF0000                // LMAC3_SRC_CNT[28..16]
+#define WF_PSE_TOP_LMAC3_PG_INFO_LMAC3_SRC_CNT_SHFT            16
+#define WF_PSE_TOP_LMAC3_PG_INFO_LMAC3_RSV_CNT_ADDR            WF_PSE_TOP_LMAC3_PG_INFO_ADDR
+#define WF_PSE_TOP_LMAC3_PG_INFO_LMAC3_RSV_CNT_MASK            0x00001FFF                // LMAC3_RSV_CNT[12..0]
+#define WF_PSE_TOP_LMAC3_PG_INFO_LMAC3_RSV_CNT_SHFT            0
+
+#define WF_PSE_TOP_MDP_PG_INFO_MDP_SRC_CNT_ADDR                WF_PSE_TOP_MDP_PG_INFO_ADDR
+#define WF_PSE_TOP_MDP_PG_INFO_MDP_SRC_CNT_MASK                0x1FFF0000                // MDP_SRC_CNT[28..16]
+#define WF_PSE_TOP_MDP_PG_INFO_MDP_SRC_CNT_SHFT                16
+#define WF_PSE_TOP_MDP_PG_INFO_MDP_RSV_CNT_ADDR                WF_PSE_TOP_MDP_PG_INFO_ADDR
+#define WF_PSE_TOP_MDP_PG_INFO_MDP_RSV_CNT_MASK                0x00001FFF                // MDP_RSV_CNT[12..0]
+#define WF_PSE_TOP_MDP_PG_INFO_MDP_RSV_CNT_SHFT                0
+
+#define WF_PSE_TOP_MDP2_PG_INFO_MDP2_SRC_CNT_ADDR              WF_PSE_TOP_MDP2_PG_INFO_ADDR
+#define WF_PSE_TOP_MDP2_PG_INFO_MDP2_SRC_CNT_MASK              0x1FFF0000                // MDP2_SRC_CNT[28..16]
+#define WF_PSE_TOP_MDP2_PG_INFO_MDP2_SRC_CNT_SHFT              16
+#define WF_PSE_TOP_MDP2_PG_INFO_MDP2_RSV_CNT_ADDR              WF_PSE_TOP_MDP2_PG_INFO_ADDR
+#define WF_PSE_TOP_MDP2_PG_INFO_MDP2_RSV_CNT_MASK              0x00001FFF                // MDP2_RSV_CNT[12..0]
+#define WF_PSE_TOP_MDP2_PG_INFO_MDP2_RSV_CNT_SHFT              0
+
+#define WF_PSE_TOP_HIF2_PG_INFO_HIF2_SRC_CNT_ADDR              WF_PSE_TOP_HIF2_PG_INFO_ADDR
+#define WF_PSE_TOP_HIF2_PG_INFO_HIF2_SRC_CNT_MASK              0x1FFF0000                // HIF2_SRC_CNT[28..16]
+#define WF_PSE_TOP_HIF2_PG_INFO_HIF2_SRC_CNT_SHFT              16
+#define WF_PSE_TOP_HIF2_PG_INFO_HIF2_RSV_CNT_ADDR              WF_PSE_TOP_HIF2_PG_INFO_ADDR
+#define WF_PSE_TOP_HIF2_PG_INFO_HIF2_RSV_CNT_MASK              0x00001FFF                // HIF2_RSV_CNT[12..0]
+#define WF_PSE_TOP_HIF2_PG_INFO_HIF2_RSV_CNT_SHFT              0
+
+#define WF_PSE_TOP_MDP3_PG_INFO_MDP3_SRC_CNT_ADDR              WF_PSE_TOP_MDP3_PG_INFO_ADDR
+#define WF_PSE_TOP_MDP3_PG_INFO_MDP3_SRC_CNT_MASK              0x1FFF0000                // MDP3_SRC_CNT[28..16]
+#define WF_PSE_TOP_MDP3_PG_INFO_MDP3_SRC_CNT_SHFT              16
+#define WF_PSE_TOP_MDP3_PG_INFO_MDP3_RSV_CNT_ADDR              WF_PSE_TOP_MDP3_PG_INFO_ADDR
+#define WF_PSE_TOP_MDP3_PG_INFO_MDP3_RSV_CNT_MASK              0x00001FFF                // MDP3_RSV_CNT[12..0]
+#define WF_PSE_TOP_MDP3_PG_INFO_MDP3_RSV_CNT_SHFT              0
+
+#define WF_PSE_TOP_FL_QUE_CTRL_0_EXECUTE_ADDR                  WF_PSE_TOP_FL_QUE_CTRL_0_ADDR
+#define WF_PSE_TOP_FL_QUE_CTRL_0_EXECUTE_MASK                  0x80000000                // EXECUTE[31]
+#define WF_PSE_TOP_FL_QUE_CTRL_0_EXECUTE_SHFT                  31
+#define WF_PSE_TOP_FL_QUE_CTRL_0_Q_BUF_QID_ADDR                WF_PSE_TOP_FL_QUE_CTRL_0_ADDR
+#define WF_PSE_TOP_FL_QUE_CTRL_0_Q_BUF_QID_MASK                0x7F000000                // Q_BUF_QID[30..24]
+#define WF_PSE_TOP_FL_QUE_CTRL_0_Q_BUF_QID_SHFT                24
+#define WF_PSE_TOP_FL_QUE_CTRL_0_Q_BUF_PID_SHFT                16
+
+#define WF_PSE_TOP_FL_QUE_CTRL_1_Q_BUF_PID_ADDR                WF_PSE_TOP_FL_QUE_CTRL_1_ADDR
+#define WF_PSE_TOP_FL_QUE_CTRL_1_Q_BUF_PID_MASK                0x30000000                // Q_BUF_PID[29..28]
+#define WF_PSE_TOP_FL_QUE_CTRL_1_Q_BUF_PID_SHFT                28
+
+#define WF_PSE_TOP_FL_QUE_CTRL_2_QUEUE_TAIL_FID_ADDR           WF_PSE_TOP_FL_QUE_CTRL_2_ADDR
+#define WF_PSE_TOP_FL_QUE_CTRL_2_QUEUE_TAIL_FID_MASK           0x1FFF0000                // QUEUE_TAIL_FID[28..16]
+#define WF_PSE_TOP_FL_QUE_CTRL_2_QUEUE_TAIL_FID_SHFT           16
+#define WF_PSE_TOP_FL_QUE_CTRL_2_QUEUE_HEAD_FID_ADDR           WF_PSE_TOP_FL_QUE_CTRL_2_ADDR
+#define WF_PSE_TOP_FL_QUE_CTRL_2_QUEUE_HEAD_FID_MASK           0x00001FFF                // QUEUE_HEAD_FID[12..0]
+#define WF_PSE_TOP_FL_QUE_CTRL_2_QUEUE_HEAD_FID_SHFT           0
+
+#define WF_PSE_TOP_FL_QUE_CTRL_3_QUEUE_PAGE_NUM_ADDR           WF_PSE_TOP_FL_QUE_CTRL_3_ADDR
+#define WF_PSE_TOP_FL_QUE_CTRL_3_QUEUE_PAGE_NUM_MASK           0x00FFF000                // QUEUE_PAGE_NUM[23..12]
+#define WF_PSE_TOP_FL_QUE_CTRL_3_QUEUE_PAGE_NUM_SHFT           12
+#define WF_PSE_TOP_FL_QUE_CTRL_3_QUEUE_PKT_NUM_ADDR            WF_PSE_TOP_FL_QUE_CTRL_3_ADDR
+#define WF_PSE_TOP_FL_QUE_CTRL_3_QUEUE_PKT_NUM_MASK            0x00001FFF                // QUEUE_PKT_NUM[12..0]
+#define WF_PSE_TOP_FL_QUE_CTRL_3_QUEUE_PKT_NUM_SHFT            0
+
+#define WF_PSE_TOP_FREEPG_CNT_FFA_CNT_ADDR                     WF_PSE_TOP_FREEPG_CNT_ADDR
+#define WF_PSE_TOP_FREEPG_CNT_FFA_CNT_MASK                     0x1FFF0000                // FFA_CNT[28..16]
+#define WF_PSE_TOP_FREEPG_CNT_FFA_CNT_SHFT                     16
+#define WF_PSE_TOP_FREEPG_CNT_FREEPG_CNT_ADDR                  WF_PSE_TOP_FREEPG_CNT_ADDR
+#define WF_PSE_TOP_FREEPG_CNT_FREEPG_CNT_MASK                  0x00001FFF                // FREEPG_CNT[12..0]
+#define WF_PSE_TOP_FREEPG_CNT_FREEPG_CNT_SHFT                  0
+
+#define WF_PSE_TOP_FREEPG_HEAD_TAIL_FREEPG_TAIL_ADDR           WF_PSE_TOP_FREEPG_HEAD_TAIL_ADDR
+#define WF_PSE_TOP_FREEPG_HEAD_TAIL_FREEPG_TAIL_MASK           0x1FFF0000                // FREEPG_TAIL[28..16]
+#define WF_PSE_TOP_FREEPG_HEAD_TAIL_FREEPG_TAIL_SHFT           16
+#define WF_PSE_TOP_FREEPG_HEAD_TAIL_FREEPG_HEAD_ADDR           WF_PSE_TOP_FREEPG_HEAD_TAIL_ADDR
+#define WF_PSE_TOP_FREEPG_HEAD_TAIL_FREEPG_HEAD_MASK           0x00001FFF                // FREEPG_HEAD[12..0]
+#define WF_PSE_TOP_FREEPG_HEAD_TAIL_FREEPG_HEAD_SHFT           0
+
+/* RXD */
+enum {
+	BMAC_GROUP_VLD_1 = 0x01,
+	BMAC_GROUP_VLD_2 = 0x02,
+	BMAC_GROUP_VLD_3 = 0x04,
+	BMAC_GROUP_VLD_4 = 0x08,
+	BMAC_GROUP_VLD_5 = 0x10,
+};
+
+/*npu offload Counter*/
+enum COUNTER_OFFSET{
+	GET_BUFID_FAIL = 0,		//00v
+	WHILE_COUNT = 1,		//01v
+	RX_DESC_DDONE,			//02
+	ALL_GET_PKT_COUNT,		//03v
+	DROP_PACKETS,			//04v
+	//ENQ_BUFID_FIAL_COUNT,		//05v
+	//ALL_ENQ_PKT_COUNT,		//06v
+	ENQ_DEQ_WHILE_COUNT,		//07v
+	ENQ_SRAM_COUNT,			//08v
+	ENQ_SRAM_FULL_COUNT,		//09vv
+	ENQ_SRAM_FAIL_COUNT,		//09v
+	DEQ_SRAM_COUNT,			//11v
+	DEQ_SRAM_FAIL_BUFID_COUNT,	//12v
+	DEQ_SRAM_FAIL_LEN_COUNT,	//13v
+	//DEQ_SRAM_NO_INFO_COUNT,		//14v
+	TO_HOSTAPD_COUNT,			//15vv
+	//ENQ_DRAM_FAIL_COUNT,		//16v
+	//ENQ_BUFID_ERROR_COUNT,		//17v
+	BA_IN_ORDER_PKT_COUNT,		//18v
+	BA_DUPL_PKT_COUNT,		//19v
+	BA_OLD_PKT_COUNT,		//20v
+	BA_WITHIN_WS_PKT_COUNT,		//21v
+	BA_POP_PKT_COUNT,		//22v
+	//BA_NO_PKT_IN_LIST_COUNT,	//23v
+	BA_AMSDU_COUNT,			//24v
+	AMPDU_COUNT,			//25v
+	//BA_NOT_DATA_PKT_COUNT,		//26v
+	//BA_RETURN_ERROR_COUNT,		//27v
+	BA_NO_MEM_COUNT,		//28v
+	TO_QDMA_COUNT,			//29v
+	TO_QDMA_COUNT_88,
+	TO_QDMA_COUNT_512,
+	TO_QDMA_COUNT_1518,
+	TO_QDMA_BYTE_LO,
+	TO_QDMA_BYTE_HI,
+	//ACCESS_PACKET,			//30v
+	HOST_APD_ERROR_COUNT,		//31v
+	//QDMA_RETURN_UNBIND_COUNT,	//32v
+	QDMA_RETURN_FAIL_COUNT,		//33v
+	//QDMA_RETURN_OK_COUNT,		//34v
+	SCATTER_CNT_MORE1,		//35v
+	BIGGER_PACKET,			//36v
+	ENQ_BIGPKT_TOSRAM_FAIL_COUNT,   //
+	SCATTER_PKT_ONE_BUFID,
+	GET_BUFID_FOR_BIGPKT_FAIL,
+	BIGPKT_TO_HOSTADPT_ERROR_COUNT,
+	API_HOSTADPT_SEND,
+	ENQ_BIGPKT_SRAM_FULL_COUNT,
+	ENQ_BIGPKT_SRAM_COUNT,
+	NO_BIGPKT_COUNT,
+	CHECK_BIGPKT,
+	CHECK_BIGPKT2,
+	CHECK_BIGPKT_OK,
+	CHECK_BIGPKT_ISLAST,
+	CHECK_BIGPKT_IDX_FAIL,
+	CHECK_BIGPKT_CNT_FAIL,
+	CHECK_BIGPKT_FAIL,
+	CHECK_BIGPKT_OVER_RETRY,
+	BIGPKT_TO_HOSTAPD_COUNT,
+	BIGPKT_DESC_FREE_COUNT,	
+	//BA_NODE_ALLOC_FAIL,	 	//37
+	//BA_NODE_ALLOC_COUNT,		//38
+	BA_AMSDU_MISS,			//39
+	//BA_TIMEOUT_FLUSH,		//40
+	BA_TIMEOUT_FLUSH100,		//42
+	BA_TIMEOUT_FLUSH250,		//43
+	BA_ENQ_DUP_SEQ,			//vv
+	BA_REORDERING_NODE_FREE_COUNT,	//10vv
+	BA_REORDERINT_NODE_ALLOC_FAIL, 	//11vv
+	BA_REORDERING_NODE_ALLOC_COUNT,	//12vv
+	BA_REORDERING_NODE_ALLOC_DRAM_COUNT,//vv
+	BA_ENQ_QLEN_ERROR_COUNT,
+	BA_WCID_ERROR,
+	HOSTADPT_API_Q_FULL,
+	ALL_GET_PKT_COUNT_512,	
+	ALL_GET_PKT_COUNT_1518,	
+	ALL_GET_PKT_COUNT_OTHER,
+	TDMA_TXDESC_FULL_COUNT,
+	TDMA_TXDESC_FULL_COUNT2,
+	TDMA_RX_GET_PKT,
+	RX_G4_PKT_NO_SN,
+	BAR_WCID_ERROR,
+	RX_PIPE_Q_FULL,
+	RX_PIPE_Q3_Q4_FULL,
+	PIPE_Q3_ENQ,
+	PIPE_Q3_DEQ,
+	PIPE_Q4_ENQ,
+	PIPE_Q4_DEQ,
+	ENQ_PKT_TO_SLOWPATH_CASE1,
+	ENQ_PKT_TO_SLOWPATH_CASE2,
+	ENQ_PKT_TO_SLOWPATH_CASE3,
+	ENQ_PIPELINE_PKT_CNT,
+	DEQ_PIPELINE_PKT_CNT,
+	TDMA_TXRING_SEND,
+	BUFID_FREE_CASE1,
+	MSDU_PG_2G_PKT,
+	MSDU_PG_5G_PKT,
+	MSDU_PG_6G_PKT,
+	MSDU_PG_READ_FAIL,
+	TX_PKT_FROM_HOSTADPT,
+	TX_FULL_DESC,
+	TX_DONE_GET_PKT,
+	TX_SLOW_PATH_Q_FULL,
+	TX_SLOW_PATH_TXRING_FULL,
+	TX_SLOW_PATH_TOO_MUCH_PKT,
+	PN_CHECK_FAIL,
+	SKB_BUFID_STATE_ABNORMAL1,	//err state when freeing skb(setting to BUF_IN_POOL)
+	SKB_BUFID_STATE_ABNORMAL2,	//err state when filling skb to Refill ring(setting to BUF_IN_RING)
+	SKB_BUFID_STATE_ABNORMAL3,	//err state when checking skb from rxdmad_c ring(setting to BUF_FROM_RING)
+#ifdef TCSUPPORT_WLAN_INODE
+	PPE_RX_NULL_COUNT,
+	PPE_RX_SEND_COUNT,
+	CPU_RX_NULL_COUNT,
+	CPU_RX_SEND_COUNT,
+	CPU_TX_ERR_COUNT,
+	CPU_TX_SEND_COUNT,
+	NPU_RX_RECV_COUNT,
+	SKB_MALLOC_FAIL,
+	SKB_MALLOC_CNT,
+	SKB_FREE_CNT,
+	//below for rx path
+	//ENQ_SRAM_FAIL_COUNT,
+	//ENQ_SRAM_COUNT,
+	//DEQ_SRAM_COUNT,
+	//DEQ_SRAM_FAIL_BUFID_COUNT,
+	//DEQ_SRAM_FAIL_LEN_COUNT,
+	//TO_HOSTAPD_COUNT,
+	//HOST_APD_ERROR_COUNT,
+	ENQ_DEQ_WHILE_COUNT_C3,
+	PPE_RX_ERROR_COUNT1,
+	PPE_RX_ERROR_COUNT2,
+	PPE_RX_ERROR_COUNT3,
+	PPE_RX_ERROR_COUNT4,
+	PPE_RX_ERROR_COUNT5,
+#endif
+	COUNTER_BOTTOM			//47
+};
+#define NPU_COUNTER_NUM				COUNTER_BOTTOM
+enum COUNTER_OFFSET_UTIL{
+	QDMA_TXDESC_NULL_COUNT=0,	//0vv
+	QDMA_FREE_BUFID_COUNT,		//1vv
+	QDMA_UNBIND_COUNT,		//2vv
+	QDMA_TO_ENQ_FAIL_COUNT,		//3vv
+	QDMA_TO_ENQ_FAIL_COUNT2,	//4
+	//QDMA_TO_PPE_COUNT,		//5
+	QDMA_DONE_COUNT,		//6vv
+	SKB_FREE_BUFID_COUNT,		//7vv
+	SKB_ALLOC_BUFID_COUNT,		//8vv
+	SKB_BUFID_ALLOC_FAIL,		//9vv
+	QDMA_TX_DSCP_IDX_INVALID,	//13vv
+	QDMA_TX_DSCP_INFO_ERROR,	//14vv
+	QDMA_DONE_DROP_BIT_ERROR,		//15
+	API_BUFF_SEND_BIGPKT,
+	API_BUFF_SEND_NOMALPKT,
+	HOSTADPT_API_DONE_COUNT,
+	BMGR0_BUFID_OVERFLOW,
+	MSDU_SKB_FREE_BUFID_COUNT,
+	MSDU_SKB_BUFID_ALLOC_FAIL,
+	MSDU_SKB_ALLOC_COUNT,
+	TX_SKB_FREE_BUFID_COUNT,		//7vv
+	TX_SKB_ALLOC_BUFID_COUNT,		//8vv
+	TX_SKB_BUFID_ALLOC_FAIL,		//9vv
+	TX_DONE_VER_ABNORMAL,
+	TX_DONE_TOKEN_LEAK,
+	TX_BUF_POOL_ABNORMAL_ALLOC,
+	TX_BUF_POOL_ABNORMAL_FREE,
+	WIFI_TX_TOKEN_ABNORMAL,
+	WIFI_TX_MSDU_PKT,
+	//QDMA_TXDESC_PUSH_COUNT,		//16
+	//QDMA_TXDESC_PUSH2_COUNT,	//17
+	//QDMA_TXDESC_POP_COUNT,		//18
+	UCOUNTER_BOTTOM			//19
+};
+#define UTIL_COUNTER_NUM			UCOUNTER_BOTTOM
+#define BAND_NUM	4
+#define NPU_COUNTER(addr,i)		(*((unsigned int *)((unsigned long int)addr + (i << 2))))
+
+#endif
