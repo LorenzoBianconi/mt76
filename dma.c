@@ -918,6 +918,13 @@ mt76_dma_rx_reset(struct mt76_dev *dev, enum mt76_rxq_id qid)
 	    mt76_queue_is_wed_rro(q))
 		return;
 
+	if (mt76_npu_device_active(dev) &&
+	    mt76_queue_is_wed_rro(q))
+		return;
+
+	if (mt76_queue_is_npu_txfree(q))
+		return;
+
 	mt76_dma_sync_idx(dev, q);
 	if (mt76_queue_is_npu(q))
 		mt76_npu_fill_rx_queue(dev, q);
