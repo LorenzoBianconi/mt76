@@ -598,28 +598,9 @@ static void mt7996_remove_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
 static void mt7996_remove_interface(struct ieee80211_hw *hw,
 				    struct ieee80211_vif *vif)
 {
-	struct mt7996_vif *mvif = (struct mt7996_vif *)vif->drv_priv;
-	unsigned long rem_links = mvif->mt76.valid_links;
 	struct mt7996_dev *dev = mt7996_hw_dev(hw);
 	struct mt7996_radio_data rdata = {};
-	unsigned int link_id;
 	int i;
-
-	/* Remove all active links */
-	for_each_set_bit(link_id, &rem_links, IEEE80211_MLD_MAX_NUM_LINKS) {
-		struct mt7996_vif_link *link;
-		struct mt7996_phy *phy;
-
-		link = mt7996_vif_link(dev, vif, link_id);
-		if (!link)
-			continue;
-
-		phy = __mt7996_phy(dev, link->msta_link.wcid.phy_idx);
-		if (!phy)
-			continue;
-
-		mt7996_vif_link_destroy(phy, link, vif, NULL);
-	}
 
 	ieee80211_iterate_active_interfaces_mtx(hw, 0, mt7996_remove_iter,
 						&rdata);
@@ -2436,6 +2417,8 @@ mt7996_change_vif_links(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 {
 	struct mt7996_dev *dev = mt7996_hw_dev(hw);
 	struct mt7996_vif *mvif = (struct mt7996_vif *)vif->drv_priv;
+	unsigned long rem_links;
+	unsigned int link_id;
 	int ret = 0;
 
 	mutex_lock(&dev->mt76.mutex);
@@ -2462,6 +2445,23 @@ mt7996_change_vif_links(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 
 	if (new_links)
 		goto out;
+
+	/* Remove all active links */
+	rem_links = mvif->mt76.valid_links;
+	for_each_set_bit(link_id, &rem_links, IEEE80211_MLD_MAX_NUM_LINKS) {
+		struct mt7996_vif_link *link;
+		struct mt7996_phy *phy;
+
+		link = mt7996_vif_link(dev, vif, link_id);
+		if (!link)
+			continue;
+
+		phy = __mt7996_phy(dev, link->msta_link.wcid.phy_idx);
+		if (!phy)
+			continue;
+
+		mt7996_vif_link_destroy(phy, link, vif, NULL);
+	}
 
 	dev->mld_idx_mask &= ~BIT_ULL(mvif->mld_group_idx);
 	dev->mld_remap_idx_mask &= ~BIT_ULL(mvif->mld_remap_idx);
